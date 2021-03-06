@@ -4,4 +4,14 @@ class Meal < ApplicationRecord
     belongs_to :meal_type
 
     validates :name, :description, presence: true
+
+    def as_json(options)
+        {}.tap do |h|
+            h[:id] = id
+            h[:name] = name
+            h[:description] = description
+            h[:recipe_url] = recipe_url
+            h[:type] = meal_type.description
+        end
+    end
 end
