@@ -6,7 +6,7 @@ class MealsController < ApplicationController
 
   def show
     @meal = Meal.find_by(id: params[:id])
-    
+
     if @meal.present?
       render json: { data: @meal }, status: :ok
     else
@@ -28,7 +28,7 @@ class MealsController < ApplicationController
 
   def update
     @meal = Meal.find(params[:id])
-    
+
     if @meal.update!(meal_params)
       render json: { data: @meal }, status: :ok
     else
@@ -38,14 +38,13 @@ class MealsController < ApplicationController
 
   def destroy
     @meal = Meal.find(params[:id])
-    
+
     if @meal.destroy!
       render json: { data: true }, status: :ok
     else
       render json: { erros: @meal.errors }, status: 500
     end
   end
-
 
   private
 

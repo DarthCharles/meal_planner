@@ -10,8 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_01_18_174644) do
-
+ActiveRecord::Schema.define(version: 2021_03_06_231826) do
   create_table "daily_meals", force: :cascade do |t|
     t.integer "day_id"
     t.integer "meal_id"
@@ -48,6 +47,12 @@ ActiveRecord::Schema.define(version: 2021_01_18_174644) do
   create_table "menus", force: :cascade do |t|
     t.datetime "from"
     t.datetime "to"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "weekdays", force: :cascade do |t|
+    t.string "name", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end

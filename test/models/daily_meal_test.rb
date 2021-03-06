@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class DailyMealTest < ActiveSupport::TestCase
   # test "the truth" do
