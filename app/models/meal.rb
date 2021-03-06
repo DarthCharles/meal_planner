@@ -5,7 +5,7 @@ class Meal < ApplicationRecord
 
     validates :name, :description, presence: true
 
-    def as_json(options)
+    def as_json(options = {})
         {}.tap do |h|
             h[:id] = id
             h[:name] = name
