@@ -17,7 +17,6 @@ class MealsController < ApplicationController
   def create
     @meal = Meal.new(meal_params)
 
-    binding.pry
     if @meal.valid?
       @meal.save!
       render json: { data: @meal }, status: :ok

@@ -11,6 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema.define(version: 2021_03_06_231826) do
+
   create_table "daily_meals", force: :cascade do |t|
     t.integer "day_id"
     t.integer "meal_id"
@@ -22,10 +23,11 @@ ActiveRecord::Schema.define(version: 2021_03_06_231826) do
 
   create_table "days", force: :cascade do |t|
     t.integer "menu_id"
-    t.string "weekday"
+    t.integer "weekday_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["menu_id"], name: "index_days_on_menu_id"
+    t.index ["weekday_id"], name: "index_days_on_weekday_id"
   end
 
   create_table "meal_types", force: :cascade do |t|
