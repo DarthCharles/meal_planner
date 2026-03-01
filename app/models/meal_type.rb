@@ -1,8 +1,9 @@
 class MealType < ApplicationRecord
-  has_many :meals
+  has_many :meal_meal_types, dependent: :destroy
+  has_many :meals, through: :meal_meal_types
 
-  %i{breakfast lunch dinner collation}.each do |meal_type|
-    scope meal_type, -> { find_by(description: meal_type) }
+  %i[breakfast lunch dinner].each do |name|
+    scope name, -> { find_by(description: name.to_s) }
   end
 
   def self.for_select

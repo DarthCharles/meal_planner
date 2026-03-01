@@ -1,25 +1,16 @@
 class DaysController < ApplicationController
   def create
-    binding.pry
-    @meals = Meal.find_by(id: day_params[:meal_ids])
+    permitted = params.permit(:id, :weekday_id, :menu_id, meal_ids: [])
+    meal_ids = Array(permitted[:meal_ids]).reject(&:blank?)
 
-    @day = Day.new(day_params)
-    @day.meals = @meals
+    @day = Day.new(permitted.except(:meal_ids))
+    @day.meals = Meal.where(id: meal_ids) if meal_ids.any?
 
     if @day.valid?
       @day.save!
       render json: { data: @day }, status: :ok
     else
-      render json: { erros: @day.errors }, status: 500
+      render json: { errors: @day.errors }, status: :unprocessable_entity
     end
-  end
-
-  def day_params
-    params.permit(
-      :id,
-      :weekday_id,
-      :menu_id,
-      :meal_ids
-    )
   end
 end

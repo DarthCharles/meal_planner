@@ -4,6 +4,6 @@ class Weekday < ApplicationRecord
   end
 
   def self.for_select
-    Weekday.all.map { |weekday| [weekday.name, type.id] }
+    Weekday.all.map { |weekday| [weekday.name, weekday.id] }
   end
 end

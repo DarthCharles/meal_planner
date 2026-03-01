@@ -1,5 +1,5 @@
 class Menu < ApplicationRecord
-  has_many :days
+  has_many :days, dependent: :destroy
 
   def as_json(options = {})
     {}.tap do |h|
