@@ -1,0 +1,17 @@
+{
+  "name": "Comal Meal Planner",
+  "short_name": "Comal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf7ef",
+  "theme_color": "#fbf7ef",
+  "description": "Plan a delicious week, one meal at a time.",
+  "icons": [
+    {
+      "src": "/comal-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
