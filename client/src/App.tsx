@@ -36,6 +36,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [showMealForm, setShowMealForm] = useState(false);
+  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -68,9 +69,20 @@ function App() {
   };
 
   const saveMeal = async (form: MealForm) => {
-    const meal = await api.createMeal(form);
-    setMeals((current) => [...current, meal]);
+    const meal = editingMeal ? await api.updateMeal(editingMeal.id, form) : await api.createMeal(form);
+    setMeals((current) => editingMeal ? current.map((item) => item.id === meal.id ? meal : item) : [...current, meal]);
     setShowMealForm(false);
+    setEditingMeal(null);
+  };
+
+  const editMeal = (meal: Meal) => {
+    setEditingMeal(meal);
+    setShowMealForm(true);
+  };
+
+  const closeMealForm = () => {
+    setShowMealForm(false);
+    setEditingMeal(null);
   };
 
   return (
@@ -117,7 +129,7 @@ function App() {
         {view === "menu" ? (
           <MenuView menu={menu} loading={loading} onGenerate={generateMenu} />
         ) : (
-          <MealsView meals={meals} onAdd={() => setShowMealForm(true)} />
+          <MealsView meals={meals} onAdd={() => { setEditingMeal(null); setShowMealForm(true); }} onEdit={editMeal} />
         )}
       </main>
 
@@ -127,7 +139,7 @@ function App() {
         <NavButton active={false} onClick={() => setShowMealForm(true)} icon="+" label="Add meal" accent />
       </nav>
 
-      {showMealForm && <MealFormModal types={mealTypes} onClose={() => setShowMealForm(false)} onSave={saveMeal} />}
+      {showMealForm && <MealFormModal types={mealTypes} initialMeal={editingMeal} onClose={closeMealForm} onSave={saveMeal} />}
     </div>
   );
 }
@@ -161,24 +173,29 @@ function orderDaysFromToday(days: Menu["days"], today: string) {
   });
 }
 
-function MealsView({ meals, onAdd }: { meals: Meal[]; onAdd: () => void }) {
+function MealsView({ meals, onAdd, onEdit }: { meals: Meal[]; onAdd: () => void; onEdit: (meal: Meal) => void }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const filtered = useMemo(() => meals.filter((meal) => (filter === "all" || meal.meal_types.includes(filter)) && meal.name.toLowerCase().includes(search.toLowerCase())), [meals, filter, search]);
   return <section className="meals-section">
     <div className="meals-toolbar"><label className="search-field"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search meals" /></label><button className="button button-secondary" onClick={onAdd}>+ Add meal</button></div>
     <div className="filter-row">{["all", ...mealTypeOrder].map((item) => <button key={item} className={`filter-chip ${filter === item ? "selected" : ""}`} onClick={() => setFilter(item)}>{item === "all" ? "All meals" : mealTypeLabels[item as MealTypeName]}</button>)}</div>
-    <div className="meal-library">{filtered.map((meal) => <article className="library-card" key={meal.id}><div className="library-accent"></div><div><div className="tag-row">{meal.meal_types.map((type) => <span className={`tag ${type}`} key={type}>{type}</span>)}</div><h4>{meal.name}</h4><p>{meal.description}</p></div><button className="more-button" aria-label={`More options for ${meal.name}`}>•••</button></article>)}{filtered.length === 0 && <div className="empty-state compact"><h3>No meals found.</h3><p>Try another search or add something new.</p></div>}</div>
+    <div className="meal-library">{filtered.map((meal) => <article className="library-card" key={meal.id}><div className="library-accent"></div><div><div className="tag-row">{meal.meal_types.map((type) => <span className={`tag ${type}`} key={type}>{type}</span>)}</div><h4>{meal.name}</h4><p>{meal.description}</p></div><button className="more-button" onClick={() => onEdit(meal)} aria-label={`Edit ${meal.name}`}>Edit</button></article>)}{filtered.length === 0 && <div className="empty-state compact"><h3>No meals found.</h3><p>Try another search or add something new.</p></div>}</div>
   </section>;
 }
 
-function MealFormModal({ types, onClose, onSave }: { types: MealTypeOption[]; onClose: () => void; onSave: (form: MealForm) => Promise<void> }) {
-  const [form, setForm] = useState<MealForm>({ name: "", description: "", recipe_url: "", meal_type_ids: [] });
+function MealFormModal({ types, initialMeal, onClose, onSave }: { types: MealTypeOption[]; initialMeal: Meal | null; onClose: () => void; onSave: (form: MealForm) => Promise<void> }) {
+  const [form, setForm] = useState<MealForm>(() => ({
+    name: initialMeal?.name ?? "",
+    description: initialMeal?.description ?? "",
+    recipe_url: initialMeal?.recipe_url ?? "",
+    meal_type_ids: initialMeal ? types.filter(([name]) => initialMeal.meal_types.includes(name)).map(([, id]) => id) : []
+  }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const toggleType = (id: number) => setForm((current) => ({ ...current, meal_type_ids: current.meal_type_ids.includes(id) ? current.meal_type_ids.filter((typeId) => typeId !== id) : [...current.meal_type_ids, id] }));
   const submit = async (event: React.FormEvent) => { event.preventDefault(); if (!form.name || !form.description || form.meal_type_ids.length === 0) { setError("Add a name, description, and at least one meal time."); return; } setSaving(true); setError(""); try { await onSave(form); } catch (err) { setError(err instanceof Error ? err.message : "Could not save this meal."); } finally { setSaving(false); } };
-  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="meal-form-title"><div className="modal-header"><div><p className="eyebrow">Add to your library</p><h3 id="meal-form-title">A new favorite</h3></div><button className="close-button" onClick={onClose} aria-label="Close">×</button></div><form onSubmit={submit}><label className="form-label">Meal name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Tacos de papa" /></label><label className="form-label">Description<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What makes it delicious?" rows={3} /></label><label className="form-label">Recipe URL <span className="muted">(optional)</span><input value={form.recipe_url} onChange={(event) => setForm({ ...form, recipe_url: event.target.value })} placeholder="https://..." /></label><fieldset className="form-label"><legend>Meal time</legend><div className="type-select">{types.map(([name, id]) => <button type="button" className={`type-option ${form.meal_type_ids.includes(id) ? "selected" : ""}`} key={id} onClick={() => toggleType(id)}>{name}</button>)}</div></fieldset>{error && <p className="form-error">{error}</p>}<div className="form-actions"><button type="button" className="button button-ghost" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={saving}>{saving ? "Saving…" : "Save meal"}</button></div></form></section></div>;
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="meal-form-title"><div className="modal-header"><div><p className="eyebrow">{initialMeal ? "Update your library" : "Add to your library"}</p><h3 id="meal-form-title">{initialMeal ? "Edit this favorite" : "A new favorite"}</h3></div><button className="close-button" onClick={onClose} aria-label="Close">×</button></div><form onSubmit={submit}><label className="form-label">Meal name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Tacos de papa" /></label><label className="form-label">Description<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What makes it delicious?" rows={3} /></label><label className="form-label">Recipe URL <span className="muted">(optional)</span><input value={form.recipe_url} onChange={(event) => setForm({ ...form, recipe_url: event.target.value })} placeholder="https://..." /></label><fieldset className="form-label"><legend>Meal time</legend><div className="type-select">{types.map(([name, id]) => <button type="button" className={`type-option ${form.meal_type_ids.includes(id) ? "selected" : ""}`} key={id} onClick={() => toggleType(id)}>{name}</button>)}</div></fieldset>{error && <p className="form-error">{error}</p>}<div className="form-actions"><button type="button" className="button button-ghost" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={saving}>{saving ? "Saving…" : initialMeal ? "Update meal" : "Save meal"}</button></div></form></section></div>;
 }
 
 function NavButton({ active, onClick, icon, label, accent = false }: { active: boolean; onClick: () => void; icon: string; label: string; accent?: boolean }) { return <button className={`nav-button ${active ? "active" : ""} ${accent ? "nav-accent" : ""}`} onClick={onClick}><span className="nav-icon">{icon}</span><span>{label}</span></button>; }

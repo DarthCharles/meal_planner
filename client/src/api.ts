@@ -20,5 +20,6 @@ export const api = {
   getMeals: () => request<Meal[]>("/meals"),
   getMealTypes: () => request<MealTypeOption[]>("/meal_types"),
   generateMenu: () => request<Menu>("/menus/generate", { method: "POST", body: JSON.stringify({}) }),
-  createMeal: (meal: MealForm) => request<Meal>("/meals", { method: "POST", body: JSON.stringify(meal) })
+  createMeal: (meal: MealForm) => request<Meal>("/meals", { method: "POST", body: JSON.stringify(meal) }),
+  updateMeal: (id: number, meal: MealForm) => request<Meal>(`/meals/${id}`, { method: "PUT", body: JSON.stringify(meal) })
 };

@@ -23,6 +23,23 @@ Run the API:
 bin/rails server -b 127.0.0.1 -p 3000
 ```
 
+## Run API and client together
+
+After installing the Rails and client dependencies, start both development
+servers from the repository root:
+
+```bash
+bin/dev
+```
+
+Press `Ctrl+C` to stop both processes. The default ports are `3000` for Rails
+and `5173` for Vite. They can be changed with environment variables, for
+example:
+
+```bash
+API_PORT=3001 CLIENT_PORT=5174 bin/dev
+```
+
 ## Client environment
 
 ```bash

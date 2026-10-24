@@ -11,6 +11,7 @@ All responses use a top-level `data` or `errors` key.
 | `GET` | `/meals` | List meals |
 | `GET` | `/meals/:id` | Show one meal |
 | `POST` | `/meals` | Create a meal |
+| `PUT` | `/meals/:id` | Update a meal |
 | `PATCH` | `/meals/:id` | Update a meal |
 | `DELETE` | `/meals/:id` | Delete a meal |
 
@@ -89,4 +90,4 @@ Returns selection pairs such as:
 
 ## CORS
 
-Development origins are configured in [`config/initializers/cors.rb`](../config/initializers/cors.rb). The current client uses `http://127.0.0.1:5173`.
+Development origins are configured in [`config/initializers/cors.rb`](../config/initializers/cors.rb). Localhost and `127.0.0.1` origins on any development port are allowed so Vite can use the next available port when the default is occupied.

@@ -34,6 +34,7 @@ bundle install
 bin/rails db:prepare
 bin/rails db:seed
 bin/rails server -b 127.0.0.1 -p 3000
+bin/dev
 bundle exec rails test
 bin/rake menu:generate
 ```
@@ -52,6 +53,8 @@ The client uses `VITE_API_URL` when set, and otherwise targets
 
 ## Development guidelines
 
+- Use English for identifiers, variables, comments, log messages, and other
+  code-facing text.
 - Keep domain logic in models or service objects; avoid putting business rules
   in controllers.
 - Reuse `MenuGenerationService` for weekly menu generation rather than

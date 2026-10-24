@@ -48,6 +48,15 @@ npm install
 npm run dev
 ```
 
+To start the API and client together after installing both sets of dependencies:
+
+```bash
+bin/dev
+```
+
+The default ports are `3000` for Rails and `5173` for Vite. Override them with
+`API_PORT`, `API_HOST`, `CLIENT_PORT`, and `CLIENT_HOST` as needed.
+
 Open the client at [http://127.0.0.1:5173/](http://127.0.0.1:5173/).
 
 The client connects to the API at `http://127.0.0.1:3000` by default. Set `VITE_API_URL` in `client/.env` to use another API URL.
