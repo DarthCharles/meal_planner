@@ -4,4 +4,5 @@ Rails.application.routes.draw do
 
   resources :days, only: :create
   resources :meal_types, only: :index
+  resources :units, only: :index
 end

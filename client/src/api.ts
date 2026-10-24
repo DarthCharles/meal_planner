@@ -1,4 +1,4 @@
-import type { Meal, MealForm, MealTypeOption, Menu } from "./types";
+import type { Meal, MealForm, MealTypeOption, Menu, UnitOption } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:3000";
 
@@ -19,6 +19,7 @@ export const api = {
   getMenus: () => request<Menu[]>("/menus"),
   getMeals: () => request<Meal[]>("/meals"),
   getMealTypes: () => request<MealTypeOption[]>("/meal_types"),
+  getUnits: () => request<UnitOption[]>("/units"),
   generateMenu: () => request<Menu>("/menus/generate", { method: "POST", body: JSON.stringify({}) }),
   createMeal: (meal: MealForm) => request<Meal>("/meals", { method: "POST", body: JSON.stringify(meal) }),
   updateMeal: (id: number, meal: MealForm) => request<Meal>(`/meals/${id}`, { method: "PUT", body: JSON.stringify(meal) })

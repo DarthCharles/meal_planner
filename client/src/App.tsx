@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
-import type { Meal, MealForm, MealTypeName, MealTypeOption, Menu } from "./types";
+import type { IngredientForm, Meal, MealForm, MealTypeName, MealTypeOption, Menu, UnitOption } from "./types";
 
 type View = "menu" | "meals";
 
@@ -12,9 +12,9 @@ const mealTypeLabels: Record<MealTypeName, string> = {
 };
 
 const demoMeals: Meal[] = [
-  { id: 1, name: "Huevos a la mexicana", description: "Eggs with tomato, onion, and chile.", recipe_url: "", meal_types: ["breakfast"] },
-  { id: 2, name: "Calabacitas con queso", description: "Tender squash with corn and queso fresco.", recipe_url: "", meal_types: ["lunch", "dinner"] },
-  { id: 3, name: "Avena cocida", description: "Warm oats with cinnamon and seasonal fruit.", recipe_url: "", meal_types: ["breakfast", "dinner"] }
+  { id: 1, name: "Huevos a la mexicana", description: "Eggs with tomato, onion, and chile.", recipe_url: "", meal_types: ["breakfast"], ingredients: [] },
+  { id: 2, name: "Calabacitas con queso", description: "Tender squash with corn and queso fresco.", recipe_url: "", meal_types: ["lunch", "dinner"], ingredients: [] },
+  { id: 3, name: "Avena cocida", description: "Warm oats with cinnamon and seasonal fruit.", recipe_url: "", meal_types: ["breakfast", "dinner"], ingredients: [] }
 ];
 
 const demoMenu: Menu = {
@@ -33,6 +33,7 @@ function App() {
   const [menu, setMenu] = useState<Menu | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [mealTypes, setMealTypes] = useState<MealTypeOption[]>([]);
+  const [units, setUnits] = useState<UnitOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [showMealForm, setShowMealForm] = useState(false);
@@ -40,17 +41,19 @@ function App() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([api.getMenus(), api.getMeals(), api.getMealTypes()])
-      .then(([menus, loadedMeals, loadedMealTypes]) => {
+    Promise.all([api.getMenus(), api.getMeals(), api.getMealTypes(), api.getUnits()])
+      .then(([menus, loadedMeals, loadedMealTypes, loadedUnits]) => {
         setMenu(menus[0] ?? null);
         setMeals(loadedMeals);
         setMealTypes(loadedMealTypes);
+        setUnits(loadedUnits);
       })
       .catch(() => {
         // Keep the shell useful while the Rails API is not running locally.
         setMenu(demoMenu);
         setMeals(demoMeals);
         setMealTypes([["breakfast", 1], ["lunch", 2], ["dinner", 3]]);
+        setUnits([{ code: "g", name: "grams" }, { code: "ml", name: "milliliters" }, { code: "pieza", name: "pieces" }, { code: "taza", name: "cups" }, { code: "cucharada", name: "tablespoons" }, { code: "cucharadita", name: "teaspoons" }]);
         setError("Demo mode · connect the Rails API to use your own meals.");
       })
       .finally(() => setLoading(false));
@@ -139,7 +142,7 @@ function App() {
         <NavButton active={false} onClick={() => setShowMealForm(true)} icon="+" label="Add meal" accent />
       </nav>
 
-      {showMealForm && <MealFormModal types={mealTypes} initialMeal={editingMeal} onClose={closeMealForm} onSave={saveMeal} />}
+      {showMealForm && <MealFormModal types={mealTypes} units={units} initialMeal={editingMeal} onClose={closeMealForm} onSave={saveMeal} />}
     </div>
   );
 }
@@ -184,18 +187,38 @@ function MealsView({ meals, onAdd, onEdit }: { meals: Meal[]; onAdd: () => void;
   </section>;
 }
 
-function MealFormModal({ types, initialMeal, onClose, onSave }: { types: MealTypeOption[]; initialMeal: Meal | null; onClose: () => void; onSave: (form: MealForm) => Promise<void> }) {
+function MealFormModal({ types, units, initialMeal, onClose, onSave }: { types: MealTypeOption[]; units: UnitOption[]; initialMeal: Meal | null; onClose: () => void; onSave: (form: MealForm) => Promise<void> }) {
   const [form, setForm] = useState<MealForm>(() => ({
     name: initialMeal?.name ?? "",
     description: initialMeal?.description ?? "",
     recipe_url: initialMeal?.recipe_url ?? "",
-    meal_type_ids: initialMeal ? types.filter(([name]) => initialMeal.meal_types.includes(name)).map(([, id]) => id) : []
+    meal_type_ids: initialMeal ? types.filter(([name]) => initialMeal.meal_types.includes(name)).map(([, id]) => id) : [],
+    ingredients: initialMeal?.ingredients?.map(({ name, quantity, unit, preparation_note }) => ({
+      name,
+      quantity: String(quantity),
+      unit,
+      preparation_note: preparation_note ?? ""
+    })) ?? []
   }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const toggleType = (id: number) => setForm((current) => ({ ...current, meal_type_ids: current.meal_type_ids.includes(id) ? current.meal_type_ids.filter((typeId) => typeId !== id) : [...current.meal_type_ids, id] }));
-  const submit = async (event: React.FormEvent) => { event.preventDefault(); if (!form.name || !form.description || form.meal_type_ids.length === 0) { setError("Add a name, description, and at least one meal time."); return; } setSaving(true); setError(""); try { await onSave(form); } catch (err) { setError(err instanceof Error ? err.message : "Could not save this meal."); } finally { setSaving(false); } };
-  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="meal-form-title"><div className="modal-header"><div><p className="eyebrow">{initialMeal ? "Update your library" : "Add to your library"}</p><h3 id="meal-form-title">{initialMeal ? "Edit this favorite" : "A new favorite"}</h3></div><button className="close-button" onClick={onClose} aria-label="Close">×</button></div><form onSubmit={submit}><label className="form-label">Meal name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Tacos de papa" /></label><label className="form-label">Description<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What makes it delicious?" rows={3} /></label><label className="form-label">Recipe URL <span className="muted">(optional)</span><input value={form.recipe_url} onChange={(event) => setForm({ ...form, recipe_url: event.target.value })} placeholder="https://..." /></label><fieldset className="form-label"><legend>Meal time</legend><div className="type-select">{types.map(([name, id]) => <button type="button" className={`type-option ${form.meal_type_ids.includes(id) ? "selected" : ""}`} key={id} onClick={() => toggleType(id)}>{name}</button>)}</div></fieldset>{error && <p className="form-error">{error}</p>}<div className="form-actions"><button type="button" className="button button-ghost" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={saving}>{saving ? "Saving…" : initialMeal ? "Update meal" : "Save meal"}</button></div></form></section></div>;
+  const addIngredient = () => setForm((current) => ({ ...current, ingredients: [...current.ingredients, { name: "", quantity: "", unit: "", preparation_note: "" }] }));
+  const updateIngredient = (index: number, changes: Partial<IngredientForm>) => setForm((current) => ({ ...current, ingredients: current.ingredients.map((ingredient, itemIndex) => itemIndex === index ? { ...ingredient, ...changes } : ingredient) }));
+  const removeIngredient = (index: number) => setForm((current) => ({ ...current, ingredients: current.ingredients.filter((_, itemIndex) => itemIndex !== index) }));
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const ingredients = form.ingredients.filter((ingredient) => ingredient.name.trim());
+    if (!form.name || !form.description || form.meal_type_ids.length === 0) { setError("Add a name, description, and at least one meal time."); return; }
+    if (ingredients.some((ingredient) => !ingredient.quantity || Number(ingredient.quantity) <= 0 || !ingredient.unit.trim())) { setError("Complete the quantity and unit for each ingredient."); return; }
+    setSaving(true); setError("");
+    try { await onSave({ ...form, ingredients }); } catch (err) { setError(err instanceof Error ? err.message : "Could not save this meal."); } finally { setSaving(false); }
+  };
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="meal-form-title"><div className="modal-header"><div><p className="eyebrow">{initialMeal ? "Update your library" : "Add to your library"}</p><h3 id="meal-form-title">{initialMeal ? "Edit this favorite" : "A new favorite"}</h3></div><button className="close-button" onClick={onClose} aria-label="Close">×</button></div><form onSubmit={submit}><label className="form-label">Meal name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Tacos de papa" /></label><label className="form-label">Description<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What makes it delicious?" rows={3} /></label><label className="form-label">Recipe URL <span className="muted">(optional)</span><input value={form.recipe_url} onChange={(event) => setForm({ ...form, recipe_url: event.target.value })} placeholder="https://..." /></label><fieldset className="form-label"><legend>Meal time</legend><div className="type-select">{types.map(([name, id]) => <button type="button" className={`type-option ${form.meal_type_ids.includes(id) ? "selected" : ""}`} key={id} onClick={() => toggleType(id)}>{name}</button>)}</div></fieldset><IngredientManager ingredients={form.ingredients} units={units} onAdd={addIngredient} onChange={updateIngredient} onRemove={removeIngredient} />{error && <p className="form-error">{error}</p>}<div className="form-actions"><button type="button" className="button button-ghost" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={saving}>{saving ? "Saving…" : initialMeal ? "Update meal" : "Save meal"}</button></div></form></section></div>;
+}
+
+function IngredientManager({ ingredients, units, onAdd, onChange, onRemove }: { ingredients: IngredientForm[]; units: UnitOption[]; onAdd: () => void; onChange: (index: number, changes: Partial<IngredientForm>) => void; onRemove: (index: number) => void }) {
+  return <fieldset className="form-label ingredient-manager"><div className="ingredient-heading"><legend>Ingredients <span className="muted">(optional)</span></legend><button type="button" className="add-ingredient" onClick={onAdd}>+ Add ingredient</button></div>{ingredients.length === 0 && <p className="ingredient-empty">Add what you need to cook this meal.</p>}{ingredients.map((ingredient, index) => <div className="ingredient-row" key={index}><input aria-label="Ingredient name" value={ingredient.name} onChange={(event) => onChange(index, { name: event.target.value })} placeholder="Ingredient" /><input aria-label="Quantity" className="quantity-input" type="number" min="0.001" step="any" value={ingredient.quantity} onChange={(event) => onChange(index, { quantity: event.target.value })} placeholder="Qty" /><select aria-label="Unit" className="unit-input" value={ingredient.unit} onChange={(event) => onChange(index, { unit: event.target.value })}><option value="">Unit</option>{units.map((unit) => <option key={unit.code} value={unit.code}>{unit.code}</option>)}</select><input aria-label="Preparation note" value={ingredient.preparation_note} onChange={(event) => onChange(index, { preparation_note: event.target.value })} placeholder="Note (optional)" /><button type="button" className="remove-ingredient" onClick={() => onRemove(index)} aria-label={`Remove ${ingredient.name || "ingredient"}`}>×</button></div>)}</fieldset>;
 }
 
 function NavButton({ active, onClick, icon, label, accent = false }: { active: boolean; onClick: () => void; icon: string; label: string; accent?: boolean }) { return <button className={`nav-button ${active ? "active" : ""} ${accent ? "nav-accent" : ""}`} onClick={onClick}><span className="nav-icon">{icon}</span><span>{label}</span></button>; }

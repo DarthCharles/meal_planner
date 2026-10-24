@@ -3,6 +3,8 @@ class Meal < ApplicationRecord
   has_many :meal_types, through: :meal_meal_types
   has_many :daily_meals, dependent: :destroy
   has_many :days, through: :daily_meals
+  has_many :meal_ingredients, -> { ordered }, dependent: :destroy
+  has_many :ingredients, through: :meal_ingredients
 
   # Scopes by meal time (a meal can appear in more than one, e.g. avena at breakfast or dinner)
   # Classified Mexican-style: lunch = main/heavy meal, dinner = lighter evening
@@ -19,6 +21,7 @@ class Meal < ApplicationRecord
       h[:name] = name
       h[:recipe_url] = recipe_url
       h[:meal_types] = meal_types.pluck(:description)
+      h[:ingredients] = meal_ingredients
     end
   end
 end

@@ -14,6 +14,13 @@ All responses use a top-level `data` or `errors` key.
 | `PUT` | `/meals/:id` | Update a meal |
 | `PATCH` | `/meals/:id` | Update a meal |
 | `DELETE` | `/meals/:id` | Delete a meal |
+| `GET` | `/units` | List available ingredient units |
+
+Meal create and update requests may include an `ingredients` array. Each item
+uses `name`, `quantity`, `unit`, and optional `preparation_note` and `position`.
+When `ingredients` is included in an update, it replaces the meal's current
+ingredient list. Meal responses include the normalized `ingredients` array.
+The `unit` value must be one of the codes returned by `GET /units`.
 
 Create and update payload:
 

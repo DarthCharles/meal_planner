@@ -3,6 +3,7 @@
 # Ensure lookup data exists. English labels, Mexican meaning: lunch = main meal, dinner = lighter evening
 Date::DAYNAMES.map(&:downcase).each { |name| Weekday.find_or_create_by!(name: name) }
 %w[breakfast lunch dinner].each { |desc| MealType.find_or_create_by!(description: desc) }
+Unit::DEFAULTS.each { |code, name| Unit.find_or_create_by!(code: code) { |unit| unit.name = name } }
 
 # Meals to seed: [name, meal_type_descriptions, recipe]. Classified by meal time.
 # A meal can have multiple types (e.g. avena at breakfast or dinner).
@@ -78,6 +79,42 @@ MEALS_TO_SEED.each do |name, type_descriptions, recipe|
   meal.recipe_url ||= ""
   meal.save!
   meal.meal_types = type_descriptions.map { |desc| MealType.find_by!(description: desc) }
+end
+
+# Ingredients for meals used by the sample weekly menu.
+# Rows are [ingredient_name, quantity, unit, preparation_note].
+MEAL_INGREDIENTS_TO_SEED = {
+  "Huevos a la mexicana" => [["Huevo", 2, "pieza", nil], ["Jitomate", 1, "pieza", "picado"], ["Cebolla", 0.25, "pieza", "picada"], ["Chile serrano", 1, "pieza", "picado"], ["Tortilla de maíz", 4, "pieza", nil]],
+  "Chilaquiles verdes con huevo" => [["Totopos", 150, "g", nil], ["Salsa verde", 200, "ml", nil], ["Huevo", 2, "pieza", nil], ["Crema", 30, "ml", nil], ["Queso fresco", 30, "g", nil]],
+  "Hot cakes de avena con plátano" => [["Avena", 80, "g", nil], ["Plátano", 1, "pieza", nil], ["Huevo", 1, "pieza", nil], ["Leche", 120, "ml", nil], ["Canela", 1, "cucharadita", nil]],
+  "Avena cocida" => [["Avena", 80, "g", nil], ["Leche", 250, "ml", "o agua"], ["Canela", 1, "cucharadita", nil]],
+  "Molletes con frijoles y panela" => [["Bolillo", 1, "pieza", "partido por la mitad"], ["Frijoles refritos", 120, "g", nil], ["Queso panela", 60, "g", nil], ["Pico de gallo", 80, "g", nil]],
+  "Yogurt con avena y plátano" => [["Yogurt natural", 200, "g", nil], ["Avena", 40, "g", nil], ["Plátano", 1, "pieza", nil], ["Canela", 1, "cucharadita", nil]],
+  "Omelette de huevo y espinaca" => [["Huevo", 2, "pieza", nil], ["Espinaca", 60, "g", nil], ["Queso", 30, "g", nil]],
+  "Brochetas de pollo" => [["Pechuga de pollo", 500, "g", "en cubos"], ["Pimiento", 1, "pieza", nil], ["Cebolla", 0.5, "pieza", nil], ["Limón", 1, "pieza", nil]],
+  "Wrap de pollo" => [["Pechuga de pollo", 150, "g", "cocida y rebanada"], ["Tortilla de harina", 1, "pieza", nil], ["Lechuga", 40, "g", nil], ["Jitomate", 0.5, "pieza", nil], ["Aguacate", 0.5, "pieza", nil]],
+  "Sopa de tortilla" => [["Tortilla de maíz", 4, "pieza", "en tiras"], ["Jitomate", 2, "pieza", nil], ["Chile pasilla", 1, "pieza", nil], ["Aguacate", 0.5, "pieza", nil], ["Queso", 30, "g", nil]],
+  "Ensalada de garbanzo" => [["Garbanzo cocido", 200, "g", nil], ["Pepino", 0.5, "pieza", nil], ["Jitomate", 1, "pieza", nil], ["Cebolla", 0.25, "pieza", nil], ["Limón", 1, "pieza", nil]],
+  "Pollo en mole" => [["Pechuga de pollo", 200, "g", nil], ["Mole", 150, "g", nil], ["Arroz", 80, "g", nil], ["Ajonjolí", 1, "cucharada", nil]],
+  "Calabacitas con queso" => [["Calabacita", 2, "pieza", nil], ["Elote", 100, "g", nil], ["Jitomate", 1, "pieza", nil], ["Cebolla", 0.25, "pieza", nil], ["Queso", 50, "g", nil]],
+  "Tostadas de pollo" => [["Pechuga de pollo", 150, "g", "deshebrada"], ["Tostada", 3, "pieza", nil], ["Frijoles refritos", 90, "g", nil], ["Lechuga", 40, "g", nil], ["Crema", 30, "ml", nil]],
+  "Bistec ranchero" => [["Bistec de res", 200, "g", nil], ["Jitomate", 2, "pieza", nil], ["Cebolla", 0.5, "pieza", nil], ["Chile serrano", 1, "pieza", nil]],
+  "Ropa vieja" => [["Carne de res", 250, "g", "cocida y deshebrada"], ["Jitomate", 2, "pieza", nil], ["Cebolla", 0.5, "pieza", nil], ["Pimiento", 1, "pieza", nil]],
+  "Barbacoa" => [["Carne de res", 250, "g", nil], ["Ajo", 1, "diente", nil], ["Cebolla", 0.5, "pieza", nil], ["Tortilla de maíz", 4, "pieza", nil]],
+  "Carne con chile" => [["Carne de res", 250, "g", "en cubos"], ["Chile guajillo", 2, "pieza", nil], ["Jitomate", 2, "pieza", nil], ["Ajo", 1, "diente", nil], ["Cebolla", 0.5, "pieza", nil]],
+  "Caldo de queso" => [["Papa", 2, "pieza", "en cubos"], ["Jitomate", 2, "pieza", nil], ["Cebolla", 0.25, "pieza", nil], ["Chile verde", 1, "pieza", nil], ["Queso panela", 100, "g", nil]]
+}.freeze
+
+MEAL_INGREDIENTS_TO_SEED.each do |meal_name, ingredient_rows|
+  meal = Meal.find_by!(name: meal_name)
+  ingredient_rows.each_with_index do |(name, quantity, unit, preparation_note), position|
+    ingredient = Ingredient.find_or_create_by!(name: name)
+    unit_record = Unit.find_by!(code: unit)
+    meal.meal_ingredients.find_or_initialize_by(ingredient: ingredient).tap do |meal_ingredient|
+      meal_ingredient.assign_attributes(quantity: quantity, unit: unit_record, preparation_note: preparation_note, position: position)
+      meal_ingredient.save!
+    end
+  end
 end
 
 # One full sample menu: 7 days, 3 meals per day (breakfast, lunch, dinner)

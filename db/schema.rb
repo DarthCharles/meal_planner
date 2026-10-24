@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_02_28_140000) do
+ActiveRecord::Schema.define(version: 2026_10_24_170000) do
 
   create_table "daily_meals", force: :cascade do |t|
     t.integer "day_id", null: false
@@ -31,6 +31,30 @@ ActiveRecord::Schema.define(version: 2025_02_28_140000) do
     t.index ["menu_id", "weekday_id"], name: "index_days_on_menu_id_and_weekday_id", unique: true
     t.index ["menu_id"], name: "index_days_on_menu_id"
     t.index ["weekday_id"], name: "index_days_on_weekday_id"
+  end
+
+  create_table "ingredients", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "normalized_name", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["normalized_name"], name: "index_ingredients_on_normalized_name", unique: true
+  end
+
+  create_table "meal_ingredients", force: :cascade do |t|
+    t.integer "meal_id", null: false
+    t.integer "ingredient_id", null: false
+    t.decimal "quantity", precision: 12, scale: 3, null: false
+    t.string "preparation_note"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.integer "unit_id", null: false
+    t.index ["ingredient_id"], name: "index_meal_ingredients_on_ingredient_id"
+    t.index ["meal_id", "ingredient_id"], name: "index_meal_ingredients_on_meal_id_and_ingredient_id", unique: true
+    t.index ["meal_id", "position"], name: "index_meal_ingredients_on_meal_id_and_position"
+    t.index ["meal_id"], name: "index_meal_ingredients_on_meal_id"
+    t.index ["unit_id"], name: "index_meal_ingredients_on_unit_id"
   end
 
   create_table "meal_meal_types", force: :cascade do |t|
@@ -65,6 +89,14 @@ ActiveRecord::Schema.define(version: 2025_02_28_140000) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "units", force: :cascade do |t|
+    t.string "code", null: false
+    t.string "name", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["code"], name: "index_units_on_code", unique: true
+  end
+
   create_table "weekdays", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -76,6 +108,9 @@ ActiveRecord::Schema.define(version: 2025_02_28_140000) do
   add_foreign_key "daily_meals", "meals"
   add_foreign_key "days", "menus"
   add_foreign_key "days", "weekdays"
+  add_foreign_key "meal_ingredients", "ingredients"
+  add_foreign_key "meal_ingredients", "meals"
+  add_foreign_key "meal_ingredients", "units"
   add_foreign_key "meal_meal_types", "meal_types"
   add_foreign_key "meal_meal_types", "meals"
 end
