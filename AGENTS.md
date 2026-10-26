@@ -18,12 +18,15 @@ requires them.
 - `test/`: Rails unit, controller, service, and channel tests.
 - `lib/tasks/`: custom Rake tasks, including menu generation.
 - `client/src/`: React screens, API client, TypeScript types, and styles.
+- `client/tests/`: Playwright browser tests and shared API fixtures.
+- `client/playwright.config.ts`: browser projects and test server configuration.
 - `docs/`: database, API, client, and development documentation.
 
 ## Requirements
 
 - Ruby 3.0.0 (the required version is declared in `Gemfile`).
-- Bundler, Node.js/npm, and SQLite.
+- Bundler, Node.js 20 or newer/npm, and SQLite.
+- Playwright Chromium for client browser tests (`cd client && npx playwright install chromium`).
 
 ## Common commands
 
@@ -46,6 +49,7 @@ cd client
 npm install
 npm run dev
 npm run build
+npm run test:browser
 ```
 
 The client uses `VITE_API_URL` when set, and otherwise targets
@@ -69,7 +73,35 @@ The client uses `VITE_API_URL` when set, and otherwise targets
 - Update the relevant file under `docs/` when changing routes, data models,
   setup, or client behavior.
 - Do not commit secrets, local `.env` files, generated `client/dist/` output,
-  or `node_modules/`.
+  `node_modules/`, or generated Playwright reports and test results.
+
+## Testing practices
+
+- Use the committed Playwright suite in `client/tests/` for client behavior
+  checks. Extend its tests and fixtures instead of rebuilding temporary browser
+  scripts each session.
+- Add or update regression tests for changed user behavior: navigation, menus,
+  search/filtering, meal forms, ingredients, validation, loading, and error states.
+  Test observable outcomes and submitted API payloads rather than implementation
+  details or exact Tailwind class strings.
+- Reuse `client/tests/fixtures/app.ts` and `data.ts`. Keep tests independent,
+  fix dates/timezones where relevant, and mock API responses deterministically.
+  Browser tests must not depend on a running Rails server, external fonts, or
+  modify the development database.
+- Prefer accessible role, label, and visible-text selectors. Use Playwright's
+  waiting assertions and controlled responses for pending states; avoid arbitrary
+  sleeps and fragile CSS selectors.
+- Preserve coverage across the configured mobile (320px), tablet (800px), and
+  desktop (1280px) Chromium projects. Check responsive layout and overflow when
+  changing UI structure or styling.
+- Inspect failure screenshots, traces, and error context before changing tests.
+  Fix the cause rather than hiding failures with retries or weaker assertions.
+  Once relevant checks pass, repeat them only when further changes or unresolved
+  concerns justify it.
+- Browser tests use mocked API responses and do not verify Rails integration.
+  Keep backend coverage in the Rails suite and update fixtures when API contracts
+  change. PWA installation/offline caching and other browser engines require
+  separate verification; do not imply this suite covers them.
 
 ## Verification expectations
 
@@ -84,11 +116,27 @@ For client changes, run:
 ```bash
 cd client
 npm run build
+npm run test:browser
 ```
 
-If a command cannot be run because a required Ruby, Node, or dependency version
-is unavailable, report that limitation clearly and include the checks that were
-completed.
+When changing browser tests or their configuration, also type-check them from
+`client/` with `npx tsc -p tsconfig.tests.json`. A single project or test can be
+used while iterating, but run the full browser suite before completing client
+changes. Documentation-only changes do not require application tests.
+
+Playwright starts its own Vite server on port 4173 and intercepts its API traffic
+to port 4174. Keep port 4173 free; do not start a separate test server or point
+tests at a shared development server.
+
+For visual inspection, use `npm run test:browser:ui` for the interactive runner
+and step snapshots. To watch live browser actions, use
+`npm run test:browser -- --headed --workers=1 --project=desktop-chromium`.
+Use `--debug` instead of `--headed` to pause and step through actions.
+
+Report the commands run, results, and material coverage limits. If a command
+cannot run because a required runtime, dependency, browser, or permission is
+unavailable, explain the limitation and list the checks completed. Do not claim
+CI passed based only on a local run.
 
 ## Documentation references
 
