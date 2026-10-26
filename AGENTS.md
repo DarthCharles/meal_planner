@@ -2,7 +2,7 @@
 
 ## Project overview
 
-Meal Planner is a Rails 6 API with a SQLite database and a React/TypeScript/Vite
+Meal Planner is a Rails 8.1 API with a SQLite database and a React/TypeScript/Vite
 responsive PWA in `client/`. The application manages meals, meal types, days,
 and generated weekly menus.
 
@@ -24,7 +24,7 @@ requires them.
 
 ## Requirements
 
-- Ruby 3.0.0 (the required version is declared in `Gemfile`).
+- Ruby 3.4.12 (the required version is declared in `Gemfile`).
 - Bundler, Node.js 20 or newer/npm, and SQLite.
 - Playwright Chromium for client browser tests (`cd client && npx playwright install chromium`).
 

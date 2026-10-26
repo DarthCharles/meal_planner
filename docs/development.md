@@ -2,12 +2,18 @@
 
 ## Rails environment
 
-The Rails app requires Ruby 3.0.0. With RVM:
+The Rails 8.1 app requires Ruby 3.4.12 and Bundler 2.7.2. With RVM:
 
 ```bash
-source /Users/carloscontreras/.rvm/scripts/rvm
-rvm use ruby-3.0.0
+source "$HOME/.rvm/scripts/rvm"
+rvm install 3.4.12
+rvm use ruby-3.4.12
+gem install bundler -v 2.7.2
 ```
+
+On macOS, use OpenSSL 3 when compiling Ruby. If an older RVM installation
+selects OpenSSL 1.1, install `openssl@3` with Homebrew and pass
+`--with-openssl-dir="$(brew --prefix openssl@3)"` to `rvm install`.
 
 Install dependencies and prepare the database:
 
@@ -58,18 +64,29 @@ Generated client files in `node_modules/`, `dist/`, and TypeScript build metadat
 
 ## Tests
 
-Run the Rails test suite with Ruby 3.0:
+Run the Rails test suite with the pinned Ruby version:
 
 ```bash
 bundle exec rails test
+RAILS_ENV=test bundle exec rails zeitwerk:check
 ```
 
+The backend tests cover API response shapes, meal writes and validation,
+ingredients, reference data, nested menus, UTC timestamps, CORS, and menu generation.
 The menu-generation tests cover:
 
 - Seven-day, 21-meal menu creation.
 - Insufficient meal pools.
 - Replacing an existing menu for a week.
 - Finding the next Monday.
+
+GitHub Actions runs Rails tests and eager-loading checks independently of the
+client workflow. Client browser tests mock API responses; they do not test the
+Rails integration.
+
+After changing Ruby or dependencies, stop any existing `bin/dev` process, select
+the pinned Ruby, run `bundle install`, and restart `bin/dev`. A running server
+continues using the Ruby and gems with which it started.
 
 ## Scheduled generation
 

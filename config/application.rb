@@ -21,8 +21,8 @@ Bundler.require(*Rails.groups)
 
 module Diet
   class Application < Rails::Application
-    # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.0
+    # Use the current framework defaults after the staged Rails upgrade.
+    config.load_defaults 8.1
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers

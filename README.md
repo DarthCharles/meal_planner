@@ -4,7 +4,7 @@ Meal Planner is a Rails API and responsive PWA for creating meals and generating
 
 The repository currently contains:
 
-- A Rails 6 API backed by SQLite.
+- A Rails 8.1 API backed by SQLite.
 - A React, TypeScript, and Vite consumer client in [`client/`](client/).
 - Random weekly menu generation based on meal types.
 - A mobile-first PWA interface that also adapts to desktop screens.
@@ -13,15 +13,15 @@ The current prototype does not have authentication yet. API data is therefore sh
 
 ## Requirements
 
-- Ruby 3.0.0
-- Bundler
+- Ruby 3.4.12
+- Bundler 2.7.2 (also recorded in `Gemfile.lock`)
 - Node.js and npm for the client
 - SQLite
 
-The Gemfile is the source of truth for the required Ruby version. If you use RVM and Ruby 3.0.0 is already installed:
+The Gemfile is the source of truth for the required Ruby version. If you use RVM and Ruby 3.4.12 is already installed:
 
 ```bash
-rvm use ruby-3.0.0
+rvm use ruby-3.4.12
 ```
 
 ## Install and run
