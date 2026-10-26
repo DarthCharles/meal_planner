@@ -1,25 +1,18 @@
 import { useState } from "react";
-import type { Meal } from "./types";
 import { AppHeader } from "./components/AppHeader";
 import { Navigation } from "./components/Navigation";
 import { HeroBowlArt } from "./components/HeroBowlArt";
 import { MenuScreen } from "./features/menu/MenuScreen";
 import { MealsScreen } from "./features/meals/MealsScreen";
-import { MealFormModal } from "./features/meals/MealFormModal";
 
 type View = "menu" | "meals";
-type MealDialog =
-  { mode: "closed" } | { mode: "create" } | { mode: "edit"; meal: Meal };
 
 function App() {
   const [view, setView] = useState<View>("menu");
-  const [mealDialog, setMealDialog] = useState<MealDialog>({ mode: "closed" });
-  const openNewMeal = () => setMealDialog({ mode: "create" });
-  const closeMealForm = () => setMealDialog({ mode: "closed" });
 
   return (
     <div className="mx-auto min-h-screen max-w-[1240px] px-[15px] pb-[105px] tablet:px-6 tablet:pb-[110px] desktop:pb-[50px]">
-      <AppHeader view={view} onNavigate={setView} onAdd={openNewMeal} />
+      <AppHeader view={view} onNavigate={setView} />
 
       <main>
         <section className="relative flex min-h-[274px] items-start justify-between overflow-hidden rounded-[30px] bg-[#e8eee0] px-6 py-[31px] tablet:min-h-[240px] tablet:items-center tablet:px-12 tablet:py-[42px]">
@@ -44,25 +37,10 @@ function App() {
           </div>
         </section>
 
-        {view === "menu" ? (
-          <MenuScreen />
-        ) : (
-          <MealsScreen
-            onAdd={openNewMeal}
-            onEdit={(meal) => setMealDialog({ mode: "edit", meal })}
-          />
-        )}
+        {view === "menu" ? <MenuScreen /> : <MealsScreen />}
       </main>
 
-      <Navigation view={view} onNavigate={setView} onAdd={openNewMeal} />
-
-      {mealDialog.mode !== "closed" && (
-        <MealFormModal
-          initialMeal={mealDialog.mode === "edit" ? mealDialog.meal : null}
-          onClose={closeMealForm}
-          onSaved={closeMealForm}
-        />
-      )}
+      <Navigation view={view} onNavigate={setView} />
     </div>
   );
 }

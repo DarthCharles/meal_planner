@@ -1,7 +1,9 @@
+import { useMealDialog } from "../features/meals/useMealDialog";
 import { BowlLogo } from "./BowlLogo";
 import type { NavigationProps } from "./Navigation";
 
-export function AppHeader({ view, onNavigate, onAdd }: NavigationProps) {
+export function AppHeader({ view, onNavigate }: NavigationProps) {
+  const { openCreateMeal } = useMealDialog();
   return (
     <header className="flex h-[70px] items-center justify-between tablet:h-[86px]">
       <div className="flex items-center gap-[11px]">
@@ -33,7 +35,7 @@ export function AppHeader({ view, onNavigate, onAdd }: NavigationProps) {
         </button>
         <button
           className="rounded-[9px] border-0 bg-terracotta px-3 py-[9px] text-xs font-bold text-white hover:bg-terracotta-dark"
-          onClick={onAdd}
+          onClick={openCreateMeal}
         >
           + Add meal
         </button>

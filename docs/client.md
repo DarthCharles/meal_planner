@@ -30,11 +30,11 @@ The client falls back to demo data when the API is unavailable so the visual she
 ```text
 client/
   src/
-    main.tsx      # React entry point, query provider, and service worker registration
-    App.tsx       # screen/dialog state and screen composition
+    main.tsx      # React entry point, query/dialog providers, and service worker registration
+    App.tsx       # screen state and screen composition
     queryClient.ts # shared server-state cache and request defaults
     queryKeys.ts  # stable cache keys
-    components/   # header, navigation, buttons, and illustrations
+    components/   # header, navigation, buttons, illustrations, and generic dialog host
     features/
       menu/       # weekly menu screen, day cards, and query/mutation hooks
       meals/      # library, form, ingredients, query/mutation hooks, and meal type styles
@@ -67,12 +67,12 @@ Query ownership follows the feature that consumes the data:
 
 - `MenuScreen` mounts `useMenus` and `useGenerateMenu`.
 - `MealsScreen` mounts `useMeals` when the library is opened.
-- `MealFormModal` mounts `useMealTypes` and `useUnits` only while the modal is open.
+- `MealDialogContent` mounts `useMealTypes` and `useUnits` only while the modal is open.
   It waits for both queries before mounting `MealForm`, so an edit draft starts
   with the correct meal type IDs. `MealForm` owns create/update mutations and
   unsaved input state.
 
-`App.tsx` owns the shell and screen/dialog state; it does not fetch data or pass
+`App.tsx` owns the shell and screen state; it does not fetch data or pass
 API collections through props. Display components such as `MenuView`, `DayCard`,
 and `MealsView` receive data and callbacks through props. Nested ingredient
 inputs access their form through React Hook Form context.
@@ -89,9 +89,9 @@ If the meal list has never loaded, it is fetched on the next library visit rathe
 than being replaced with a partial list containing only the saved meal. Creating
 a meal from the menu does not trigger an unused library request.
 
-`App.tsx` keeps two local states: the current screen and a dialog state of
-`closed`, `create`, or `edit` (with the selected meal). Unsaved form inputs,
-validation errors, search, and filters stay local to their components.
+`App.tsx` keeps the current screen in local state. The dialog provider owns the
+active dialog. Unsaved form inputs, validation errors, search, and filters stay
+local to their components.
 
 Initial query failures use demo data only for the failed resource and show the
 demo notice in the screen or modal that owns the query. Successful resources
@@ -120,6 +120,46 @@ are excluded from the payload. The form disables native validation so these
 rules display consistently through RHF, marking invalid controls and linking
 them to an alert summary. Cancel/close unmounts the draft; reopening initializes
 a fresh form. Failed saves leave the current values intact.
+
+## Dialogs
+
+`DialogProvider` in `components/dialog/` wraps the application beneath
+`QueryClientProvider`. `useDialog` exposes stable `openDialog` and `closeDialog`
+actions. The provider supports one active dialog with a required title, optional
+eyebrow, and content render function:
+
+```tsx
+const { openDialog } = useDialog();
+openDialog({
+  title: "Confirm action",
+  content: ({ close }) => <button onClick={close}>Done</button>,
+});
+```
+
+`DialogHost` owns the native `<dialog>` shell and opens it with `showModal()`.
+It names the dialog using its title, focuses the title initially (including while
+content loads), makes the background inert, and locks page scrolling while the
+content panel can scroll. Escape, the close button, and a click that starts and
+ends on the backdrop dismiss it. Closing restores the previous scroll settings
+and focuses the original trigger if it still exists.
+
+Every opening has a unique instance key, so replacing dialog content resets its
+local form state. The `close` passed to content only closes that instance; use it
+for save completion so older asynchronous work cannot close a newer dialog.
+`closeDialog` explicitly closes whichever dialog is currently active. Replacement
+keeps the original trigger as the focus restoration target.
+
+`features/meals/useMealDialog.tsx` supplies `openCreateMeal` and `openEditMeal`.
+Header, navigation, and meal-screen actions call this hook directly. The feature's
+`MealDialogContent` owns reference queries and renders the RHF form; the shared
+host has no meal-specific logic. Content inherits providers around the dialog
+host, so shared dependencies such as React Query must wrap `DialogProvider`.
+
+Dismissal remains available during saves. Closing does not cancel an in-flight
+mutation; its cache updates still complete, while a subsequently opened dialog
+stays independent. `tests/dialog.spec.ts` covers keyboard/focus behavior,
+background inertness, scroll locking, backdrop dismissal, pending requests, and
+generic content replacement using the isolated `dialog-harness` fixture.
 
 ## Styling with Tailwind
 

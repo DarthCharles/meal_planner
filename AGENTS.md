@@ -86,6 +86,12 @@ The client uses `VITE_API_URL` when set, and otherwise targets
   with its generated row IDs for dynamic ingredients. Nested form fields can
   use `FormProvider`/`useFormContext`; avoid mirroring their values in `useState`.
   Keep API mutations and cache synchronization in React Query hooks.
+- Open dialogs through the generic `useDialog` API and `DialogProvider`;
+  feature hooks such as `useMealDialog` supply feature content. Keep the native
+  dialog shell, focus restoration, dismissal, and scroll locking in `DialogHost`.
+  Use the instance-bound `close` supplied to dialog content for async completion,
+  and keep form state and API hooks in the content. Cover keyboard/focus and
+  replacement behavior when changing the shared dialog implementation.
 - Preserve the mobile-first responsive behavior and existing visual language
   when modifying the client.
 - Update the relevant file under `docs/` when changing routes, data models,

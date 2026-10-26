@@ -1,10 +1,11 @@
+import { useMealDialog } from "../features/meals/useMealDialog";
 export type NavigationProps = {
   view: "menu" | "meals";
   onNavigate: (view: "menu" | "meals") => void;
-  onAdd: () => void;
 };
 
-export function Navigation({ view, onNavigate, onAdd }: NavigationProps) {
+export function Navigation({ view, onNavigate }: NavigationProps) {
+  const { openCreateMeal } = useMealDialog();
   return (
     <nav
       className="fixed bottom-[18px] left-1/2 z-10 flex w-[calc(100%-28px)] -translate-x-1/2 items-center justify-around gap-1 rounded-[19px] border border-[rgba(232,225,214,.9)] bg-[rgba(255,253,248,.93)] p-[7px] shadow-[0_12px_35px_rgba(50,35,24,.13)] backdrop-blur-[15px] tablet:w-auto tablet:justify-normal desktop:hidden"
@@ -24,7 +25,7 @@ export function Navigation({ view, onNavigate, onAdd }: NavigationProps) {
       />
       <NavButton
         active={false}
-        onClick={onAdd}
+        onClick={openCreateMeal}
         icon="+"
         label="Add meal"
         accent

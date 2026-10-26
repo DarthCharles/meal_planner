@@ -1,16 +1,11 @@
-import type { Meal } from "../../types";
+import { useMealDialog } from "./useMealDialog";
 import { Notice } from "../../components/Notice";
 import { demoMeals } from "../../demoData";
 import { MealsView } from "./MealsView";
 import { useMeals } from "./queries";
 
-export function MealsScreen({
-  onAdd,
-  onEdit,
-}: {
-  onAdd: () => void;
-  onEdit: (meal: Meal) => void;
-}) {
+export function MealsScreen() {
+  const { openCreateMeal, openEditMeal } = useMealDialog();
   const {
     data: meals,
     isPending: loading,
@@ -37,7 +32,11 @@ export function MealsScreen({
           Loading meals…
         </p>
       ) : (
-        <MealsView meals={meals ?? demoMeals} onAdd={onAdd} onEdit={onEdit} />
+        <MealsView
+          meals={meals ?? demoMeals}
+          onAdd={openCreateMeal}
+          onEdit={openEditMeal}
+        />
       )}
     </>
   );
