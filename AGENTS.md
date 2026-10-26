@@ -81,6 +81,11 @@ The client uses `VITE_API_URL` when set, and otherwise targets
 - Destructure React Query hook results at the call site. Alias data, mutation
   functions, status, and errors clearly when using multiple hooks; select only
   the fields needed rather than using rest destructuring.
+- Use React Hook Form for form values and client validation. Register native
+  inputs, use `Controller` for custom controlled inputs, and use `useFieldArray`
+  with its generated row IDs for dynamic ingredients. Nested form fields can
+  use `FormProvider`/`useFormContext`; avoid mirroring their values in `useState`.
+  Keep API mutations and cache synchronization in React Query hooks.
 - Preserve the mobile-first responsive behavior and existing visual language
   when modifying the client.
 - Update the relevant file under `docs/` when changing routes, data models,

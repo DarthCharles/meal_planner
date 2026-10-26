@@ -74,7 +74,8 @@ Query ownership follows the feature that consumes the data:
 
 `App.tsx` owns the shell and screen/dialog state; it does not fetch data or pass
 API collections through props. Display components such as `MenuView`, `DayCard`,
-`MealsView`, and `IngredientManager` receive data and callbacks through props.
+and `MealsView` receive data and callbacks through props. Nested ingredient
+inputs access their form through React Hook Form context.
 Opening the app requests only `/menus`; opening the library adds `/meals`, and
 opening a form adds `/meal_types` and `/units`. Fresh cached data is reused when
 revisiting a screen or reopening a form. Menu planning controls live on the menu
@@ -98,6 +99,27 @@ stay intact. Demo values are presentation
 fallbacks and are never stored as successful query results. A failed background
 refresh retains cached data and displays the error; failed mutations retain the
 existing data and leave the form open for correction or retry.
+
+## Forms
+
+`MealForm` uses React Hook Form's `useForm` with typed default values for create
+and edit. Native name, description, URL, quantity, unit, and note fields use
+`register`; the meal-time toggle buttons use `Controller` to preserve numeric
+meal type IDs. React Query continues to own save requests, pending state, API
+errors, and cache updates.
+
+`FormProvider` shares the draft with `IngredientManager`, which uses
+`useFormContext` and `useFieldArray`. Rows use React Hook Form's generated IDs
+as React keys, so removing a row preserves the other rows' values. Each row
+watches its name for the accessible remove-button label. Generated IDs are not
+included in the submitted ingredients.
+
+Validation requires a nonblank name and description and at least one meal time.
+Named ingredient rows need a quantity of at least 0.001 and a unit; unnamed rows
+are excluded from the payload. The form disables native validation so these
+rules display consistently through RHF, marking invalid controls and linking
+them to an alert summary. Cancel/close unmounts the draft; reopening initializes
+a fresh form. Failed saves leave the current values intact.
 
 ## Styling with Tailwind
 

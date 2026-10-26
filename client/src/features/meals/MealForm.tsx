@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { Controller, FormProvider, useForm } from "react-hook-form";
 import { Button } from "../../components/Button";
 import type {
-  IngredientForm,
   Meal,
   MealForm as MealFormValues,
   MealTypeOption,
@@ -23,26 +22,33 @@ export function MealForm({
   types: MealTypeOption[];
   units: UnitOption[];
 }) {
-  const [form, setForm] = useState<MealFormValues>(() => ({
-    name: initialMeal?.name ?? "",
-    description: initialMeal?.description ?? "",
-    recipe_url: initialMeal?.recipe_url ?? "",
-    meal_type_ids: initialMeal
-      ? types
-          .filter(([name]) => initialMeal.meal_types.includes(name))
-          .map(([, id]) => id)
-      : [],
-    ingredients:
-      initialMeal?.ingredients?.map(
-        ({ name, quantity, unit, preparation_note }) => ({
-          name,
-          quantity: String(quantity),
-          unit,
-          preparation_note: preparation_note ?? "",
-        }),
-      ) ?? [],
-  }));
-  const [validationError, setValidationError] = useState("");
+  const methods = useForm<MealFormValues>({
+    defaultValues: {
+      name: initialMeal?.name ?? "",
+      description: initialMeal?.description ?? "",
+      recipe_url: initialMeal?.recipe_url ?? "",
+      meal_type_ids: initialMeal
+        ? types
+            .filter(([name]) => initialMeal.meal_types.includes(name))
+            .map(([, id]) => id)
+        : [],
+      ingredients:
+        initialMeal?.ingredients?.map(
+          ({ name, quantity, unit, preparation_note }) => ({
+            name,
+            quantity: String(quantity),
+            unit,
+            preparation_note: preparation_note ?? "",
+          }),
+        ) ?? [],
+    },
+  });
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = methods;
   const {
     mutate: createMeal,
     isPending: creating,
@@ -56,62 +62,23 @@ export function MealForm({
     reset: resetUpdateMeal,
   } = useUpdateMeal();
   const saving = creating || updating;
+  const validationError =
+    errors.name || errors.description || errors.meal_type_ids
+      ? "Add a name, description, and at least one meal time."
+      : errors.ingredients
+        ? "Complete the quantity and unit for each ingredient."
+        : undefined;
   const error = validationError || createError?.message || updateError?.message;
-  const toggleType = (id: number) =>
-    setForm((current) => ({
-      ...current,
-      meal_type_ids: current.meal_type_ids.includes(id)
-        ? current.meal_type_ids.filter((typeId) => typeId !== id)
-        : [...current.meal_type_ids, id],
-    }));
-  const addIngredient = () =>
-    setForm((current) => ({
-      ...current,
-      ingredients: [
-        ...current.ingredients,
-        { name: "", quantity: "", unit: "", preparation_note: "" },
-      ],
-    }));
-  const updateIngredient = (index: number, changes: Partial<IngredientForm>) =>
-    setForm((current) => ({
-      ...current,
-      ingredients: current.ingredients.map((ingredient, itemIndex) =>
-        itemIndex === index ? { ...ingredient, ...changes } : ingredient,
-      ),
-    }));
-  const removeIngredient = (index: number) =>
-    setForm((current) => ({
-      ...current,
-      ingredients: current.ingredients.filter(
-        (_, itemIndex) => itemIndex !== index,
-      ),
-    }));
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (saving) return;
+  const clearSaveErrors = () => {
     resetCreateMeal();
     resetUpdateMeal();
-    setValidationError("");
+  };
+  const submit = (form: MealFormValues) => {
+    if (saving) return;
+    clearSaveErrors();
     const ingredients = form.ingredients.filter((ingredient) =>
       ingredient.name.trim(),
     );
-    if (!form.name || !form.description || form.meal_type_ids.length === 0) {
-      setValidationError(
-        "Add a name, description, and at least one meal time.",
-      );
-      return;
-    }
-    if (
-      ingredients.some(
-        (ingredient) =>
-          !ingredient.quantity ||
-          Number(ingredient.quantity) <= 0 ||
-          !ingredient.unit.trim(),
-      )
-    ) {
-      setValidationError("Complete the quantity and unit for each ingredient.");
-      return;
-    }
     const values = { ...form, ingredients };
     if (initialMeal) {
       updateMeal({ id: initialMeal.id, form: values }, { onSuccess: onSaved });
@@ -120,70 +87,98 @@ export function MealForm({
     }
   };
   return (
-    <form onSubmit={submit}>
-      <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-        Meal name
-        <input
-          className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
-          value={form.name}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
-          placeholder="e.g. Tacos de papa"
-        />
-      </label>
-      <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-        Description
-        <textarea
-          className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
-          value={form.description}
-          onChange={(event) =>
-            setForm({ ...form, description: event.target.value })
-          }
-          placeholder="What makes it delicious?"
-          rows={3}
-        />
-      </label>
-      <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-        Recipe URL <span className="font-normal text-muted">(optional)</span>
-        <input
-          className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
-          value={form.recipe_url}
-          onChange={(event) =>
-            setForm({ ...form, recipe_url: event.target.value })
-          }
-          placeholder="https://..."
-        />
-      </label>
-      <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-        <legend className="mb-[7px]">Meal time</legend>
-        <div className="flex flex-wrap gap-2">
-          {types.map(([name, id]) => (
-            <button
-              type="button"
-              className={`rounded-[9px] border px-3 py-[9px] text-xs capitalize ${form.meal_type_ids.includes(id) ? "border-terracotta bg-[#fbece5] text-terracotta-dark" : "border-line bg-transparent text-muted"}`}
-              key={id}
-              onClick={() => toggleType(id)}
-            >
-              {name}
-            </button>
-          ))}
+    <FormProvider {...methods}>
+      <form noValidate onSubmit={handleSubmit(submit, clearSaveErrors)}>
+        <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
+          Meal name
+          <input
+            className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
+            {...register("name", { validate: (value) => !!value.trim() })}
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? "meal-form-error" : undefined}
+            placeholder="e.g. Tacos de papa"
+          />
+        </label>
+        <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
+          Description
+          <textarea
+            className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
+            {...register("description", {
+              validate: (value) => !!value.trim(),
+            })}
+            aria-invalid={!!errors.description}
+            aria-describedby={
+              errors.description ? "meal-form-error" : undefined
+            }
+            placeholder="What makes it delicious?"
+            rows={3}
+          />
+        </label>
+        <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
+          Recipe URL <span className="font-normal text-muted">(optional)</span>
+          <input
+            className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
+            {...register("recipe_url")}
+            placeholder="https://..."
+          />
+        </label>
+        <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
+          <legend className="mb-[7px]">Meal time</legend>
+          <Controller
+            name="meal_type_ids"
+            control={control}
+            rules={{ validate: (ids) => ids.length > 0 }}
+            render={({ field }) => (
+              <div className="flex flex-wrap gap-2">
+                {types.map(([name, id], index) => {
+                  const selected = field.value.includes(id);
+                  return (
+                    <button
+                      type="button"
+                      className={`rounded-[9px] border px-3 py-[9px] text-xs capitalize ${selected ? "border-terracotta bg-[#fbece5] text-terracotta-dark" : "border-line bg-transparent text-muted"}`}
+                      key={id}
+                      ref={index === 0 ? field.ref : undefined}
+                      onBlur={field.onBlur}
+                      aria-pressed={selected}
+                      aria-invalid={!!errors.meal_type_ids}
+                      aria-describedby={
+                        errors.meal_type_ids ? "meal-form-error" : undefined
+                      }
+                      onClick={() =>
+                        field.onChange(
+                          selected
+                            ? field.value.filter((typeId) => typeId !== id)
+                            : [...field.value, id],
+                        )
+                      }
+                    >
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          />
+        </fieldset>
+        <IngredientManager units={units} />
+        {error && (
+          <p
+            id="meal-form-error"
+            role="alert"
+            className="text-xs text-[#b03d2f]"
+          >
+            {error}
+          </p>
+        )}
+        <div className="mt-6 flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" disabled={saving}>
+            {saving ? "Saving…" : initialMeal ? "Update meal" : "Save meal"}
+          </Button>
         </div>
-      </fieldset>
-      <IngredientManager
-        ingredients={form.ingredients}
-        units={units}
-        onAdd={addIngredient}
-        onChange={updateIngredient}
-        onRemove={removeIngredient}
-      />
-      {error && <p className="text-xs text-[#b03d2f]">{error}</p>}
-      <div className="mt-6 flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button variant="primary" disabled={saving}>
-          {saving ? "Saving…" : initialMeal ? "Update meal" : "Save meal"}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </FormProvider>
   );
 }

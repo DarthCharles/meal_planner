@@ -75,7 +75,27 @@ test("validates required fields and ingredient quantity/unit before saving", asy
   await expect(
     dialog.getByText("Complete the quantity and unit for each ingredient."),
   ).toBeVisible();
+  await page.getByLabel("Unit", { exact: true }).selectOption("pieza");
+  for (const quantity of ["0", "-1", "0.0001"]) {
+    await page.getByLabel("Quantity").fill(quantity);
+    await dialog
+      .getByRole("button", { name: "Save meal", exact: true })
+      .click();
+    await expect(dialog.getByRole("alert")).toHaveText(
+      "Complete the quantity and unit for each ingredient.",
+    );
+    await expect(page.getByLabel("Quantity")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  }
   expect(api.saves).toEqual([]);
+  await dialog
+    .getByRole("button", { name: "Remove Potato", exact: true })
+    .click();
+  await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.ingredients).toEqual([]);
 });
 
 test("creates a meal with ingredients and updates the library", async ({
@@ -302,4 +322,96 @@ test("waits for form options before initializing an existing meal", async ({
     .click();
   await expect(dialog).toHaveCount(0);
   expect(api.saves[0].body.meal_type_ids).toEqual([1]);
+});
+
+test("preserves ingredient values after removing a middle row", async ({
+  page,
+  api,
+}) => {
+  await openLibrary(page);
+  const dialog = await addMeal(page);
+  await fillMeal(page);
+  for (const [index, name] of ["Potato", "Onion", "Garlic"].entries()) {
+    await dialog.getByRole("button", { name: /Add ingredient/ }).click();
+    await page
+      .getByLabel("Ingredient name", { exact: true })
+      .nth(index)
+      .fill(name);
+    await page
+      .getByLabel("Quantity", { exact: true })
+      .nth(index)
+      .fill(String(index + 1));
+    await page
+      .getByLabel("Unit", { exact: true })
+      .nth(index)
+      .selectOption("pieza");
+    await page
+      .getByLabel("Preparation note", { exact: true })
+      .nth(index)
+      .fill(`${name} note`);
+  }
+  await dialog
+    .getByRole("button", { name: "Remove Onion", exact: true })
+    .click();
+  await expect(page.getByLabel("Ingredient name", { exact: true })).toHaveCount(
+    2,
+  );
+  await expect(
+    page.getByLabel("Ingredient name", { exact: true }).nth(1),
+  ).toHaveValue("Garlic");
+  await expect(page.getByLabel("Quantity", { exact: true }).nth(1)).toHaveValue(
+    "3",
+  );
+  await expect(
+    page.getByLabel("Preparation note", { exact: true }).nth(1),
+  ).toHaveValue("Garlic note");
+  await page.getByLabel("Quantity", { exact: true }).nth(1).fill("4");
+  await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.ingredients).toEqual([
+    {
+      name: "Potato",
+      quantity: "1",
+      unit: "pieza",
+      preparation_note: "Potato note",
+    },
+    {
+      name: "Garlic",
+      quantity: "4",
+      unit: "pieza",
+      preparation_note: "Garlic note",
+    },
+  ]);
+});
+
+test("validates deselecting all meal times and submits numeric type IDs", async ({
+  page,
+  api,
+}) => {
+  await openLibrary(page);
+  await page
+    .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog");
+  const breakfast = dialog.getByRole("button", {
+    name: "breakfast",
+    exact: true,
+  });
+  await expect(breakfast).toHaveAttribute("aria-pressed", "true");
+  await breakfast.click();
+  await expect(breakfast).toHaveAttribute("aria-pressed", "false");
+  await dialog
+    .getByRole("button", { name: "Update meal", exact: true })
+    .click();
+  await expect(dialog.getByRole("alert")).toHaveText(
+    "Add a name, description, and at least one meal time.",
+  );
+  expect(api.saves).toEqual([]);
+  await dialog.getByRole("button", { name: "lunch", exact: true }).click();
+  await dialog.getByRole("button", { name: "dinner", exact: true }).click();
+  await dialog
+    .getByRole("button", { name: "Update meal", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.meal_type_ids).toEqual([2, 3]);
 });
