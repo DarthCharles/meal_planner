@@ -1,109 +1,37 @@
-import { Button } from "../../components/Button";
-import { useState } from "react";
-import type {
-  IngredientForm,
-  Meal,
-  MealForm,
-  MealTypeOption,
-  UnitOption,
-} from "../../types";
-import { IngredientManager } from "./IngredientManager";
+import type { Meal } from "../../types";
+import { Notice } from "../../components/Notice";
+import { demoMealTypes, demoUnits } from "../../demoData";
+import { useMealTypes, useUnits } from "./queries";
+import { MealForm } from "./MealForm";
 
-export function MealFormModal({
-  types,
-  units,
-  initialMeal,
-  onClose,
-  onSave,
-}: {
-  types: MealTypeOption[];
-  units: UnitOption[];
+type MealFormModalProps = {
   initialMeal: Meal | null;
   onClose: () => void;
-  onSave: (form: MealForm) => Promise<void>;
-}) {
-  const [form, setForm] = useState<MealForm>(() => ({
-    name: initialMeal?.name ?? "",
-    description: initialMeal?.description ?? "",
-    recipe_url: initialMeal?.recipe_url ?? "",
-    meal_type_ids: initialMeal
-      ? types
-          .filter(([name]) => initialMeal.meal_types.includes(name))
-          .map(([, id]) => id)
-      : [],
-    ingredients:
-      initialMeal?.ingredients?.map(
-        ({ name, quantity, unit, preparation_note }) => ({
-          name,
-          quantity: String(quantity),
-          unit,
-          preparation_note: preparation_note ?? "",
-        }),
-      ) ?? [],
-  }));
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const toggleType = (id: number) =>
-    setForm((current) => ({
-      ...current,
-      meal_type_ids: current.meal_type_ids.includes(id)
-        ? current.meal_type_ids.filter((typeId) => typeId !== id)
-        : [...current.meal_type_ids, id],
-    }));
-  const addIngredient = () =>
-    setForm((current) => ({
-      ...current,
-      ingredients: [
-        ...current.ingredients,
-        { name: "", quantity: "", unit: "", preparation_note: "" },
-      ],
-    }));
-  const updateIngredient = (index: number, changes: Partial<IngredientForm>) =>
-    setForm((current) => ({
-      ...current,
-      ingredients: current.ingredients.map((ingredient, itemIndex) =>
-        itemIndex === index ? { ...ingredient, ...changes } : ingredient,
-      ),
-    }));
-  const removeIngredient = (index: number) =>
-    setForm((current) => ({
-      ...current,
-      ingredients: current.ingredients.filter(
-        (_, itemIndex) => itemIndex !== index,
-      ),
-    }));
-  const submit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const ingredients = form.ingredients.filter((ingredient) =>
-      ingredient.name.trim(),
-    );
-    if (!form.name || !form.description || form.meal_type_ids.length === 0) {
-      setError("Add a name, description, and at least one meal time.");
-      return;
-    }
-    if (
-      ingredients.some(
-        (ingredient) =>
-          !ingredient.quantity ||
-          Number(ingredient.quantity) <= 0 ||
-          !ingredient.unit.trim(),
-      )
-    ) {
-      setError("Complete the quantity and unit for each ingredient.");
-      return;
-    }
-    setSaving(true);
-    setError("");
-    try {
-      await onSave({ ...form, ingredients });
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not save this meal.",
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
+  onSaved: () => void;
+};
+
+export function MealFormModal({
+  initialMeal,
+  onClose,
+  onSaved,
+}: MealFormModalProps) {
+  const {
+    data: types,
+    isPending: loadingTypes,
+    isError: typesFailed,
+    error: typesError,
+  } = useMealTypes();
+  const {
+    data: units,
+    isPending: loadingUnits,
+    isError: unitsFailed,
+    error: unitsError,
+  } = useUnits();
+  const loading = loadingTypes || loadingUnits;
+  const optionsError =
+    (typesFailed && !types) || (unitsFailed && !units)
+      ? "Demo mode · connect the Rails API to use your own meals."
+      : (typesError?.message ?? unitsError?.message);
   return (
     <div
       className="fixed inset-0 z-20 grid items-end justify-items-center bg-[rgba(43,40,35,.34)] p-[15px] desktop:items-center"
@@ -135,74 +63,20 @@ export function MealFormModal({
             ×
           </button>
         </div>
-        <form onSubmit={submit}>
-          <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-            Meal name
-            <input
-              className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
-              value={form.name}
-              onChange={(event) =>
-                setForm({ ...form, name: event.target.value })
-              }
-              placeholder="e.g. Tacos de papa"
-            />
-          </label>
-          <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-            Description
-            <textarea
-              className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
-              value={form.description}
-              onChange={(event) =>
-                setForm({ ...form, description: event.target.value })
-              }
-              placeholder="What makes it delicious?"
-              rows={3}
-            />
-          </label>
-          <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-            Recipe URL{" "}
-            <span className="font-normal text-muted">(optional)</span>
-            <input
-              className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
-              value={form.recipe_url}
-              onChange={(event) =>
-                setForm({ ...form, recipe_url: event.target.value })
-              }
-              placeholder="https://..."
-            />
-          </label>
-          <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-            <legend className="mb-[7px]">Meal time</legend>
-            <div className="flex flex-wrap gap-2">
-              {types.map(([name, id]) => (
-                <button
-                  type="button"
-                  className={`rounded-[9px] border px-3 py-[9px] text-xs capitalize ${form.meal_type_ids.includes(id) ? "border-terracotta bg-[#fbece5] text-terracotta-dark" : "border-line bg-transparent text-muted"}`}
-                  key={id}
-                  onClick={() => toggleType(id)}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <IngredientManager
-            ingredients={form.ingredients}
-            units={units}
-            onAdd={addIngredient}
-            onChange={updateIngredient}
-            onRemove={removeIngredient}
+        {optionsError && <Notice>{optionsError}</Notice>}
+        {loading ? (
+          <p role="status" className="text-sm text-muted">
+            Loading meal options…
+          </p>
+        ) : (
+          <MealForm
+            types={types ?? demoMealTypes}
+            units={units ?? demoUnits}
+            initialMeal={initialMeal}
+            onClose={onClose}
+            onSaved={onSaved}
           />
-          {error && <p className="text-xs text-[#b03d2f]">{error}</p>}
-          <div className="mt-6 flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button variant="primary" disabled={saving}>
-              {saving ? "Saving…" : initialMeal ? "Update meal" : "Save meal"}
-            </Button>
-          </div>
-        </form>
+        )}
       </section>
     </div>
   );

@@ -68,6 +68,19 @@ The client uses `VITE_API_URL` when set, and otherwise targets
 - Update Rails tests for backend behavior changes and run the full test suite.
 - Keep API-facing TypeScript types in `client/src/types.ts` and HTTP calls in
   `client/src/api.ts`.
+- Manage client server state with React Query hooks in feature `queries.ts`
+  files, using the shared query client and keys. Keep query data and request
+  status out of local `useState`; reserve local state for UI interactions and
+  unsaved form inputs. Keep mutation cache updates in hooks, including updating
+  meals embedded in cached menus.
+- Call query hooks in the screen or form that consumes the data, so inactive
+  features do not fetch eagerly. Keep `App.tsx` focused on the shell and UI
+  state; pass data and callbacks to display components through props. Wait for
+  form reference data before initializing an edit draft, and test which requests
+  happen on initial load, navigation, and opening a form.
+- Destructure React Query hook results at the call site. Alias data, mutation
+  functions, status, and errors clearly when using multiple hooks; select only
+  the fields needed rather than using rest destructuring.
 - Preserve the mobile-first responsive behavior and existing visual language
   when modifying the client.
 - Update the relevant file under `docs/` when changing routes, data models,

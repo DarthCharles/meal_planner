@@ -1,4 +1,4 @@
-import type { Meal, Menu } from "./types";
+import type { Meal, MealTypeOption, Menu, UnitOption } from "./types";
 
 export const demoMeals: Meal[] = [
   {
@@ -41,3 +41,18 @@ export const demoMenu: Menu = {
     meals: meals as Meal[],
   })),
 };
+
+export const demoMealTypes: MealTypeOption[] = [
+  ["breakfast", 1],
+  ["lunch", 2],
+  ["dinner", 3],
+];
+
+export const demoUnits: UnitOption[] = [
+  { code: "g", name: "grams" },
+  { code: "ml", name: "milliliters" },
+  { code: "pieza", name: "pieces" },
+  { code: "taza", name: "cups" },
+  { code: "cucharada", name: "tablespoons" },
+  { code: "cucharadita", name: "teaspoons" },
+];

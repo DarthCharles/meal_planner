@@ -11,6 +11,7 @@
     "test:browser:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.5",
     "@vitejs/plugin-react": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

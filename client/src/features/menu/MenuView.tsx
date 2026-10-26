@@ -5,10 +5,12 @@ import { DayCard } from "./DayCard";
 export function MenuView({
   menu,
   loading,
+  generating,
   onGenerate,
 }: {
   menu: Menu | null;
   loading: boolean;
+  generating: boolean;
   onGenerate: () => void;
 }) {
   if (loading)
@@ -31,7 +33,7 @@ export function MenuView({
         <p className="mb-[1em] max-w-[300px] text-sm leading-normal text-muted">
           Generate a menu and we’ll fill it with breakfast, lunch, and dinner.
         </p>
-        <Button variant="primary" onClick={onGenerate}>
+        <Button variant="primary" onClick={onGenerate} disabled={generating}>
           Create my first menu
         </Button>
       </div>

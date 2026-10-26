@@ -1,14 +1,18 @@
 import { test as base, expect } from "@playwright/test";
-import type { MealForm, Menu } from "../../src/types";
+import type { Meal, MealForm, Menu } from "../../src/types";
 import { meals, mealTypes, menu, units } from "./data";
 
 type SaveRequest = { method: string; path: string; body: MealForm };
 type MockApi = {
   menus: Menu[];
+  meals: Meal[];
+  readErrors: Record<string, string>;
+  reads: Record<string, number>;
   unavailable: boolean;
   generationError: string | null;
   saveError: string | null;
   initialBarrier?: Promise<void>;
+  readBarriers: Record<string, Promise<void>>;
   generationBarrier?: Promise<void>;
   saveBarrier?: Promise<void>;
   generationRequests: number;
@@ -20,6 +24,10 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
     async ({ page }, use) => {
       const api: MockApi = {
         menus: structuredClone([menu]),
+        meals: structuredClone(meals),
+        readErrors: {},
+        readBarriers: {},
+        reads: {},
         unavailable: false,
         generationError: null,
         saveError: null,
@@ -54,9 +62,13 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         const fail = (errors: string) =>
           route.fulfill({ status: 422, json: { errors }, headers });
         if (request.method() === "GET") {
+          api.reads[path] = (api.reads[path] ?? 0) + 1;
           await api.initialBarrier;
+          await api.readBarriers[path];
+          if (api.readErrors[path])
+            return void (await fail(api.readErrors[path]));
           if (path === "/menus") return void (await respond(api.menus));
-          if (path === "/meals") return void (await respond(meals));
+          if (path === "/meals") return void (await respond(api.meals));
           if (path === "/meal_types") return void (await respond(mealTypes));
           if (path === "/units") return void (await respond(units));
         }
@@ -65,6 +77,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           await api.generationBarrier;
           if (api.generationError)
             return void (await fail(api.generationError));
+          api.menus = structuredClone([menu]);
           return void (await respond(menu));
         }
         if (
@@ -75,13 +88,28 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           api.saves.push({ method: request.method(), path, body });
           await api.saveBarrier;
           if (api.saveError) return void (await fail(api.saveError));
-          return void (await respond({
+          const savedMeal: Meal = {
             ...body,
             id: request.method() === "POST" ? 4 : 1,
             meal_types: mealTypes
               .filter(([, id]) => body.meal_type_ids.includes(id))
               .map(([name]) => name),
+          };
+          api.meals = api.meals.some((meal) => meal.id === savedMeal.id)
+            ? api.meals.map((meal) =>
+                meal.id === savedMeal.id ? savedMeal : meal,
+              )
+            : [...api.meals, savedMeal];
+          api.menus = api.menus.map((menu) => ({
+            ...menu,
+            days: menu.days.map((day) => ({
+              ...day,
+              meals: day.meals.map((meal) =>
+                meal.id === savedMeal.id ? savedMeal : meal,
+              ),
+            })),
           }));
+          return void (await respond(savedMeal));
         }
         throw new Error(`Unexpected API request: ${request.method()} ${path}`);
       });

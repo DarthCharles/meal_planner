@@ -80,6 +80,9 @@ test("generates a menu from the empty state with planning feedback", async ({
   await page.goto("/");
   await page.getByRole("button", { name: "Create my first menu" }).click();
   await expect(page.getByRole("button", { name: "Planning" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Create my first menu" }),
+  ).toBeDisabled();
   release();
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
   await expect(
@@ -95,9 +98,7 @@ test("keeps the current menu when generation fails and allows retrying", async (
   api.generationError = "Could not plan this week. Try again.";
   await page.goto("/");
   await page.getByRole("button", { name: "Plan my week" }).click();
-  await expect(
-    page.getByText(api.generationError),
-  ).toBeVisible();
+  await expect(page.getByText(api.generationError)).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(3);
   api.generationError = null;
   await page.getByRole("button", { name: "Plan my week" }).click();
@@ -127,4 +128,94 @@ test("falls back to demo data when the API is unavailable", async ({
   await expect(
     page.getByRole("button", { name: "Edit Avena cocida", exact: true }),
   ).toBeVisible();
+});
+
+test("keeps reference query failures inside the modal", async ({
+  page,
+  api,
+}) => {
+  api.readErrors["/units"] = "Units are unavailable.";
+  api.menus[0].days[0].weekday = "Thursday";
+  api.meals[0].name = "Breakfast from the API";
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Thursday" })).toBeVisible();
+  await expect(
+    page.getByText("Demo mode · connect the Rails API to use your own meals."),
+  ).toHaveCount(0);
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: /Add meal/ })
+    .click();
+  const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByText(
+      "Demo mode · connect the Rails API to use your own meals.",
+    ),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Thursday" })).toBeVisible();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: /My meals/ })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Breakfast from the API" }),
+  ).toBeVisible();
+});
+
+test("loads each resource only when its screen or form needs it", async ({
+  page,
+  api,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
+  expect(Object.keys(api.reads)).toEqual(["/menus"]);
+  const nav = page.getByRole("navigation");
+  await nav.getByRole("button", { name: /My meals/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Your meal library" }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(3);
+  expect(Object.keys(api.reads).sort()).toEqual(["/meals", "/menus"]);
+  await nav.getByRole("button", { name: /Add meal/ }).click();
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByRole("button", { name: "breakfast", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Save meal", exact: true }),
+  ).toBeEnabled();
+  expect(Object.keys(api.reads).sort()).toEqual([
+    "/meal_types",
+    "/meals",
+    "/menus",
+    "/units",
+  ]);
+});
+
+test("creating a meal from the menu does not eagerly load the library", async ({
+  page,
+  api,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
+  const nav = page.getByRole("navigation");
+  await nav.getByRole("button", { name: /Add meal/ }).click();
+  const dialog = page.getByRole("dialog");
+  await page.getByLabel("Meal name", { exact: true }).fill("New breakfast");
+  await page
+    .getByRole("textbox", { name: "Description", exact: true })
+    .fill("Fresh from the kitchen.");
+  await dialog.getByRole("button", { name: "breakfast", exact: true }).click();
+  await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.reads["/meals"]).toBeUndefined();
+  await nav.getByRole("button", { name: /My meals/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "New breakfast" }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(4);
 });

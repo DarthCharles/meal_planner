@@ -8,6 +8,7 @@ async function openLibrary(page: Page) {
     .getByRole("navigation")
     .getByRole("button", { name: /My meals/ })
     .click();
+  await page.getByRole("article").first().waitFor();
 }
 
 async function addMeal(page: Page) {
@@ -143,9 +144,9 @@ test("prefills and updates a meal including removing an ingredient", async ({
   await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue(
     "Huevos a la mexicana",
   );
-  await expect(page.getByRole("textbox", { name: "Description", exact: true })).toHaveValue(
-    "Eggs with tomato, onion, and chile.",
-  );
+  await expect(
+    page.getByRole("textbox", { name: "Description", exact: true }),
+  ).toHaveValue("Eggs with tomato, onion, and chile.");
   await expect(page.getByPlaceholder("https://...")).toHaveValue(
     "https://example.com/huevos",
   );
@@ -177,6 +178,19 @@ test("prefills and updates a meal including removing an ingredient", async ({
     path: "/meals/1",
     body: { name: "Huevos con salsa", meal_type_ids: [1], ingredients: [] },
   });
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: /My menu/ })
+    .click();
+  await expect(
+    page
+      .getByRole("article")
+      .first()
+      .getByText("Huevos con salsa", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Huevos a la mexicana", { exact: true }),
+  ).toHaveCount(0);
 });
 
 test("preserves form values after a save error and supports retrying", async ({
@@ -218,4 +232,74 @@ test("closes without saving and resets the form when reopened", async ({
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(api.saves).toEqual([]);
+});
+
+test("reuses cached meals when navigating between screens", async ({
+  page,
+  api,
+}) => {
+  await openLibrary(page);
+  const initialReads = api.reads["/meals"];
+  const nav = page.getByRole("navigation");
+  await nav.getByRole("button", { name: /My menu/ }).click();
+  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
+  await nav.getByRole("button", { name: /My meals/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Huevos a la mexicana" }),
+  ).toBeVisible();
+  expect(api.reads["/meals"]).toBe(initialReads);
+});
+
+test("retains cached meals when a background refresh fails", async ({
+  page,
+  api,
+}) => {
+  api.meals[0].name = "Breakfast from the API";
+  await openLibrary(page);
+  await expect(
+    page.getByRole("heading", { name: "Breakfast from the API" }),
+  ).toBeVisible();
+  api.readErrors["/meals"] = "Could not refresh meals.";
+  await page.clock.setFixedTime(new Date("2026-10-21T12:01:00Z"));
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(page.getByText("Could not refresh meals.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Breakfast from the API" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Demo mode · connect the Rails API to use your own meals."),
+  ).toHaveCount(0);
+});
+
+test("waits for form options before initializing an existing meal", async ({
+  page,
+  api,
+}) => {
+  let release!: () => void;
+  const optionsBarrier = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  api.readBarriers["/meal_types"] = optionsBarrier;
+  api.readBarriers["/units"] = optionsBarrier;
+  await openLibrary(page);
+  await page
+    .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Edit this favorite" });
+  await expect(dialog.getByText("Loading meal options…")).toBeVisible();
+  await expect(
+    dialog.getByRole("button", { name: "Update meal", exact: true }),
+  ).toHaveCount(0);
+  release();
+  await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue(
+    "Huevos a la mexicana",
+  );
+  await expect(page.getByLabel("Unit", { exact: true })).toHaveValue("pieza");
+  await dialog
+    .getByRole("button", { name: "Update meal", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.meal_type_ids).toEqual([1]);
 });
