@@ -20,7 +20,7 @@ export function MealsScreen() {
     <>
       {error && <Notice>{error}</Notice>}
       <div className="mt-[31px] mb-[17px] tablet:mt-[39px] tablet:mb-5">
-        <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted uppercase">
+        <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
           Your collection
         </p>
         <h3 className="mb-0 font-display text-[28px] font-semibold tracking-[-.04em]">
@@ -28,7 +28,7 @@ export function MealsScreen() {
         </h3>
       </div>
       {loading ? (
-        <p role="status" className="text-sm text-muted">
+        <p role="status" className="text-sm text-muted-foreground">
           Loading meals…
         </p>
       ) : (

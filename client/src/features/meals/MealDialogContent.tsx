@@ -36,7 +36,7 @@ export function MealDialogContent({
     <>
       {optionsError && <Notice>{optionsError}</Notice>}
       {loading ? (
-        <p role="status" className="text-sm text-muted">
+        <p role="status" className="text-sm text-muted-foreground">
           Loading meal options…
         </p>
       ) : (

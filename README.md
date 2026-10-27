@@ -15,7 +15,7 @@ The current prototype does not have authentication yet. API data is therefore sh
 
 - Ruby 3.4.12
 - Bundler 2.7.2 (also recorded in `Gemfile.lock`)
-- Node.js and npm for the client
+- Node.js 22.12 or newer and npm for the client (Node 24 recommended)
 - SQLite
 
 The Gemfile is the source of truth for the required Ruby version. If you use RVM and Ruby 3.4.12 is already installed:

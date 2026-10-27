@@ -1,3 +1,4 @@
+import { Button } from "@darthcharles/greda";
 import { useId, useLayoutEffect, useRef } from "react";
 import type { DialogInstance } from "./useDialog";
 
@@ -30,7 +31,7 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
       ref={elementRef}
       aria-labelledby={titleId}
       aria-modal="true"
-      className="fixed inset-0 m-0 h-full w-full max-h-none max-w-none items-end justify-items-center overflow-hidden border-0 bg-transparent p-[15px] text-ink open:grid desktop:items-center backdrop:bg-[rgba(43,40,35,.34)]"
+      className="fixed inset-0 m-0 h-full w-full max-h-none max-w-none items-end justify-items-center overflow-hidden border-0 bg-transparent p-[15px] text-foreground open:grid desktop:items-center backdrop:bg-overlay"
       onCancel={(event) => {
         event.preventDefault();
         close();
@@ -77,11 +78,11 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
         pointerStartedOutside.current = false;
       }}
     >
-      <section className="max-h-[calc(100dvh-30px)] w-full max-w-[520px] overflow-y-auto overscroll-contain rounded-[24px_24px_15px_15px] bg-paper p-[25px] shadow-[0_24px_70px_rgba(45,31,20,.25)] desktop:rounded-3xl">
+      <section className="max-h-[calc(100dvh-30px)] w-full max-w-[520px] overflow-y-auto overscroll-contain rounded-[24px_24px_15px_15px] bg-card p-[25px] shadow-lg desktop:rounded-3xl">
         <div className="mb-[22px] flex items-start justify-between">
           <div>
             {eyebrow && (
-              <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted uppercase">
+              <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
                 {eyebrow}
               </p>
             )}
@@ -94,14 +95,16 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
               {title}
             </h2>
           </div>
-          <button
+          <Button
             type="button"
-            className="size-[31px] shrink-0 rounded-full border-0 bg-[#f4efe7] text-[22px] leading-5 text-muted"
+            variant="ghost"
+            size="icon"
+            className="size-[31px] shrink-0 rounded-full text-[22px]"
             onClick={close}
             aria-label="Close"
           >
             ×
-          </button>
+          </Button>
         </div>
         {content({ close })}
       </section>

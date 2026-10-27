@@ -25,7 +25,7 @@ requires them.
 ## Requirements
 
 - Ruby 3.4.12 (the required version is declared in `Gemfile`).
-- Bundler, Node.js 20 or newer/npm, and SQLite.
+- Bundler, Node.js 22.12 or newer/npm (Node 24 recommended), and SQLite.
 - Playwright Chromium for client browser tests (`cd client && npx playwright install chromium`).
 
 ## Common commands
@@ -92,6 +92,10 @@ The client uses `VITE_API_URL` when set, and otherwise targets
   Use the instance-bound `close` supplied to dialog content for async completion,
   and keep form state and API hooks in the content. Cover keyboard/focus and
   replacement behavior when changing the shared dialog implementation.
+- Import UI primitives directly from Greda and use its existing Storybook Comal
+  palette through Greda's standard semantic tokens.
+  Keep illustration colors inside SVGs; discuss any additional UI colors with
+  the user before adding them.
 - Preserve the mobile-first responsive behavior and existing visual language
   when modifying the client.
 - Update the relevant file under `docs/` when changing routes, data models,

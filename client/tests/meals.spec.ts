@@ -110,6 +110,20 @@ test("creates a meal with ingredients and updates the library", async ({
   await page.getByLabel("Quantity").fill("2");
   await page.getByLabel("Unit", { exact: true }).selectOption("pieza");
   await page.getByLabel("Preparation note").fill("diced");
+  for (const label of [
+    "Ingredient name",
+    "Quantity",
+    "Unit",
+    "Preparation note",
+  ]) {
+    const field = page.getByLabel(label, { exact: true });
+    await expect(field).toBeVisible();
+    const bounds = await field.boundingBox();
+    expect(
+      bounds!.width,
+      `${label} should have room for its value`,
+    ).toBeGreaterThanOrEqual(60);
+  }
   // Empty ingredient rows are intentionally excluded from the submitted recipe.
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   expect(
@@ -414,4 +428,53 @@ test("validates deselecting all meal times and submits numeric type IDs", async 
     .click();
   await expect(dialog).toHaveCount(0);
   expect(api.saves[0].body.meal_type_ids).toEqual([2, 3]);
+});
+
+test("submits a meal from the keyboard with registered design system inputs", async ({
+  page,
+  api,
+}) => {
+  await page.goto("/");
+  const dialog = await addMeal(page);
+  await fillMeal(page);
+  expect(api.saves).toEqual([]);
+  const name = page.getByLabel("Meal name", { exact: true });
+  await name.focus();
+  await expect(name).toBeFocused();
+  await name.press("Enter");
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves).toHaveLength(1);
+  expect(api.saves[0].body).toMatchObject({
+    name: "Tacos de papa",
+    description: "Potato tacos with salsa.",
+    meal_type_ids: [2],
+  });
+});
+
+test("applies root theme overrides to the app shell and Greda form controls", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
+  await page.evaluate(() => {
+    const theme = document.documentElement.style;
+    theme.setProperty("--primary", "240 100% 50%");
+    theme.setProperty("--background", "0 0% 0%");
+  });
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await expect(page.getByRole("button", { name: "Plan my week" })).toHaveCSS(
+    "background-color",
+    "rgb(0, 0, 255)",
+  );
+  const dialog = await addMeal(page);
+  await expect(
+    dialog.getByRole("button", { name: "Save meal", exact: true }),
+  ).toHaveCSS(
+    "background-color",
+    "rgb(0, 0, 255)",
+  );
+  await expect(dialog.getByLabel("Meal name", { exact: true })).toHaveCSS(
+    "background-color",
+    "rgb(0, 0, 0)",
+  );
 });

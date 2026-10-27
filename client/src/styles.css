@@ -1,22 +1,16 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap");
 @import "tailwindcss" source(".");
+@import "@darthcharles/greda/styles.css" layer(components);
+@import "@darthcharles/greda/tokens.css";
+@import "./theme.css";
 
 @theme {
   --breakpoint-tablet: 641px;
   --breakpoint-desktop: 760px;
   --breakpoint-wide: 901px;
   --font-sans: "DM Sans", sans-serif;
+  --font-weight-semibold: 600;
   --font-display: "Fraunces", serif;
-  --color-cream: #fbf7ef;
-  --color-paper: #fffdf8;
-  --color-ink: #2b2823;
-  --color-muted: #8c877d;
-  --color-line: #e9e3d8;
-  --color-terracotta: #c8583e;
-  --color-terracotta-dark: #a84330;
-  --color-sage: #708d69;
-  --color-gold: #d6a43c;
-  --shadow-card: 0 16px 45px rgba(71, 49, 30, 0.08);
   --animate-shimmer: shimmer 1.4s infinite;
 
   @keyframes shimmer {
@@ -28,7 +22,7 @@
 
 @layer base {
   body {
-    @apply min-w-[320px] bg-cream font-sans text-ink leading-[normal];
+    @apply min-w-[320px] bg-background font-sans text-foreground leading-[normal];
     font-synthesis: none;
   }
   button {

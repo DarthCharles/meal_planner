@@ -1,4 +1,4 @@
-import { Button } from "../../components/Button";
+import { Button } from "@darthcharles/greda";
 import type { Menu } from "../../types";
 import { DayCard } from "./DayCard";
 
@@ -16,24 +16,24 @@ export function MenuView({
   if (loading)
     return (
       <div className="grid grid-cols-3 gap-4">
-        <div className="h-[410px] animate-shimmer rounded-[20px] bg-[linear-gradient(100deg,#f0ece4_30%,#faf8f3_50%,#f0ece4_70%)] bg-size-[200%_100%]"></div>
-        <div className="h-[330px] animate-shimmer rounded-[20px] bg-[linear-gradient(100deg,#f0ece4_30%,#faf8f3_50%,#f0ece4_70%)] bg-size-[200%_100%]"></div>
-        <div className="h-[330px] animate-shimmer rounded-[20px] bg-[linear-gradient(100deg,#f0ece4_30%,#faf8f3_50%,#f0ece4_70%)] bg-size-[200%_100%]"></div>
+        <div className="h-[410px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
+        <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
+        <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
       </div>
     );
   if (!menu) {
     return (
-      <div className="grid min-h-[280px] content-center justify-items-center rounded-[20px] border border-dashed border-[#dfd5c7] px-5 py-[42px] text-center">
-        <div className="mb-[15px] grid size-[49px] place-items-center rounded-2xl bg-[#f5e6db] text-[22px] text-terracotta">
+      <div className="grid min-h-[280px] content-center justify-items-center rounded-[20px] border border-dashed border-border px-5 py-[42px] text-center">
+        <div className="mb-[15px] grid size-[49px] place-items-center rounded-2xl bg-secondary text-[22px] text-primary">
           ✦
         </div>
         <h3 className="font-display text-[28px] mb-[9px] font-semibold tracking-[-.04em]">
           Your week is a blank page.
         </h3>
-        <p className="mb-[1em] max-w-[300px] text-sm leading-normal text-muted">
+        <p className="mb-[1em] max-w-[300px] text-sm leading-normal text-muted-foreground">
           Generate a menu and we’ll fill it with breakfast, lunch, and dinner.
         </p>
-        <Button variant="primary" onClick={onGenerate} disabled={generating}>
+        <Button variant="default" onClick={onGenerate} disabled={generating}>
           Create my first menu
         </Button>
       </div>

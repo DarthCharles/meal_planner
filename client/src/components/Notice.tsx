@@ -4,7 +4,7 @@ export function Notice({ children }: { children: ReactNode }) {
   return (
     <div
       role="status"
-      className="flex items-center gap-[9px] rounded-[10px] bg-[#f7eed1] px-[13px] py-[11px] text-xs text-[#806638]"
+      className="flex items-center gap-[9px] rounded-[10px] bg-muted px-[13px] py-[11px] text-xs text-foreground"
     >
       <span
         aria-hidden="true"

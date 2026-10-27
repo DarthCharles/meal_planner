@@ -1,5 +1,5 @@
+import { Button, Input, Textarea } from "@darthcharles/greda";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { Button } from "../../components/Button";
 import type {
   Meal,
   MealForm as MealFormValues,
@@ -89,20 +89,20 @@ export function MealForm({
   return (
     <FormProvider {...methods}>
       <form noValidate onSubmit={handleSubmit(submit, clearSaveErrors)}>
-        <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
+        <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
           Meal name
-          <input
-            className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
+          <Input
+            className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
             {...register("name", { validate: (value) => !!value.trim() })}
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? "meal-form-error" : undefined}
             placeholder="e.g. Tacos de papa"
           />
         </label>
-        <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
+        <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
           Description
-          <textarea
-            className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
+          <Textarea
+            className="h-auto resize-y rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
             {...register("description", {
               validate: (value) => !!value.trim(),
             })}
@@ -114,15 +114,16 @@ export function MealForm({
             rows={3}
           />
         </label>
-        <label className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
-          Recipe URL <span className="font-normal text-muted">(optional)</span>
-          <input
-            className="w-full resize-y rounded-[10px] border border-line bg-white p-3 text-[13px] text-ink outline-none focus:border-terracotta focus:shadow-[0_0_0_3px_#f7e5de]"
+        <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
+          Recipe URL{" "}
+          <span className="font-normal text-muted-foreground">(optional)</span>
+          <Input
+            className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
             {...register("recipe_url")}
             placeholder="https://..."
           />
         </label>
-        <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-[#5e594f]">
+        <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
           <legend className="mb-[7px]">Meal time</legend>
           <Controller
             name="meal_type_ids"
@@ -133,9 +134,11 @@ export function MealForm({
                 {types.map(([name, id], index) => {
                   const selected = field.value.includes(id);
                   return (
-                    <button
+                    <Button
                       type="button"
-                      className={`rounded-[9px] border px-3 py-[9px] text-xs capitalize ${selected ? "border-terracotta bg-[#fbece5] text-terracotta-dark" : "border-line bg-transparent text-muted"}`}
+                      variant={selected ? "secondary" : "outline"}
+                      size="sm"
+                      className="capitalize"
                       key={id}
                       ref={index === 0 ? field.ref : undefined}
                       onBlur={field.onBlur}
@@ -153,7 +156,7 @@ export function MealForm({
                       }
                     >
                       {name}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -165,7 +168,7 @@ export function MealForm({
           <p
             id="meal-form-error"
             role="alert"
-            className="text-xs text-[#b03d2f]"
+            className="text-xs text-destructive"
           >
             {error}
           </p>
@@ -174,7 +177,7 @@ export function MealForm({
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" disabled={saving}>
+          <Button type="submit" variant="default" loading={saving}>
             {saving ? "Saving…" : initialMeal ? "Update meal" : "Save meal"}
           </Button>
         </div>

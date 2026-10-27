@@ -34,20 +34,23 @@ client/
     App.tsx       # screen state and screen composition
     queryClient.ts # shared server-state cache and request defaults
     queryKeys.ts  # stable cache keys
-    components/   # header, navigation, buttons, illustrations, and generic dialog host
+    components/   # header, navigation, illustrations, and generic dialog host
     features/
       menu/       # weekly menu screen, day cards, and query/mutation hooks
       meals/      # library, form, ingredients, query/mutation hooks, and meal type styles
     demoData.ts   # fallback meals and menu for offline development
     api.ts        # Rails API requests
     types.ts      # API-facing TypeScript types
-    styles.css    # Tailwind imports, theme tokens, and global defaults
+    styles.css    # Tailwind/Greda imports, app utilities, and global defaults
+    theme.css     # typography/shape overrides and a gradient using Greda colors
   public/
     manifest.webmanifest
     sw.js
 ```
 
-The visual system uses a warm cream canvas, terracotta actions, golden meal accents, green garnish cues, and a bowl-based Comal mark.
+The UI uses Greda's Storybook Comal palette: warm cream surfaces, terracotta
+actions, and sage accents, with Comal typography and a bowl-based mark. SVG
+artwork keeps its own brand colors.
 
 ## Server state and hooks
 
@@ -112,7 +115,9 @@ errors, and cache updates.
 `useFormContext` and `useFieldArray`. Rows use React Hook Form's generated IDs
 as React keys, so removing a row preserves the other rows' values. Each row
 watches its name for the accessible remove-button label. Generated IDs are not
-included in the submitted ingredients.
+included in the submitted ingredients. On mobile, ingredient names and notes
+span the row, with quantity and unit paired beneath the name; tablet and desktop
+use a compact single row.
 
 Validation requires a nonblank name and description and at least one meal time.
 Named ingredient rows need a quantity of at least 0.001 and a unit; unnamed rows
@@ -165,19 +170,52 @@ generic content replacement using the isolated `dialog-harness` fixture.
 
 Tailwind CSS v4 runs through `client/postcss.config.js` using the
 [`@tailwindcss/postcss` integration](https://tailwindcss.com/docs/installation/using-postcss).
-Use Node.js 20 or newer when installing dependencies and building the client.
+Use Node.js 22.12 or newer (Node 24 recommended) when installing dependencies and building the client.
 The existing `npm run dev` and `npm run build` commands compile Tailwind automatically.
 
 Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-Components use Tailwind utilities directly in JSX, including responsive, hover,
-focus, and selected states. `components/Button.tsx` shares the primary, secondary,
-and ghost action styles. Meal time colors use maps of complete class names in
-`features/meals/mealTypes.ts` so Tailwind can detect every variant.
+The client pins `@darthcharles/greda` 0.2.0. `styles.css` imports Tailwind,
+Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, then
+`theme.css`. Do not also import Greda CSS in JavaScript. This layer order lets
+app utilities override component styles.
 
-`styles.css` contains the Tailwind import (including Preflight), theme colors,
+The palette and shadows in `theme.css` come from the light Comal theme in
+Greda's `.storybook/themes/comal.css`. The app uses Greda's built-in `background`,
+`foreground`, `card`, `primary`, `secondary`, `accent`, `muted`, `border`, `input`,
+`ring`, `destructive`, and `overlay` tokens with those existing Comal values and
+no extra app color tokens. `theme.css` also preserves typography and shape and
+defines a loading gradient using `muted` and `background`. Root token changes
+update both Greda components and the app shell.
+
+Meal categories use text labels and Greda's secondary badges, rather than
+category-specific palettes. Notices use neutral `muted` surfaces; errors in forms
+use `destructive`. Today's card uses `accent` with a `primary` border. Reuse these
+existing roles before introducing a new color, and discuss any needed palette
+extension with the user first. SVG illustrations keep fill and stroke colors
+inside their markup. Standalone PWA metadata and the public icon retain their
+static brand colors because they load independently of application CSS.
+
+Greda supplies `Input`, `Textarea`, `Card`, and `Badge`. Cards retain the article
+role and existing headings. Inputs forward React Hook Form refs, native props,
+and validation ARIA attributes. Import UI primitives directly from
+`@darthcharles/greda`, using its variants and sizes rather than defining local
+primitive wrappers. Buttons use Greda's `default`, `secondary`, and `ghost`
+variants and default to `type="button"`; form save actions explicitly use
+`type="submit"`. Navigation, filters, meal-time toggles, and ingredient actions
+also render Greda buttons directly, with layout classes where needed.
+
+The existing native dialog/provider and native ingredient unit select stay in
+place. If adding Greda Select or Tooltip inside a native dialog, put its portal
+container inside that dialog so it participates in the modal top layer.
+
+Components use Tailwind utilities directly in JSX for responsive layout and
+app-specific states. Meal type order and labels live in
+`features/meals/mealTypes.ts`.
+
+`styles.css` contains the layered imports (including Preflight), breakpoints,
 fonts, the loading shimmer animation, and global body/button defaults. Keep
 component styling in JSX rather than adding component selectors or `@apply`
 wrappers to this file.

@@ -15,17 +15,17 @@ function App() {
       <AppHeader view={view} onNavigate={setView} />
 
       <main>
-        <section className="relative flex min-h-[274px] items-start justify-between overflow-hidden rounded-[30px] bg-[#e8eee0] px-6 py-[31px] tablet:min-h-[240px] tablet:items-center tablet:px-12 tablet:py-[42px]">
+        <section className="relative flex min-h-[274px] items-start justify-between overflow-hidden rounded-[30px] bg-accent px-6 py-[31px] tablet:min-h-[240px] tablet:items-center tablet:px-12 tablet:py-[42px]">
           <div>
-            <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted uppercase">
+            <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
               Good morning, Carlos
             </p>
             <h2 className="mb-[13px] font-display text-[clamp(37px,5vw,62px)] leading-[.98] font-semibold tracking-[-.055em]">
               Make this week
               <br />
-              <em className="text-terracotta not-italic">delicious.</em>
+              <em className="text-primary not-italic">delicious.</em>
             </h2>
-            <p className="mb-[1em] max-w-[350px] text-sm leading-[1.6] text-[#6c7563]">
+            <p className="mb-[1em] max-w-[350px] text-sm leading-[1.6] text-muted-foreground">
               A little structure, plenty of sabor. Your meals, your rhythm.
             </p>
           </div>

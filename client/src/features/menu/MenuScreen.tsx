@@ -1,4 +1,4 @@
-import { Button } from "../../components/Button";
+import { Button } from "@darthcharles/greda";
 import { Notice } from "../../components/Notice";
 import { demoMenu } from "../../demoData";
 import { MenuView } from "./MenuView";
@@ -27,7 +27,7 @@ export function MenuScreen() {
       {error && <Notice>{error}</Notice>}
       <div className="mt-[31px] mb-[17px] flex flex-col items-start justify-between gap-[15px] tablet:mt-[39px] tablet:mb-5 tablet:flex-row tablet:items-end tablet:gap-0">
         <div>
-          <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted uppercase">
+          <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
             This week
           </p>
           <h3 className="mb-0 font-display text-[28px] font-semibold tracking-[-.04em]">
@@ -35,7 +35,7 @@ export function MenuScreen() {
           </h3>
         </div>
         <Button
-          variant="primary"
+          variant="default"
           className="w-full tablet:w-auto"
           onClick={() => generateMenu()}
           disabled={generating || loading}
