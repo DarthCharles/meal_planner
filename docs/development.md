@@ -81,8 +81,14 @@ The menu-generation tests cover:
 - Finding the next Monday.
 
 GitHub Actions runs Rails tests and eager-loading checks independently of the
-client workflow. Client browser tests mock API responses; they do not test the
-Rails integration.
+client workflow. It initializes the test database with
+`RAILS_ENV=test bundle exec rails db:create db:schema:load` so tests start without
+sample data. Avoid `db:prepare` for this step: it loads `db/seeds.rb` when creating
+a database, causing duplicate ingredient errors in tests that create their own
+records. To reset a previously seeded local test database, run the same schema
+load command; it replaces all test data.
+
+Client browser tests mock API responses; they do not test the Rails integration.
 
 After changing Ruby or dependencies, stop any existing `bin/dev` process, select
 the pinned Ruby, run `bundle install`, and restart `bin/dev`. A running server
