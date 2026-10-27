@@ -2,9 +2,19 @@ import { useCallback } from "react";
 import type { Meal } from "../../types";
 import { useDialog } from "../../components/dialog/useDialog";
 import { MealDialogContent } from "./MealDialogContent";
+import { MealDetails } from "./MealDetails";
 
 export function useMealDialog() {
   const { openDialog } = useDialog();
+  const openMeal = useCallback(
+    (meal: Meal) =>
+      openDialog({
+        title: meal.name,
+        eyebrow: "On your table",
+        content: () => <MealDetails meal={meal} />,
+      }),
+    [openDialog],
+  );
   const openCreateMeal = useCallback(
     () =>
       openDialog({
@@ -35,5 +45,5 @@ export function useMealDialog() {
       }),
     [openDialog],
   );
-  return { openCreateMeal, openEditMeal };
+  return { openCreateMeal, openEditMeal, openMeal };
 }

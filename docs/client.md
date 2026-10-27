@@ -23,6 +23,30 @@ The client uses `VITE_API_URL` for the API base URL. The default is `http://127.
 - Add a meal to the library.
 - Install the app as a PWA.
 
+The menu screen owns the bowl hero. Before a menu exists, it explains weekly
+planning and contains the single “Plan my week” action. While menus load, that
+action is disabled and the hero shows a loading message. Once a menu exists,
+the hero becomes a compact overview of today's breakfast, lunch, and dinner,
+each on a light card surface within the sage hero, using the same ordered meal
+slots as the day cards. It checks the menu's calendar
+date range against the local date before presenting meals as today's plan.
+If the latest plan is for next week, the overview uses the current week's menu
+when available while the grid continues to show the latest plan.
+Past or future menus show a saved-menu message; current menus without today's
+meals show an unplanned-day message. Only days in the current menu receive the
+“Today” highlight. The dated weekly grid and planning action appear below the
+overview. Generation failures preserve the current hero and allow retrying.
+The meal library has no hero, keeping its heading, search, filters, and add action
+at the top of the screen.
+
+Hero meals and weekly day cards reuse `MealRow`: a light button with a meal-time
+label, dot, meal name, and caret. Clicking a row or activating it with Enter or
+Space opens the meal card through `useMealDialog` and the shared dialog host.
+The card shows meal types, description, ingredient quantities and preparation
+notes, and an optional recipe link. Missing ingredients have an explicit empty
+message. Details use the meal already embedded in the menu and make no additional
+API requests. Closing the card restores focus to the row that opened it.
+
 The client falls back to demo data when the API is unavailable so the visual shell can still be developed.
 
 ## Structure

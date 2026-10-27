@@ -1,17 +1,15 @@
-import { Button } from "@darthcharles/greda";
-import type { Menu } from "../../types";
+import type { Meal, Menu } from "../../types";
 import { DayCard } from "./DayCard";
+import { isCurrentMenu } from "./menuDates";
 
 export function MenuView({
   menu,
   loading,
-  generating,
-  onGenerate,
+  onOpenMeal,
 }: {
   menu: Menu | null;
   loading: boolean;
-  generating: boolean;
-  onGenerate: () => void;
+  onOpenMeal: (meal: Meal) => void;
 }) {
   if (loading)
     return (
@@ -21,24 +19,7 @@ export function MenuView({
         <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
       </div>
     );
-  if (!menu) {
-    return (
-      <div className="grid min-h-[280px] content-center justify-items-center rounded-[20px] border border-dashed border-border px-5 py-[42px] text-center">
-        <div className="mb-[15px] grid size-[49px] place-items-center rounded-2xl bg-secondary text-[22px] text-primary">
-          ✦
-        </div>
-        <h3 className="font-display text-[28px] mb-[9px] font-semibold tracking-[-.04em]">
-          Your week is a blank page.
-        </h3>
-        <p className="mb-[1em] max-w-[300px] text-sm leading-normal text-muted-foreground">
-          Generate a menu and we’ll fill it with breakfast, lunch, and dinner.
-        </p>
-        <Button variant="default" onClick={onGenerate} disabled={generating}>
-          Create my first menu
-        </Button>
-      </div>
-    );
-  }
+  if (!menu) return null;
   const today = new Intl.DateTimeFormat("en-US", { weekday: "long" })
     .format(new Date())
     .toLowerCase();
@@ -48,7 +29,11 @@ export function MenuView({
       {orderedDays.map((day) => (
         <DayCard
           day={day}
-          featured={day.weekday.toLowerCase() === today}
+          onOpenMeal={onOpenMeal}
+          featured={
+            isCurrentMenu(menu, new Date()) &&
+            day.weekday.toLowerCase() === today
+          }
           key={day.id}
         />
       ))}

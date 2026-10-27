@@ -1,16 +1,17 @@
 import { Card } from "@darthcharles/greda";
 import type { Menu } from "../../types";
-import {
-  mealTypeOrder,
-  mealTypeLabels,
-} from "../meals/mealTypes";
+import { mealTypeOrder } from "../meals/mealTypes";
+import { MealRow } from "../meals/MealRow";
+import type { Meal } from "../../types";
 
 export function DayCard({
   day,
   featured,
+  onOpenMeal,
 }: {
   day: Menu["days"][number];
   featured: boolean;
+  onOpenMeal: (meal: Meal) => void;
 }) {
   return (
     <Card
@@ -32,23 +33,13 @@ export function DayCard({
       </div>
       <div className="grid gap-0.5">
         {day.meals.map((meal, index) => (
-          <div
-            className={`flex items-center gap-[11px] border-t border-border ${featured ? "min-h-[67px]" : "min-h-[57px] tablet:min-h-[67px]"}`}
+          <MealRow
             key={`${meal.id}-${index}`}
-          >
-            <span
-              className="size-[9px] basis-[9px] shrink-0 grow-0 rounded-full bg-primary"
-            ></span>
-            <div className="grid min-w-0 flex-1 gap-1">
-              <span className="text-[10px] font-bold tracking-[.08em] text-muted-foreground uppercase">
-                {mealTypeLabels[mealTypeOrder[index]]}
-              </span>
-              <strong className="truncate text-[13px] leading-[1.25]">
-                {meal.name}
-              </strong>
-            </div>
-            <span className="text-[22px] text-muted-foreground">›</span>
-          </div>
+            meal={meal}
+            mealType={mealTypeOrder[index]}
+            onOpen={onOpenMeal}
+            className="min-h-[57px] tablet:min-h-[67px]"
+          />
         ))}
       </div>
     </Card>
