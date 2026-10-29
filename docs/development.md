@@ -1,5 +1,20 @@
 # Development guide
 
+## Agent workflow
+
+The root [AGENTS.md](../AGENTS.md) contains shared rules and coordination
+guidance. The backend agent reads [backend instructions](agents/backend.md)
+for Rails work across the repository. The client agent reads
+[client/AGENTS.md](../client/AGENTS.md) for work in `client/` and the client
+documentation. Read the relevant instructions even when starting at the root.
+
+For changes spanning both areas, define the API contract and acceptance criteria
+first, assign non-overlapping files to each agent, and coordinate updates to
+shared documentation and configuration. Run both sets of required checks and
+verify Rails integration separately when necessary; browser tests use mocks.
+Single-area tasks only need the responsible role. These instruction files do not
+start agent processes or create persistent agent instances.
+
 ## Rails environment
 
 The Rails 8.1 app requires Ruby 3.4.12 and Bundler 2.7.2. With RVM:
