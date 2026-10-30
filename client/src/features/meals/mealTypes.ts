@@ -5,3 +5,16 @@ export const mealTypeLabels: Record<MealTypeName, string> = {
   lunch: "Lunch",
   dinner: "Dinner",
 };
+
+export function mealTypeBadgeClassName(type: string): string {
+  switch (type) {
+    case "breakfast":
+      return "bg-secondary";
+    case "lunch":
+      return "bg-accent";
+    case "dinner":
+      return "bg-muted";
+    default:
+      return "bg-background";
+  }
+}

@@ -11,7 +11,7 @@
     "test:browser:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@darthcharles/greda": "0.2.0",
+    "@darthcharles/greda": "1.0.0",
     "@tanstack/react-query": "^5.104.5",
     "@vitejs/plugin-react": "^4.0.0",
     "react": "^18.2.0",

@@ -1,12 +1,17 @@
 import { Badge } from "@darthcharles/greda";
 import type { Meal } from "../../types";
+import { mealTypeBadgeClassName } from "./mealTypes";
 
 export function MealDetails({ meal }: { meal: Meal }) {
   return (
     <div className="grid min-w-0 gap-5 break-words">
       <div className="flex flex-wrap gap-2">
         {meal.meal_types.map((type) => (
-          <Badge key={type} variant="secondary" className="uppercase">
+          <Badge
+            key={type}
+            variant="secondary"
+            className={`border-0 text-secondary uppercase ${mealTypeBadgeClassName(type)}`}
+          >
             {type}
           </Badge>
         ))}
@@ -45,7 +50,7 @@ export function MealDetails({ meal }: { meal: Meal }) {
           href={meal.recipe_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="justify-self-start rounded text-sm font-semibold text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+          className="justify-self-start rounded text-sm font-semibold text-action underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
         >
           Open recipe
         </a>

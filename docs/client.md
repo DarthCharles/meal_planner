@@ -201,23 +201,30 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 0.2.0. `styles.css` imports Tailwind,
+The client pins `@darthcharles/greda` 1.0.0. `styles.css` imports Tailwind,
 Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, then
 `theme.css`. Do not also import Greda CSS in JavaScript. This layer order lets
 app utilities override component styles.
 
-The palette and shadows in `theme.css` come from the light Comal theme in
-Greda's `.storybook/themes/comal.css`. The app uses Greda's built-in `background`,
-`foreground`, `card`, `primary`, `secondary`, `accent`, `muted`, `border`, `input`,
-`ring`, `destructive`, and `overlay` tokens with those existing Comal values and
-no extra app color tokens. `theme.css` also preserves typography and shape and
-defines a loading gradient using `muted` and `background`. Root token changes
-update both Greda components and the app shell.
+The palette in `theme.css` comes from the light Comal theme in
+Greda's `.storybook/themes/comal.css`. It overrides only generic `--base-*`
+colors; Greda derives surface, text, border, component color, and shadow tokens.
+The app uses these derived roles without adding app color tokens. `theme.css`
+also preserves typography and shape and defines a loading gradient using `muted`
+and `background`. Root base color changes update both Greda components and the
+app shell. In Greda 1.0, `text-primary` and `border-primary` use neutral category
+roles; action-colored text and borders use `text-action` and `border-action`.
 
-Meal categories use text labels and Greda's secondary badges, rather than
-category-specific palettes. Notices use neutral `muted` surfaces; errors in forms
-use `destructive`. Today's card uses `accent` with a `primary` border. Reuse these
-existing roles before introducing a new color, and discuss any needed palette
+Meal category badges use soft Comal fills and dark brown (`text-secondary`)
+text consistently in the library and meal details: peach (`secondary`) for
+breakfast, sage (`accent`) for lunch, and warm gray (`muted`) for dinner.
+Unknown categories use cream (`background`). The shared fill mapping lives in
+`features/meals/mealTypes.ts`. Badges use plain text labels without decorative
+dots; the visible labels identify each category without relying on color.
+Notices use neutral `muted` surfaces; errors in forms
+use `destructive`. Today's card uses `accent` with an action-colored
+(`border-action`) border. Reuse these existing roles before introducing a new
+color, and discuss any needed palette
 extension with the user first. SVG illustrations keep fill and stroke colors
 inside their markup. Standalone PWA metadata and the public icon retain their
 static brand colors because they load independently of application CSS.

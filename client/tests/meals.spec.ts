@@ -458,8 +458,8 @@ test("applies root theme overrides to the app shell and Greda form controls", as
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
   await page.evaluate(() => {
     const theme = document.documentElement.style;
-    theme.setProperty("--primary", "240 100% 50%");
-    theme.setProperty("--background", "0 0% 0%");
+    theme.setProperty("--base-primary", "240 100% 50%");
+    theme.setProperty("--base-white", "0 0% 0%");
   });
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(0, 0, 0)");
   await expect(page.getByRole("button", { name: "Plan my week" })).toHaveCSS(

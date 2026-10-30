@@ -47,7 +47,7 @@ export function MenuHero({
               <>
                 Make this week
                 <br />
-                <em className="text-primary not-italic">delicious.</em>
+                <em className="text-action not-italic">delicious.</em>
               </>
             )}
           </h2>

@@ -1,7 +1,7 @@
 import { Badge, Button, Card, Input } from "@darthcharles/greda";
 import { useMemo, useState } from "react";
 import type { Meal, MealTypeName } from "../../types";
-import { mealTypeOrder, mealTypeLabels } from "./mealTypes";
+import { mealTypeOrder, mealTypeLabels, mealTypeBadgeClassName } from "./mealTypes";
 
 export function MealsView({
   meals,
@@ -65,11 +65,11 @@ export function MealsView({
           >
             <div className="absolute top-0 left-0 h-full w-[5px] bg-primary"></div>
             <div>
-              <div className="flex gap-[5px]">
+              <div className="flex flex-wrap gap-[5px]">
                 {meal.meal_types.map((type) => (
                   <Badge
                     variant="secondary"
-                    className="rounded-[5px] border-0 px-[6px] py-1 text-[9px] font-bold uppercase"
+                    className={`rounded-[5px] border-0 px-[6px] py-1 text-[9px] font-bold text-secondary uppercase ${mealTypeBadgeClassName(type)}`}
                     key={type}
                   >
                     {type}
