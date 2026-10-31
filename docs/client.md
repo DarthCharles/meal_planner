@@ -201,7 +201,7 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.1.0. `styles.css` imports Tailwind,
+The client pins `@darthcharles/greda` 1.2.0. `styles.css` imports Tailwind,
 Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, the
 packaged `@darthcharles/greda/themes/comal.css` theme, then `theme.css`. Do not
 also import Greda CSS in JavaScript. This layer order lets app utilities override
