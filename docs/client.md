@@ -201,19 +201,21 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.0.0. `styles.css` imports Tailwind,
-Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, then
-`theme.css`. Do not also import Greda CSS in JavaScript. This layer order lets
-app utilities override component styles.
+The client pins `@darthcharles/greda` 1.1.0. `styles.css` imports Tailwind,
+Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, the
+packaged `@darthcharles/greda/themes/comal.css` theme, then `theme.css`. Do not
+also import Greda CSS in JavaScript. This layer order lets app utilities override
+component styles.
 
-The palette in `theme.css` comes from the light Comal theme in
-Greda's `.storybook/themes/comal.css`. It overrides only generic `--base-*`
-colors; Greda derives surface, text, border, component color, and shadow tokens.
-The app uses these derived roles without adding app color tokens. `theme.css`
-also preserves typography and shape and defines a loading gradient using `muted`
-and `background`. Root base color changes update both Greda components and the
-app shell. In Greda 1.0, `text-primary` and `border-primary` use neutral category
-roles; action-colored text and borders use `text-action` and `border-action`.
+`client/index.html` selects the official theme with `data-theme="comal"` and
+`data-color-scheme="light"` on `<html>`, so dialogs inherit it too. The dialog
+test fixture selects the same theme. Comal supplies the palette, font stacks,
+and base radii; the app loads DM Sans and Fraunces through the existing font
+import. No palette values are copied into the app. Greda derives surface, text,
+border, component color, and shadow tokens. `theme.css` only keeps app font
+sizes/weight, the existing large radius, and a loading gradient using `muted`
+and `background`. Action-colored text and borders use `text-action` and
+`border-action`; `text-primary` and `border-primary` use neutral category roles.
 
 Meal category badges use soft Comal fills and dark brown (`text-secondary`)
 text consistently in the library and meal details: peach (`secondary`) for

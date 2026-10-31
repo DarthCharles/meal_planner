@@ -2,6 +2,7 @@
 @import "tailwindcss" source(".");
 @import "@darthcharles/greda/styles.css" layer(components);
 @import "@darthcharles/greda/tokens.css";
+@import "@darthcharles/greda/themes/comal.css";
 @import "./theme.css";
 
 @theme {

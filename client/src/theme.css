@@ -1,32 +1,9 @@
-/* Light Comal base colors from Greda's .storybook/themes/comal.css.
-   Greda derives color roles and shadows; typography and shape stay app-specific. */
+/* App typography sizes and shape overrides on top of Greda's Comal theme. */
 :root {
-  color-scheme: light;
-  --base-white: 40 60% 96.078%;
-  --base-black: 37.5 10.256% 15.294%;
-  --base-gray-50: 42.857 100% 98.627%;
-  --base-gray-100: 36.923 37.143% 93.137%;
-  --base-gray-200: 38.824 27.869% 88.039%;
-  --base-gray-300: 33.103 19.205% 70.392%;
-  --base-gray-500: 41.25 7.273% 43.137%;
-  --base-gray-600: 30 15.476% 32.941%;
-  --base-gray-800: 30 16.216% 14.51%;
-  --base-gray-900: 30 17.857% 10.98%;
-  --base-primary: 9.5 55.556% 42.353%;
-  --base-primary-hover: 9.714 56.15% 36.667%;
-  --base-secondary: 25.385 56.522% 90.98%;
-  --base-tertiary: 85.714 29.167% 90.588%;
-  --base-accent: 85.714 29.167% 90.588%;
-  --base-destructive: 6.512 57.848% 43.725%;
-
-  --font-sans: "DM Sans Variable", "DM Sans", sans-serif;
-  --font-heading: "Fraunces Variable", "Fraunces", serif;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
   --font-weight-bold: 700;
-  --radius: 0.75rem;
-  --radius-sm: 0.375rem;
   --radius-lg: 0.75rem;
 }
 
