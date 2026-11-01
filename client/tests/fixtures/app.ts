@@ -1,4 +1,5 @@
 import { test as base, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import type { Meal, MealForm, Menu } from "../../src/types";
 import { meals, mealTypes, menu, units } from "./data";
 
@@ -129,3 +130,10 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
 });
 
 export { expect };
+
+export async function navigateTo(page: Page, name: "My menu" | "My meals") {
+  if (page.viewportSize()!.width >= 760) {
+    await page.getByRole("button", { name: "Open actions" }).click();
+  }
+  await page.getByRole("navigation").getByRole("button", { name: new RegExp(name) }).click();
+}

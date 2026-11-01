@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures/app";
+import { test, expect, navigateTo } from "./fixtures/app";
 
 test("opens the selected hero meal with its ingredients and recipe", async ({
   page,
@@ -81,16 +81,13 @@ test("summarizes today's actual meals and leaves the library focused on meals", 
   const heroBox = await hero.boundingBox();
   expect(heroBox!.height).toBeLessThan(274);
   const initialMenuReads = api.reads["/menus"];
-  const nav = page.getByRole("navigation");
-  await nav.getByRole("button", { name: /My meals/ }).click();
+  await navigateTo(page, "My meals");
   await expect(
     page.getByRole("heading", { name: "Your meal library" }),
   ).toBeVisible();
   await expect(hero).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Plan my week" })).toHaveCount(
-    0,
-  );
-  await nav.getByRole("button", { name: /My menu/ }).click();
+  await expect(page.getByRole("banner").getByRole("button", { name: "Plan my week" })).toBeEnabled();
+  await navigateTo(page, "My menu");
   await expect(hero).toBeVisible();
   expect(api.reads["/menus"]).toBe(initialMenuReads);
 });
@@ -176,7 +173,7 @@ test("keeps long meal names readable without horizontal overflow", async ({
   ).toBe(true);
 });
 
-test("allows retrying planning from the hero after an empty-state error", async ({
+test("allows retrying planning from the header after an empty-state error", async ({
   page,
   api,
 }) => {
@@ -214,12 +211,19 @@ test("shows today's menu first and adapts the grid and navigation", async ({
   const navigation = page.getByRole("navigation", {
     name: "Primary navigation",
   });
-  await expect(navigation).toHaveCount(1);
   const width = page.viewportSize()!.width;
-  const navBox = await navigation.boundingBox();
-  expect(navBox).not.toBeNull();
-  if (width < 760) expect(navBox!.y).toBeGreaterThan(700);
-  else expect(navBox!.y).toBeLessThan(100);
+  if (width < 760) {
+    await expect(navigation).toHaveCount(1);
+    const navBox = await navigation.boundingBox();
+    expect(navBox!.y).toBeGreaterThan(700);
+  } else {
+    await expect(navigation).toHaveCount(0);
+    await page.getByRole("button", { name: "Open actions" }).click();
+    await expect(navigation).toBeVisible();
+    await expect(navigation.getByRole("button", { name: "My menu" })).toHaveAttribute("aria-current", "page");
+    await expect(navigation.getByRole("button", { name: "My meals" })).toBeVisible();
+    await page.keyboard.press("Escape");
+  }
 
   const boxes = await cards.evaluateAll((elements) =>
     elements.map((element) => {
@@ -281,7 +285,7 @@ test("generates a menu from the empty state with planning feedback", async ({
   await expect(page.getByRole("button", { name: "Plan my week" })).toHaveCount(
     1,
   );
-  await hero.getByRole("button", { name: "Plan my week" }).click();
+  await page.getByRole("banner").getByRole("button", { name: "Plan my week" }).click();
   await expect(page.getByRole("button", { name: "Planning" })).toBeDisabled();
   release();
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
@@ -324,10 +328,7 @@ test("falls back to demo data when the API is unavailable", async ({
     page.getByText("Demo mode · connect the Rails API to use your own meals."),
   ).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(3);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: /My meals/ })
-    .click();
+  await navigateTo(page, "My meals");
   await expect(
     page.getByRole("button", { name: "Edit Avena cocida", exact: true }),
   ).toBeVisible();
@@ -345,10 +346,8 @@ test("keeps reference query failures inside the modal", async ({
   await expect(
     page.getByText("Demo mode · connect the Rails API to use your own meals."),
   ).toHaveCount(0);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: /Add meal/ })
-    .click();
+  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(
     dialog.getByText(
@@ -357,10 +356,7 @@ test("keeps reference query failures inside the modal", async ({
   ).toBeVisible();
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Thursday" })).toBeVisible();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: /My meals/ })
-    .click();
+  await navigateTo(page, "My meals");
   await expect(
     page.getByRole("heading", { name: "Breakfast from the API" }),
   ).toBeVisible();
@@ -373,14 +369,14 @@ test("loads each resource only when its screen or form needs it", async ({
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
   expect(Object.keys(api.reads)).toEqual(["/menus"]);
-  const nav = page.getByRole("navigation");
-  await nav.getByRole("button", { name: /My meals/ }).click();
+  await navigateTo(page, "My meals");
   await expect(
     page.getByRole("heading", { name: "Your meal library" }),
   ).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(3);
   expect(Object.keys(api.reads).sort()).toEqual(["/meals", "/menus"]);
-  await nav.getByRole("button", { name: /Add meal/ }).click();
+  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   await expect(
     page
       .getByRole("dialog")
@@ -405,8 +401,8 @@ test("creating a meal from the menu does not eagerly load the library", async ({
 }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
-  const nav = page.getByRole("navigation");
-  await nav.getByRole("button", { name: /Add meal/ }).click();
+  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await page.getByLabel("Meal name", { exact: true }).fill("New breakfast");
   await page
@@ -416,9 +412,33 @@ test("creating a meal from the menu does not eagerly load the library", async ({
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(api.reads["/meals"]).toBeUndefined();
-  await nav.getByRole("button", { name: /My meals/ }).click();
+  await navigateTo(page, "My meals");
   await expect(
     page.getByRole("heading", { name: "New breakfast" }),
   ).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(4);
+});
+
+test("keeps the planning action beside MC on both screens without overflow", async ({ page, api }) => {
+  await page.goto("/");
+  await page.getByRole("heading", { name: "Wednesday" }).waitFor();
+  for (const view of ["My menu", "My meals"] as const) {
+    if (view === "My meals") await navigateTo(page, view);
+    const header = page.getByRole("banner");
+    const plan = header.getByRole("button", { name: "Plan my week" });
+    const avatar = header.getByRole("button", { name: "Open actions" });
+    await expect(plan).toBeEnabled();
+    await expect(page.getByRole("main").getByRole("button", { name: "Plan my week" })).toHaveCount(0);
+    const planBox = (await plan.boundingBox())!;
+    const avatarBox = (await avatar.boundingBox())!;
+    expect(planBox.x + planBox.width).toBeLessThanOrEqual(avatarBox.x);
+    expect(Math.abs(planBox.y + planBox.height / 2 - avatarBox.y - avatarBox.height / 2)).toBeLessThan(2);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  await page.getByRole("banner").getByRole("button", { name: "Plan my week" }).click();
+  await expect.poll(() => api.generationRequests).toBe(1);
+  await expect(page.getByRole("banner").getByRole("button", { name: "Plan my week" })).toBeEnabled();
+  await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
+  await navigateTo(page, "My menu");
+  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
 });

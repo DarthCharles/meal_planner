@@ -1,21 +1,16 @@
 import type { Page } from "@playwright/test";
-import { test, expect } from "./fixtures/app";
+import { test, expect, navigateTo } from "./fixtures/app";
 
 async function openLibrary(page: Page) {
   await page.goto("/");
   await page.getByRole("heading", { name: "Wednesday" }).waitFor();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: /My meals/ })
-    .click();
+  await navigateTo(page, "My meals");
   await page.getByRole("article").first().waitFor();
 }
 
 async function addMeal(page: Page) {
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: /Add meal/ })
-    .click();
+  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   return page.getByRole("dialog", { name: "A new favorite" });
 }
 
@@ -212,10 +207,7 @@ test("prefills and updates a meal including removing an ingredient", async ({
     path: "/meals/1",
     body: { name: "Huevos con salsa", meal_type_ids: [1], ingredients: [] },
   });
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: /My menu/ })
-    .click();
+  await navigateTo(page, "My menu");
   await expect(
     page
       .getByRole("article")
@@ -274,10 +266,9 @@ test("reuses cached meals when navigating between screens", async ({
 }) => {
   await openLibrary(page);
   const initialReads = api.reads["/meals"];
-  const nav = page.getByRole("navigation");
-  await nav.getByRole("button", { name: /My menu/ }).click();
+  await navigateTo(page, "My menu");
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
-  await nav.getByRole("button", { name: /My meals/ }).click();
+  await navigateTo(page, "My meals");
   await expect(
     page.getByRole("heading", { name: "Huevos a la mexicana" }),
   ).toBeVisible();

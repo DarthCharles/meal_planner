@@ -1,13 +1,12 @@
 import type { Page } from "@playwright/test";
-import { test, expect } from "./fixtures/app";
+import { test, expect, navigateTo } from "./fixtures/app";
 
 async function openMealDialog(page: Page) {
   await page.goto("/");
   await page.getByRole("heading", { name: "Wednesday" }).waitFor();
-  const trigger = page
-    .getByRole("navigation")
-    .getByRole("button", { name: /Add meal/ });
+  const trigger = page.getByRole("button", { name: "Open actions" });
   await trigger.click();
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "A new favorite" });
   await expect(dialog).toBeVisible();
   return { dialog, trigger };
@@ -52,17 +51,16 @@ test("makes the background inert and restores scroll settings after closing", as
     document.body.style.overflow = "auto";
     document.documentElement.style.overflow = "scroll";
   });
-  const trigger = page
-    .getByRole("navigation")
-    .getByRole("button", { name: /Add meal/ });
+  const trigger = page.getByRole("button", { name: "Open actions" });
   await trigger.click();
-  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "A new favorite" });
   await expect(dialog).toBeVisible();
   expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(
     true,
   );
   await page
-    .getByRole("button", { name: "Open profile", includeHidden: true })
+    .getByRole("button", { name: "Open actions", includeHidden: true })
     .evaluate((element) => (element as HTMLElement).focus());
   expect(
     await dialog.evaluate((element) =>
@@ -123,6 +121,7 @@ test("supports closing while options are loading without creating a form", async
   await expect(trigger).toBeFocused();
   release();
   await trigger.click();
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   await expect(
     page
       .getByRole("dialog")
@@ -141,8 +140,7 @@ test("a dismissed pending save cannot close the next meal dialog", async ({
   });
   await page.goto("/");
   await page.getByRole("heading", { name: "Wednesday" }).waitFor();
-  const nav = page.getByRole("navigation");
-  await nav.getByRole("button", { name: /My meals/ }).click();
+  await navigateTo(page, "My meals");
   await page
     .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
     .click();
@@ -156,7 +154,8 @@ test("a dismissed pending save cannot close the next meal dialog", async ({
   ).toBeDisabled();
   await page.keyboard.press("Escape");
   await expect(oldDialog).toHaveCount(0);
-  await nav.getByRole("button", { name: /Add meal/ }).click();
+  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "A new favorite" });
   await page.getByLabel("Meal name", { exact: true }).fill("Second draft");
   release();
@@ -203,5 +202,37 @@ test("replaces generic dialog content with fresh state and ignores an older clos
     .getByRole("button", { name: "Close through context", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
+
+test("opens header actions with the keyboard and dismisses with Escape or an outside click", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("heading", { name: "Wednesday" }).waitFor();
+  await expect(
+    page.getByRole("navigation").getByRole("button", { name: /Add meal/ }),
+  ).toHaveCount(0);
+  const trigger = page.getByRole("button", { name: "Open actions" });
+  const addMeal = page.getByRole("button", { name: "Add a meal", exact: true });
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  if (page.viewportSize()!.width < 760) {
+    await expect(addMeal).toBeFocused();
+  } else {
+    await expect(page.getByRole("button", { name: "My menu", exact: true })).toBeFocused();
+  }
+  await page.keyboard.press("Escape");
+  await expect(addMeal).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await page.getByRole("heading", { name: "Wednesday" }).click();
+  await expect(addMeal).toHaveCount(0);
+  await trigger.click();
+  await addMeal.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog", { name: "A new favorite" })).toBeVisible();
+  await expect(addMeal).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await expect(trigger).toBeFocused();
 });

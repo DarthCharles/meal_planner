@@ -23,9 +23,19 @@ The client uses `VITE_API_URL` for the API base URL. The default is `http://127.
 - Add a meal to the library.
 - Install the app as a PWA.
 
+The header's MC button opens a Greda popover with an “Add a meal” action on all
+screen sizes. Choosing it closes the popover and opens the meal form; closing
+the form returns focus to MC. Mobile keeps “My menu” and “My meals” in its bottom navigation. On desktop,
+both navigation actions appear inside the MC popover. The library also keeps
+its own add action.
+
+The single “Plan my week” action sits beside MC in the header on mobile and
+desktop, including while browsing the meal library. It is disabled while menus
+load or generation is pending, and shows “Planning” during generation. Failures
+appear below the header and allow retrying without discarding the saved menu.
+
 The menu screen owns the bowl hero. Before a menu exists, it explains weekly
-planning and contains the single “Plan my week” action. While menus load, that
-action is disabled and the hero shows a loading message. Once a menu exists,
+planning. While menus load, the hero shows a loading message. Once a menu exists,
 the hero becomes a compact overview of today's breakfast, lunch, and dinner,
 each on a light card surface within the sage hero, using the same ordered meal
 slots as the day cards. It checks the menu's calendar
@@ -34,8 +44,7 @@ If the latest plan is for next week, the overview uses the current week's menu
 when available while the grid continues to show the latest plan.
 Past or future menus show a saved-menu message; current menus without today's
 meals show an unplanned-day message. Only days in the current menu receive the
-“Today” highlight. The dated weekly grid and planning action appear below the
-overview. Generation failures preserve the current hero and allow retrying.
+“Today” highlight. The dated weekly grid appears below the overview. Generation failures preserve the current hero and allow retrying.
 The meal library has no hero, keeping its heading, search, filters, and add action
 at the top of the screen.
 
@@ -92,7 +101,8 @@ query's abort signal for cancellable reads.
 
 Query ownership follows the feature that consumes the data:
 
-- `MenuScreen` mounts `useMenus` and `useGenerateMenu`.
+- `AppHeader` mounts `useMenus` and `useGenerateMenu` for its planning action.
+- `MenuScreen` mounts `useMenus`, sharing the header's cached query.
 - `MealsScreen` mounts `useMeals` when the library is opened.
 - `MealDialogContent` mounts `useMealTypes` and `useUnits` only while the modal is open.
   It waits for both queries before mounting `MealForm`, so an edit draft starts
@@ -105,8 +115,7 @@ and `MealsView` receive data and callbacks through props. Nested ingredient
 inputs access their form through React Hook Form context.
 Opening the app requests only `/menus`; opening the library adds `/meals`, and
 opening a form adds `/meal_types` and `/units`. Fresh cached data is reused when
-revisiting a screen or reopening a form. Menu planning controls live on the menu
-screen; the library has its own heading and add/edit actions.
+revisiting a screen or reopening a form. The menu planning action lives in the header; the library has its own heading and add/edit actions.
 
 Successful mutations update the cache from the API response. Generating a menu
 puts it first in the menu list. Saving a meal updates the library and replaces
@@ -179,7 +188,7 @@ for save completion so older asynchronous work cannot close a newer dialog.
 keeps the original trigger as the focus restoration target.
 
 `features/meals/useMealDialog.tsx` supplies `openCreateMeal` and `openEditMeal`.
-Header, navigation, and meal-screen actions call this hook directly. The feature's
+Header popover and meal-screen actions call this hook directly. The feature's
 `MealDialogContent` owns reference queries and renders the RHF form; the shared
 host has no meal-specific logic. Content inherits providers around the dialog
 host, so shared dependencies such as React Query must wrap `DialogProvider`.

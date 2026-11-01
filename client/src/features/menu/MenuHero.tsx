@@ -1,4 +1,3 @@
-import { Button } from "@darthcharles/greda";
 import { HeroBowlArt } from "../../components/HeroBowlArt";
 import type { Meal, Menu } from "../../types";
 import { mealTypeOrder } from "../meals/mealTypes";
@@ -8,14 +7,10 @@ import { isCurrentMenu } from "./menuDates";
 export function MenuHero({
   menu,
   loading,
-  generating,
-  onGenerate,
   onOpenMeal,
 }: {
   menu: Menu | null;
   loading: boolean;
-  generating: boolean;
-  onGenerate: () => void;
   onOpenMeal: (meal: Meal) => void;
 }) {
   const now = new Date();
@@ -59,13 +54,6 @@ export function MenuHero({
               ? "Finding your menu…"
               : "A little structure, plenty of sabor. Plan a week of breakfasts, lunches, and dinners from your meals."}
           </p>
-          <Button
-            onClick={onGenerate}
-            disabled={loading || generating}
-            className="w-full tablet:w-auto"
-          >
-            {generating ? "Planning" : "Plan my week"}
-          </Button>
         </div>
         <div
           aria-hidden="true"
