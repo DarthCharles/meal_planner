@@ -29,7 +29,7 @@ the form returns focus to MC. Mobile keeps “My menu” and “My meals” in i
 both navigation actions appear inside the MC popover. The library also keeps
 its own add action.
 
-The single “Plan my week” action sits beside MC in the header on mobile and
+The single “Plan my week” action has a plus icon and sits beside MC in the header on mobile and
 desktop, including while browsing the meal library. It is disabled while menus
 load or generation is pending, and shows “Planning” during generation. Failures
 appear below the header and allow retrying without discarding the saved menu.

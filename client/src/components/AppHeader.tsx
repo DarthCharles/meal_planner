@@ -34,10 +34,13 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            className="px-2 text-xs tablet:px-3"
+            className="gap-1 px-2 text-xs tablet:gap-2 tablet:px-3"
             disabled={loadingMenus || generating}
             onClick={() => generateMenu()}
           >
+            <span aria-hidden="true" className="text-xl leading-none font-normal">
+              {generating ? "…" : "+"}
+            </span>
             {generating ? "Planning" : "Plan my week"}
           </Button>
           <Popover open={actionsOpen} onOpenChange={setActionsOpen}>
