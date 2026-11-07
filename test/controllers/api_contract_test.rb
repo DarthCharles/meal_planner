@@ -22,6 +22,7 @@ class ApiContractTest < ActionDispatch::IntegrationTest
     expected = {
       "id" => @meal.id, "name" => "Avena", "description" => "Con leche",
       "recipe_url" => nil, "meal_types" => ["breakfast"],
+      "preferred_days" => [],
       "ingredients" => [
         { "id" => earlier.id, "ingredient_id" => earlier.ingredient_id,
           "name" => "Manzana", "quantity" => "1.0", "unit" => "pieza",
@@ -139,7 +140,7 @@ class ApiContractTest < ActionDispatch::IntegrationTest
     get "/menus/#{menu.id}", as: :json
     assert_response :ok
     expected = response.parsed_body.fetch("data")
-    assert_equal %w[created_at days from id to], expected.keys.sort
+    assert_equal %w[created_at days from generation_notices id to], expected.keys.sort
     assert_equal "2026-10-26T00:00:00.000Z", expected.fetch("from")
     assert_equal "2026-11-01T23:59:59.000Z", expected.fetch("to")
     assert_equal menu.created_at.iso8601(3), expected.fetch("created_at")

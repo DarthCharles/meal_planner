@@ -442,3 +442,14 @@ test("keeps the planning action beside MC on both screens without overflow", asy
   await navigateTo(page, "My menu");
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
 });
+
+test("shows preference fallbacks after generation and on reload", async ({ page, api }) => {
+  const notice = "Pizza was scheduled on Monday to complete the menu; its preferred days are Friday, Saturday, Sunday.";
+  api.generationNotices = [notice];
+  await page.goto("/");
+  await page.getByRole("button", { name: "Plan my week" }).click();
+  await expect(page.getByText(notice, { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.reload();
+  await expect(page.getByText(notice, { exact: true })).toBeVisible();
+});

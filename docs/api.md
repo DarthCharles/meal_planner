@@ -29,7 +29,8 @@ Create and update payload:
   "name": "Avena cocida",
   "description": "Warm oats with cinnamon and fruit.",
   "recipe_url": "https://example.com/recipe",
-  "meal_type_ids": [1, 3]
+  "meal_type_ids": [1, 3],
+  "preferred_days": ["friday", "saturday", "sunday"]
 }
 ```
 
@@ -42,10 +43,19 @@ Meal responses include meal type descriptions:
     "name": "Avena cocida",
     "description": "Warm oats with cinnamon and fruit.",
     "recipe_url": "https://example.com/recipe",
-    "meal_types": ["breakfast", "dinner"]
+    "meal_types": ["breakfast", "dinner"],
+    "preferred_days": ["friday", "saturday", "sunday"]
   }
 }
 ```
+
+`preferred_days` is an array of lowercase English weekday names, returned in
+Monday–Sunday order with duplicates removed. An empty array means **Any day**.
+Omitting it on create defaults to Any day; omitting it on update preserves the
+saved preference. Sending `[]` clears the preference. Invalid names, null, or a
+non-array value return `422` with a `preferred_days` field error. The client
+weekend preset means Friday–Sunday; weekdays means Monday–Thursday. Preferences
+apply to every meal time associated with the meal and affect future generation.
 
 ## Menus
 
@@ -55,13 +65,39 @@ Meal responses include meal type descriptions:
 | `GET` | `/menus/:id` | Show one menu |
 | `POST` | `/menus/generate` | Generate the next weekly menu |
 
-`POST /menus/generate` selects random meals for the next Monday–Sunday week. It requires at least seven meals in each category. It creates seven days and three meal assignments per day, avoiding reuse when possible.
+`POST /menus/generate` plans the next Monday–Sunday week (using the existing UTC
+next-Monday date semantics). It creates seven days with breakfast, lunch, and
+dinner, each using a different meal within the day. A meal may repeat on
+separate days, so seven meals per category are no longer required.
+
+Generation minimizes the total number of assignments outside a meal's preferred
+days, then minimizes weekly repeats. Thus repeating a suitable weekday meal is
+preferred over scheduling weekend pizza on Monday. Among equally suitable
+solutions, meal order is randomized. Preferences do not guarantee inclusion in
+a menu or variety across different weeks.
+
+Every menu response, including list/detail and generation, includes
+`generation_notices: []`. If a preference exception is necessary, the array
+contains messages such as:
+
+```json
+{
+  "generation_notices": [
+    "Pizza was scheduled on Monday to complete the menu; its preferred days are Friday, Saturday, Sunday."
+  ]
+}
+```
+
+These notices are saved with the menu as a generation snapshot; editing a meal
+later does not rewrite historical notices. Existing menus default to no notices.
+The previous menu for that week is replaced atomically only after a complete
+schedule has been found. Failed generation preserves it.
 
 If meals are insufficient, the endpoint returns `422`:
 
 ```json
 {
-  "errors": "Need at least 7 meals per type. Got: breakfast=3, lunch=7, dinner=7"
+  "errors": "Cannot complete the menu. Add meals for each meal time; each day needs three different meals."
 }
 ```
 

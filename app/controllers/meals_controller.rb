@@ -1,6 +1,6 @@
 class MealsController < ApplicationController
   def index
-    @meals = Meal.all
+    @meals = Meal.includes(:preferred_weekdays)
     render json: { data: @meals }, status: :ok
   end
 
@@ -54,14 +54,20 @@ class MealsController < ApplicationController
   private
 
   def meal_params
-    params.permit(
+    permitted = params.permit(
       :id,
       :name,
       :recipe_url,
       :description,
+      preferred_days: [],
       meal_type_ids: [],
       ingredients: %i[name quantity unit preparation_note position]
     )
+    if params.key?(:preferred_days)
+      days = params[:preferred_days]
+      permitted[:preferred_days] = days.is_a?(Array) && days.all? { |day| day.is_a?(String) } ? days : nil
+    end
+    permitted
   end
 
   def assign_meal_types(meal)

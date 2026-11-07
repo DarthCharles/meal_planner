@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "set"
-
 class MenuGenerationService
   class InsufficientMealsError < StandardError; end
 
@@ -15,26 +13,24 @@ class MenuGenerationService
   end
 
   def call(week_start:)
-    validate_meal_pool!
-    menu = replace_or_create_menu(week_start)
-    assign_meals(menu)
-    menu
+    schedule = MealScheduleService.new.call
+    Menu.transaction do
+      menu = replace_or_create_menu(week_start)
+      days = menu.days.includes(:weekday).index_by { |day| day.weekday.name }
+      schedule.each do |assignment|
+        DailyMeal.create!(day: days.fetch(assignment[:weekday]), meal: assignment[:meal], position: assignment[:position])
+      end
+      notices = schedule.select { |assignment| assignment[:exception] }.map do |assignment|
+        meal = assignment[:meal]
+        preferred = meal.preferred_days.map(&:capitalize).join(", ")
+        "#{meal.name} was scheduled on #{assignment[:weekday].capitalize} to complete the menu; its preferred days are #{preferred}."
+      end
+      menu.update!(generation_notices: notices)
+      menu
+    end
   end
 
   private
-
-  def validate_meal_pool!
-    counts = {
-      breakfast: Meal.breakfast.count,
-      lunch: Meal.lunch.count,
-      dinner: Meal.dinner.count
-    }
-    missing = counts.select { |_, count| count < 7 }
-    return if missing.empty?
-
-    raise InsufficientMealsError,
-          "Need at least 7 meals per type. Got: #{counts.map { |k, v| "#{k}=#{v}" }.join(', ')}"
-  end
 
   def replace_or_create_menu(week_start)
     from_begin = Time.utc(week_start.year, week_start.month, week_start.day)
@@ -54,24 +50,5 @@ class MenuGenerationService
       Day.create!(menu: menu, weekday: weekday)
     end
     menu.reload
-  end
-
-  def assign_meals(menu)
-    used_meal_ids = Set.new
-    days_by_weekday = menu.days.includes(:weekday).index_by { |d| d.weekday.name }
-    scope_by_position = { 0 => :breakfast, 1 => :lunch, 2 => :dinner }
-
-    WEEKDAY_ORDER.each do |weekday_name|
-      day = days_by_weekday[weekday_name]
-      [0, 1, 2].each do |position|
-        scope = scope_by_position[position]
-        candidates = Meal.public_send(scope).where.not(id: used_meal_ids)
-        candidates = Meal.public_send(scope) if candidates.empty?
-        meal = candidates.order(Arel.sql("RANDOM()")).first
-        raise InsufficientMealsError, "No meals available for #{scope}" if meal.nil?
-        DailyMeal.create!(day: day, meal: meal, position: position)
-        used_meal_ids << meal.id
-      end
-    end
   end
 end

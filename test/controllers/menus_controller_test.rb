@@ -13,6 +13,8 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     json = response.parsed_body
     assert json["data"]["id"].present?
     assert_equal 7, Menu.find(json["data"]["id"]).days.count
+    assert_equal [], json["data"]["generation_notices"]
+    assert_equal [], json["data"]["days"][0]["meals"][0]["preferred_days"]
   end
 
   test "generate returns 422 when insufficient meals" do
@@ -20,7 +22,7 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     post "/menus/generate", as: :json
     assert_response :unprocessable_entity
     json = response.parsed_body
-    assert_match(/Need at least 7 meals per type/, json["errors"].to_s)
+    assert_match(/Cannot complete the menu/, json["errors"].to_s)
   end
 
   private

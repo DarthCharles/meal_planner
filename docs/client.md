@@ -159,6 +159,25 @@ rules display consistently through RHF, marking invalid controls and linking
 them to an alert summary. Cancel/close unmounts the draft; reopening initializes
 a fresh form. Failed saves leave the current values intact.
 
+## Day preferences
+
+The meal form's **Preferred days** field uses React Hook Form through
+`PreferredDaysField`. Presets select Any day (an empty array), Weekdays
+(Monday–Thursday), or Weekend (Friday–Sunday). Individual weekday toggles support
+custom choices. Clearing all choices restores Any day. Existing meals default to
+Any day, and the edit form initializes from the saved preference. Meal details
+show the saved days; saving also updates meals embedded in cached menus.
+
+Generation honors preferences before optimizing variety, repeating suitable
+meals across days if needed. Exceptions are used only when necessary to complete
+a menu. The weekly view displays the menu's persisted `generation_notices`,
+including after reloading. These notices describe generation-time preferences;
+subsequent meal edits do not rewrite them.
+
+Browser tests cover presets, custom days, clearing preferences, submitted
+payloads, nested menu details, and fallback messages on generation/reload across
+all three viewports. Rails tests verify the actual scheduling and API contract.
+
 ## Dialogs
 
 `DialogProvider` in `components/dialog/` wraps the application beneath

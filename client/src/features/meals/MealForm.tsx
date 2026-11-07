@@ -7,6 +7,7 @@ import type {
   UnitOption,
 } from "../../types";
 import { useCreateMeal, useUpdateMeal } from "./queries";
+import { PreferredDaysField } from "./PreferredDaysField";
 import { IngredientManager } from "./IngredientManager";
 
 export function MealForm({
@@ -32,6 +33,7 @@ export function MealForm({
             .filter(([name]) => initialMeal.meal_types.includes(name))
             .map(([, id]) => id)
         : [],
+      preferred_days: initialMeal?.preferred_days ?? [],
       ingredients:
         initialMeal?.ingredients?.map(
           ({ name, quantity, unit, preparation_note }) => ({
@@ -163,6 +165,7 @@ export function MealForm({
             )}
           />
         </fieldset>
+        <PreferredDaysField />
         <IngredientManager units={units} />
         {error && (
           <p

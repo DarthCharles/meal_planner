@@ -10,6 +10,8 @@ erDiagram
   WEEKDAYS ||--o{ DAYS : "belongs to"
   DAYS ||--o{ DAILY_MEALS : "has many"
   MEALS ||--o{ DAILY_MEALS : "has many"
+  MEALS ||--o{ MEAL_PREFERRED_DAYS : prefers
+  WEEKDAYS ||--o{ MEAL_PREFERRED_DAYS : identifies
   MEALS }o--o{ MEAL_TYPES : "many-to-many via meal_meal_types"
   MEALS ||--o{ MEAL_INGREDIENTS : contains
   INGREDIENTS ||--o{ MEAL_INGREDIENTS : used_in
@@ -19,6 +21,7 @@ erDiagram
     int id PK
     datetime from "not null"
     datetime to "not null"
+    json generation_notices "default [], not null"
     datetime created_at
     datetime updated_at
   }
@@ -54,6 +57,12 @@ erDiagram
     string recipe_url
     datetime created_at
     datetime updated_at
+  }
+
+  MEAL_PREFERRED_DAYS {
+    int id PK
+    int meal_id FK "not null, unique with weekday_id"
+    int weekday_id FK "not null"
   }
 
   MEAL_TYPES {
@@ -100,6 +109,10 @@ erDiagram
 - `DailyMeal.position` orders meals within a day: `0` breakfast, `1` lunch, `2` dinner.
 - `Meal` has many `MealType` records through `MealMealType`.
 - A meal can belong to more than one type, such as breakfast and dinner.
+- `MealPreferredDay` joins meals to preferred `Weekday` records. No rows means
+  Any day. These preferences guide automatic generation and apply across the
+  meal's types. They do not prevent assignments on other days.
+- `Menu.generation_notices` stores fallback messages as a generation snapshot.
 - Seeded meal types are `breakfast`, `lunch`, and `dinner`.
 - `Meal` has many `Ingredient` records through `MealIngredient`.
 - `MealIngredient` stores the quantity, unit, preparation note, and display order.
@@ -111,6 +124,7 @@ The schema enforces required foreign keys and prevents duplicate relationships:
 
 - One weekday can appear only once within a menu.
 - A meal cannot be added twice to the same day.
+- Each preferred weekday can occur only once per meal, with foreign keys to both records.
 - An ingredient name is unique after trimming and lowercasing.
 - An ingredient cannot be added twice to the same meal.
 - Meal ingredient units must reference the unit catalog.

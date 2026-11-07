@@ -18,14 +18,11 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     assert_equal 21, DailyMeal.joins(:day).where(days: { menu_id: menu.id }).count
   end
 
-  test "raises InsufficientMealsError when fewer than 7 meals per type" do
-    Meal.destroy_all
-    create_meals_for_generation(breakfast_count: 3, lunch_count: 7, dinner_count: 7)
-
-    error = assert_raises(MenuGenerationService::InsufficientMealsError) do
-      MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
-    end
-    assert_match(/Need at least 7 meals per type/, error.message)
+  test "small pools repeat meals to complete a week" do
+    create_meals_for_generation(breakfast_count: 1, lunch_count: 1, dinner_count: 1)
+    menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
+    assert_equal 21, menu.days.sum { |day| day.daily_meals.count }
+    assert_empty menu.generation_notices
   end
 
   test "raises InsufficientMealsError when no meals in database" do
@@ -34,7 +31,7 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     error = assert_raises(MenuGenerationService::InsufficientMealsError) do
       MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
     end
-    assert_match(/Need at least 7 meals per type/, error.message)
+    assert_match(/Cannot complete the menu/, error.message)
   end
 
   test "replaces existing menu for same week" do
@@ -56,6 +53,78 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
   test "next_monday returns next Monday when given Monday" do
     monday = Time.utc(2025, 3, 3, 6, 0, 0)
     assert_equal Date.new(2025, 3, 10), MenuGenerationService.next_monday(from: monday)
+  end
+
+  test "weekend meals never displace suitable weekday meals and Friday is included" do
+    meals = Meal.lunch.to_a
+    pizza = meals.first
+    pizza.update!(preferred_days: %w[friday saturday sunday])
+    meals.drop(1).each { |meal| meal.update!(preferred_days: %w[monday tuesday wednesday thursday]) }
+
+    menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
+    menu.days.includes(:weekday, :daily_meals).each do |day|
+      lunch = day.daily_meals.find_by!(position: 1).meal
+      if %w[friday saturday sunday].include?(day.weekday.name)
+        assert_equal pizza.id, lunch.id
+      else
+        assert_not_equal pizza.id, lunch.id
+      end
+    end
+    assert_empty menu.generation_notices
+  end
+
+  test "unrestricted pools use 21 different meals" do
+    menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
+    assert_equal 21, menu.days.flat_map { |day| day.meals.pluck(:id) }.uniq.size
+  end
+
+  test "fallbacks are minimal and persist in menu responses" do
+    Meal.lunch.each { |meal| meal.update!(preferred_days: %w[friday saturday sunday]) }
+    menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
+    assert_equal 4, menu.generation_notices.size
+    assert menu.generation_notices.any? { |notice| notice.include?("on Monday") }
+    assert menu.generation_notices.all? { |notice| notice.include?("Friday, Saturday, Sunday") }
+    assert_equal menu.generation_notices, menu.reload.as_json[:generation_notices]
+  end
+
+  test "global planning preserves an unrestricted meal for another meal time" do
+    Meal.destroy_all
+    breakfast = MealType.find_by!(description: "breakfast")
+    lunch = MealType.find_by!(description: "lunch")
+    dinner = MealType.find_by!(description: "dinner")
+    shared = Meal.create!(name: "Shared", description: "Flexible", meal_types: [breakfast, lunch])
+    Meal.create!(name: "Breakfast", description: "Morning", meal_types: [breakfast])
+    Meal.create!(name: "Dinner", description: "Evening", meal_types: [dinner])
+    menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
+    menu.days.each do |day|
+      assert_equal shared.id, day.daily_meals.find_by!(position: 1).meal_id
+      assert_equal 3, day.meals.distinct.count
+    end
+    assert_empty menu.generation_notices
+  end
+
+  test "an impossible schedule preserves the existing menu" do
+    week_start = Date.new(2025, 3, 3)
+    existing = MenuGenerationService.new.call(week_start: week_start)
+    Meal.lunch.each { |meal| meal.meal_types.delete_all }
+    assert_no_difference ["Menu.count", "Day.count", "DailyMeal.count"] do
+      assert_raises(MenuGenerationService::InsufficientMealsError) do
+        MenuGenerationService.new.call(week_start: week_start)
+      end
+    end
+    assert Menu.exists?(existing.id)
+  end
+
+  test "persistence errors roll back replacement" do
+    week_start = Date.new(2025, 3, 3)
+    existing = MenuGenerationService.new.call(week_start: week_start)
+    Weekday.find_by!(name: "monday").update!(name: "invalid")
+    assert_no_difference ["Menu.count", "Day.count", "DailyMeal.count"] do
+      assert_raises(ActiveRecord::RecordNotFound) do
+        MenuGenerationService.new.call(week_start: week_start)
+      end
+    end
+    assert Menu.exists?(existing.id)
   end
 
   private

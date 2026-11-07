@@ -148,6 +148,7 @@ test("creates a meal with ingredients and updates the library", async ({
         description: "Potato tacos with salsa.",
         recipe_url: "https://example.com/tacos",
         meal_type_ids: [2],
+        preferred_days: [],
         ingredients: [
           {
             name: "Potato",
@@ -476,4 +477,49 @@ test("applies root theme overrides to the app shell and Greda form controls", as
     "background-color",
     "rgb(0, 0, 0)",
   );
+});
+
+test("creates weekend preferences including Friday", async ({ page, api }) => {
+  await openLibrary(page);
+  const dialog = await addMeal(page);
+  await fillMeal(page);
+  const days = dialog.getByRole("group", { name: "Preferred days" });
+  await expect(days.getByRole("button", { name: "Any day", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await days.getByRole("button", { name: "Weekend (Fri–Sun)", exact: true }).click();
+  for (const day of ["Friday", "Saturday", "Sunday"]) {
+    await expect(days.getByRole("button", { name: day, exact: true })).toHaveAttribute("aria-pressed", "true");
+  }
+  await expect(days.getByRole("button", { name: "Monday", exact: true })).toHaveAttribute("aria-pressed", "false");
+  expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.preferred_days).toEqual(["friday", "saturday", "sunday"]);
+});
+
+test("prefills custom preferences, updates nested menu details, and clears to Any day", async ({ page, api }) => {
+  api.meals[0].preferred_days = ["monday", "thursday"];
+  await openLibrary(page);
+  const edit = page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true });
+  await edit.click();
+  const dialog = page.getByRole("dialog");
+  const days = dialog.getByRole("group", { name: "Preferred days" });
+  await expect(days.getByRole("button", { name: "Monday", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(days.getByRole("button", { name: "Thursday", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await days.getByRole("button", { name: "Monday", exact: true }).click();
+  await days.getByRole("button", { name: "Tuesday", exact: true }).click();
+  await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.preferred_days).toEqual(["thursday", "tuesday"]);
+  await navigateTo(page, "My menu");
+  await page.getByRole("button", { name: "View Breakfast: Huevos a la mexicana", exact: true }).first().click();
+  await expect(dialog.getByText("Preferred days: Tuesday, Thursday", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await navigateTo(page, "My meals");
+  await edit.click();
+  await days.getByRole("button", { name: "Weekdays (Mon–Thu)", exact: true }).click();
+  await expect(days.getByRole("button", { name: "Friday", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await days.getByRole("button", { name: "Any day", exact: true }).click();
+  await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[1].body.preferred_days).toEqual([]);
 });

@@ -1,3 +1,12 @@
+export type Weekday =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
 export type MealTypeName = "breakfast" | "lunch" | "dinner";
 
 export type Meal = {
@@ -6,6 +15,7 @@ export type Meal = {
   description: string;
   recipe_url?: string;
   meal_types: string[];
+  preferred_days: Weekday[];
   ingredients: Ingredient[];
 };
 
@@ -28,6 +38,7 @@ export type Day = {
 export type Menu = {
   id: number;
   created_at?: string;
+  generation_notices: string[];
   from: string;
   to: string;
   days: Day[];
@@ -45,6 +56,7 @@ export type MealForm = {
   description: string;
   recipe_url: string;
   meal_type_ids: number[];
+  preferred_days: Weekday[];
   ingredients: IngredientForm[];
 };
 

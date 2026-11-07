@@ -1,5 +1,6 @@
 import { Badge } from "@darthcharles/greda";
 import type { Meal } from "../../types";
+import { preferredDaysLabel } from "./preferredDays";
 import { mealTypeBadgeClassName } from "./mealTypes";
 
 export function MealDetails({ meal }: { meal: Meal }) {
@@ -18,6 +19,10 @@ export function MealDetails({ meal }: { meal: Meal }) {
       </div>
       <p className="m-0 text-sm leading-relaxed text-muted-foreground">
         {meal.description}
+      </p>
+      <p className="m-0 text-sm text-muted-foreground">
+        <span className="font-semibold">Preferred days: </span>
+        {preferredDaysLabel(meal.preferred_days ?? [])}
       </p>
       <section aria-label="Ingredients">
         <h3 className="mb-3 font-display text-xl font-semibold">Ingredients</h3>

@@ -6,6 +6,7 @@ export const meals: Meal[] = [
     name: "Huevos a la mexicana",
     description: "Eggs with tomato, onion, and chile.",
     recipe_url: "https://example.com/huevos",
+    preferred_days: [],
     meal_types: ["breakfast"],
     ingredients: [
       { name: "Egg", quantity: 2, unit: "pieza", preparation_note: "beaten" },
@@ -16,6 +17,7 @@ export const meals: Meal[] = [
     name: "Calabacitas con queso",
     description: "Tender squash with corn and queso fresco.",
     recipe_url: "",
+    preferred_days: [],
     meal_types: ["lunch", "dinner"],
     ingredients: [],
   },
@@ -24,6 +26,7 @@ export const meals: Meal[] = [
     name: "Avena cocida",
     description: "Warm oats with cinnamon.",
     recipe_url: "",
+    preferred_days: [],
     meal_types: ["breakfast", "dinner"],
     ingredients: [],
   },
@@ -40,6 +43,7 @@ export const units: UnitOption[] = [
 ];
 export const menu: Menu = {
   id: 1,
+  generation_notices: [],
   from: "2026-10-19T12:00:00Z",
   to: "2026-10-25T12:00:00Z",
   days: ["Monday", "Tuesday", "Wednesday"].map((weekday, index) => ({

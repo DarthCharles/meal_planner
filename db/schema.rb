@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_24_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   create_table "daily_meals", force: :cascade do |t|
     t.integer "day_id", null: false
     t.integer "meal_id", null: false
@@ -66,6 +66,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_170000) do
     t.index ["meal_type_id"], name: "index_meal_meal_types_on_meal_type_id"
   end
 
+  create_table "meal_preferred_days", force: :cascade do |t|
+    t.integer "meal_id", null: false
+    t.integer "weekday_id", null: false
+    t.index ["meal_id", "weekday_id"], name: "index_meal_preferred_days_on_meal_id_and_weekday_id", unique: true
+    t.index ["meal_id"], name: "index_meal_preferred_days_on_meal_id"
+    t.index ["weekday_id"], name: "index_meal_preferred_days_on_weekday_id"
+  end
+
   create_table "meal_types", force: :cascade do |t|
     t.string "description", null: false
     t.datetime "created_at", null: false
@@ -86,6 +94,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_170000) do
     t.datetime "to", precision: nil, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.json "generation_notices", default: [], null: false
   end
 
   create_table "units", force: :cascade do |t|
@@ -112,4 +121,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_170000) do
   add_foreign_key "meal_ingredients", "units"
   add_foreign_key "meal_meal_types", "meal_types"
   add_foreign_key "meal_meal_types", "meals"
+  add_foreign_key "meal_preferred_days", "meals"
+  add_foreign_key "meal_preferred_days", "weekdays"
 end

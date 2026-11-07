@@ -6,6 +6,7 @@ export const demoMeals: Meal[] = [
     name: "Huevos a la mexicana",
     description: "Eggs with tomato, onion, and chile.",
     recipe_url: "",
+    preferred_days: [],
     meal_types: ["breakfast"],
     ingredients: [],
   },
@@ -14,6 +15,7 @@ export const demoMeals: Meal[] = [
     name: "Calabacitas con queso",
     description: "Tender squash with corn and queso fresco.",
     recipe_url: "",
+    preferred_days: [],
     meal_types: ["lunch", "dinner"],
     ingredients: [],
   },
@@ -22,6 +24,7 @@ export const demoMeals: Meal[] = [
     name: "Avena cocida",
     description: "Warm oats with cinnamon and seasonal fruit.",
     recipe_url: "",
+    preferred_days: [],
     meal_types: ["breakfast", "dinner"],
     ingredients: [],
   },
@@ -29,6 +32,7 @@ export const demoMeals: Meal[] = [
 
 export const demoMenu: Menu = {
   id: 1,
+  generation_notices: [],
   from: "2025-03-03T00:00:00.000Z",
   to: "2025-03-09T23:59:59.000Z",
   days: [

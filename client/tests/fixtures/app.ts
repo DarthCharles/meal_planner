@@ -11,6 +11,7 @@ type MockApi = {
   reads: Record<string, number>;
   unavailable: boolean;
   generationError: string | null;
+  generationNotices: string[];
   saveError: string | null;
   initialBarrier?: Promise<void>;
   readBarriers: Record<string, Promise<void>>;
@@ -31,6 +32,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         reads: {},
         unavailable: false,
         generationError: null,
+        generationNotices: [],
         saveError: null,
         generationRequests: 0,
         saves: [],
@@ -78,8 +80,9 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           await api.generationBarrier;
           if (api.generationError)
             return void (await fail(api.generationError));
-          api.menus = structuredClone([menu]);
-          return void (await respond(menu));
+          const generated = { ...structuredClone(menu), generation_notices: api.generationNotices };
+          api.menus = [generated];
+          return void (await respond(generated));
         }
         if (
           (path === "/meals" && request.method() === "POST") ||

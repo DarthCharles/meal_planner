@@ -41,6 +41,18 @@ export function MenuScreen() {
         </div>
       )}
 
+      {!!menu?.generation_notices?.length && (
+        <Notice>
+          <div className="min-w-0">
+            <p className="m-0 font-semibold">Some day preferences needed a fallback.</p>
+            <ul className="mt-2 mb-0 pl-5">
+              {menu.generation_notices.map((notice, index) => (
+                <li key={index}>{notice}</li>
+              ))}
+            </ul>
+          </div>
+        </Notice>
+      )}
       <MenuView menu={menu} loading={loading} onOpenMeal={openMeal} />
     </>
   );

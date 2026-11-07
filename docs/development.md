@@ -91,7 +91,9 @@ ingredients, reference data, nested menus, UTC timestamps, CORS, and menu genera
 The menu-generation tests cover:
 
 - Seven-day, 21-meal menu creation.
-- Insufficient meal pools.
+- Small pools with repeats and impossible schedules.
+- Preferred days, minimal fallback notices, and variety after preferences.
+- Atomic replacement and preservation of existing menus on failure.
 - Replacing an existing menu for a week.
 - Finding the next Monday.
 
