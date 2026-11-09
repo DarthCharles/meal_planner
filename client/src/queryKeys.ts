@@ -3,4 +3,5 @@ export const queryKeys = {
   meals: ["meals"] as const,
   mealTypes: ["meal-types"] as const,
   units: ["units"] as const,
+  ingredients: ["ingredients"] as const,
 };

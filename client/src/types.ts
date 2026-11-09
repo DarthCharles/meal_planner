@@ -51,6 +51,8 @@ export type UnitOption = {
   name: string;
 };
 
+export type IngredientOption = { id: number; name: string };
+
 export type MealForm = {
   name: string;
   description: string;
@@ -61,8 +63,15 @@ export type MealForm = {
 };
 
 export type IngredientForm = {
+  ingredient_id?: number;
+  uncommitted?: boolean;
   name: string;
   quantity: string;
   unit: string;
   preparation_note: string;
+};
+
+export type MealPayload = Omit<MealForm, "ingredients"> & {
+  ingredients: (Omit<IngredientForm, "ingredient_id" | "name" | "uncommitted"> &
+    ({ ingredient_id: number; name?: never } | { name: string; ingredient_id?: never }))[];
 };

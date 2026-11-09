@@ -129,7 +129,7 @@ a meal from the menu does not trigger an unused library request.
 active dialog. Unsaved form inputs, validation errors, search, and filters stay
 local to their components.
 
-Initial query failures use demo data only for the failed resource and show the
+Initial meal, menu, type, and unit query failures use demo data only for the failed resource and show the
 demo notice in the screen or modal that owns the query. Successful resources
 stay intact. Demo values are presentation
 fallbacks and are never stored as successful query results. A failed background
@@ -139,10 +139,31 @@ existing data and leave the form open for correction or retry.
 ## Forms
 
 `MealForm` uses React Hook Form's `useForm` with typed default values for create
-and edit. Native name, description, URL, quantity, unit, and note fields use
+and edit. Native meal name, description, URL, quantity, and note fields use
 `register`; the meal-time toggle buttons use `Controller` to preserve numeric
 meal type IDs. React Query continues to own save requests, pending state, API
 errors, and cache updates.
+
+Ingredient units use Greda's `Select` through RHF `Controller`, with codes from
+`GET /units`. The trigger shows the saved unit when editing, supports keyboard
+selection, and exposes validation errors. Its popup renders inside the native
+dialog; Escape dismisses the unit list and restores focus to the trigger.
+
+Ingredient names use Greda's `Combobox` through RHF `Controller`. Opening the
+form fetches and caches `GET /ingredients`; filtering happens locally. Users
+select an existing ingredient or explicitly choose **Create ingredient**.
+Created options remain drafts until the meal saves, so cancelling does not
+create catalog entries. Existing options submit `ingredient_id`; new options
+submit `name`. Edit defaults preserve the saved ingredient identity. Successful
+saves merge returned ingredients into the catalog cache, making newly created
+ingredients available in the next form without an extra fetch. Catalog loading
+and errors stay inside the form; a failed catalog request has a retry action.
+
+Typing alone does not commit a selection. The form blocks saving until the user
+selects or creates an option, including when replacing a previously selected
+ingredient. The combobox popup portals inside the native dialog. Arrow keys and
+Enter select options without submitting the meal; Escape dismisses suggestions
+before dismissing the dialog.
 
 `FormProvider` shares the draft with `IngredientManager`, which uses
 `useFormContext` and `useFieldArray`. Rows use React Hook Form's generated IDs
@@ -229,7 +250,7 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.2.0. `styles.css` imports Tailwind,
+The client pins `@darthcharles/greda` 1.3.0. `styles.css` imports Tailwind,
 Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, the
 packaged `@darthcharles/greda/themes/comal.css` theme, then `theme.css`. Do not
 also import Greda CSS in JavaScript. This layer order lets app utilities override
@@ -268,9 +289,9 @@ variants and default to `type="button"`; form save actions explicitly use
 `type="submit"`. Navigation, filters, meal-time toggles, and ingredient actions
 also render Greda buttons directly, with layout classes where needed.
 
-The existing native dialog/provider and native ingredient unit select stay in
-place. If adding Greda Select or Tooltip inside a native dialog, put its portal
-container inside that dialog so it participates in the modal top layer.
+The native dialog/provider remains in place. Greda's ingredient combobox and
+unit select portal inside that dialog to participate in the modal top layer.
+Use the same portal placement for other overlay controls inside native dialogs.
 
 Components use Tailwind utilities directly in JSX for responsive layout and
 app-specific states. Meal type order and labels live in

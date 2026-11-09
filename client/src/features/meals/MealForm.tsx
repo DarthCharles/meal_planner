@@ -4,6 +4,7 @@ import type {
   Meal,
   MealForm as MealFormValues,
   MealTypeOption,
+  MealPayload,
   UnitOption,
 } from "../../types";
 import { useCreateMeal, useUpdateMeal } from "./queries";
@@ -36,7 +37,8 @@ export function MealForm({
       preferred_days: initialMeal?.preferred_days ?? [],
       ingredients:
         initialMeal?.ingredients?.map(
-          ({ name, quantity, unit, preparation_note }) => ({
+          ({ ingredient_id, name, quantity, unit, preparation_note }) => ({
+            ingredient_id,
             name,
             quantity: String(quantity),
             unit,
@@ -68,7 +70,9 @@ export function MealForm({
     errors.name || errors.description || errors.meal_type_ids
       ? "Add a name, description, and at least one meal time."
       : errors.ingredients
-        ? "Complete the quantity and unit for each ingredient."
+        ? errors.ingredients.some?.((row) => row?.name)
+          ? "Choose an ingredient or select Create for each typed name."
+          : "Complete the quantity and unit for each ingredient."
         : undefined;
   const error = validationError || createError?.message || updateError?.message;
   const clearSaveErrors = () => {
@@ -78,9 +82,14 @@ export function MealForm({
   const submit = (form: MealFormValues) => {
     if (saving) return;
     clearSaveErrors();
-    const ingredients = form.ingredients.filter((ingredient) =>
-      ingredient.name.trim(),
-    );
+    const ingredients: MealPayload["ingredients"] = form.ingredients
+      .filter((ingredient) => ingredient.name.trim())
+      .map(({ ingredient_id, name, quantity, unit, preparation_note }) => ({
+        ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
+        quantity,
+        unit,
+        preparation_note,
+      }));
     const values = { ...form, ingredients };
     if (initialMeal) {
       updateMeal({ id: initialMeal.id, form: values }, { onSuccess: onSaved });

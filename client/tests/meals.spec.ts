@@ -14,6 +14,11 @@ async function addMeal(page: Page) {
   return page.getByRole("dialog", { name: "A new favorite" });
 }
 
+async function selectUnit(page: Page, code: string, index = 0) {
+  await page.getByRole("combobox", { name: "Unit", exact: true }).nth(index).click();
+  await page.getByRole("option", { name: code, exact: true }).click();
+}
+
 async function fillMeal(page: Page) {
   await page.getByLabel("Meal name", { exact: true }).fill("Tacos de papa");
   await page
@@ -61,6 +66,7 @@ test("validates required fields and ingredient quantity/unit before saving", asy
   await fillMeal(page);
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await page.getByLabel("Ingredient name").fill("Potato");
+  await page.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(
     dialog.getByText("Complete the quantity and unit for each ingredient."),
@@ -70,7 +76,7 @@ test("validates required fields and ingredient quantity/unit before saving", asy
   await expect(
     dialog.getByText("Complete the quantity and unit for each ingredient."),
   ).toBeVisible();
-  await page.getByLabel("Unit", { exact: true }).selectOption("pieza");
+  await selectUnit(page, "pieza");
   for (const quantity of ["0", "-1", "0.0001"]) {
     await page.getByLabel("Quantity").fill(quantity);
     await dialog
@@ -102,8 +108,9 @@ test("creates a meal with ingredients and updates the library", async ({
   await fillMeal(page);
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await page.getByLabel("Ingredient name").fill("Potato");
+  await page.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
   await page.getByLabel("Quantity").fill("2");
-  await page.getByLabel("Unit", { exact: true }).selectOption("pieza");
+  await selectUnit(page, "pieza");
   await page.getByLabel("Preparation note").fill("diced");
   for (const label of [
     "Ingredient name",
@@ -162,6 +169,130 @@ test("creates a meal with ingredients and updates the library", async ({
   ]);
 });
 
+test("searches and selects an existing ingredient with the keyboard", async ({ page, api }) => {
+  await openLibrary(page);
+  const dialog = await addMeal(page);
+  await fillMeal(page);
+  await dialog.getByRole("button", { name: /Add ingredient/ }).click();
+  const ingredient = dialog.getByRole("combobox", { name: "Ingredient name" });
+  await ingredient.fill("eGG");
+  await expect(dialog.getByRole("option", { name: "Egg", exact: true })).toBeVisible();
+  const suggestions = await dialog.getByRole("listbox", { name: "Ingredients" }).boundingBox();
+  expect(suggestions!.x).toBeGreaterThanOrEqual(0);
+  expect(suggestions!.x + suggestions!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await expect(dialog.getByRole("option", { name: /Create ingredient/ })).toHaveCount(0);
+  await ingredient.press("ArrowDown");
+  await ingredient.press("Enter");
+  await expect(ingredient).toHaveValue("Egg");
+  expect(api.saves).toEqual([]);
+  await dialog.getByLabel("Quantity").fill("2");
+  await selectUnit(page, "pieza");
+  await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.ingredients).toEqual([
+    { ingredient_id: 1, quantity: "2", unit: "pieza", preparation_note: "" },
+  ]);
+});
+
+test("selects units with the keyboard and dismisses the unit list without closing the meal", async ({ page, api }) => {
+  await openLibrary(page);
+  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  const unit = dialog.getByRole("combobox", { name: "Unit", exact: true });
+  await expect(unit).toHaveText("pieza");
+  await unit.focus();
+  await unit.press("ArrowDown");
+  await expect(dialog.getByRole("listbox")).toBeVisible();
+  await expect(dialog.getByRole("option", { name: "pieza", exact: true })).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(dialog.getByRole("option", { name: "g", exact: true })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(unit).toHaveText("g");
+  await expect(unit).toBeFocused();
+  expect(api.saves).toEqual([]);
+  await unit.press("ArrowDown");
+  await expect(dialog.getByRole("listbox")).toBeVisible();
+  const popup = await dialog.getByRole("listbox").boundingBox();
+  expect(popup!.x).toBeGreaterThanOrEqual(0);
+  expect(popup!.x + popup!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("listbox")).toHaveCount(0);
+  await expect(unit).toBeFocused();
+  await expect(unit).toHaveText("g");
+  await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.ingredients[0].unit).toBe("g");
+});
+
+test("requires explicit selection when replacing an ingredient and closes suggestions before the dialog", async ({ page, api }) => {
+  await openLibrary(page);
+  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  const ingredient = dialog.getByRole("combobox", { name: "Ingredient name" });
+  await ingredient.fill("Tom");
+  await expect(dialog.getByRole("option", { name: "Tomato", exact: true })).toBeVisible();
+  await ingredient.press("Escape");
+  await expect(dialog).toBeVisible();
+  await expect(ingredient).toBeFocused();
+  await expect(dialog.getByRole("listbox")).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(dialog.getByRole("alert")).toHaveText("Choose an ingredient or select Create for each typed name.");
+  expect(api.saves).toEqual([]);
+  await ingredient.fill("Tom");
+  await dialog.getByRole("option", { name: "Tomato", exact: true }).click();
+  await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(api.saves[0].body.ingredients[0]).toMatchObject({ ingredient_id: 2 });
+});
+
+test("keeps created ingredients as drafts until save and reuses the saved catalog", async ({ page, api }) => {
+  await openLibrary(page);
+  let dialog = await addMeal(page);
+  await dialog.getByRole("button", { name: /Add ingredient/ }).click();
+  await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
+  await dialog.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
+  // StrictMode may abort and restart the initial request; reopening must reuse it.
+  const initialReads = api.reads["/ingredients"];
+  expect(api.ingredients.some((item) => item.name === "Potato")).toBe(false);
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  expect(api.saves).toEqual([]);
+  dialog = await addMeal(page);
+  await fillMeal(page);
+  await dialog.getByRole("button", { name: /Add ingredient/ }).click();
+  await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
+  await dialog.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
+  await dialog.getByLabel("Quantity").fill("1");
+  await selectUnit(page, "pieza");
+  await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  dialog = await addMeal(page);
+  await dialog.getByRole("button", { name: /Add ingredient/ }).click();
+  await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("potato");
+  await expect(dialog.getByRole("option", { name: "Potato", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("option", { name: /Create ingredient/ })).toHaveCount(0);
+  expect(api.reads["/ingredients"]).toBe(initialReads);
+});
+
+test("shows ingredient catalog loading and supports retry after failure", async ({ page, api }) => {
+  let release!: () => void;
+  api.readBarriers["/ingredients"] = new Promise<void>((resolve) => { release = resolve; });
+  api.readErrors["/ingredients"] = "Ingredients unavailable";
+  await openLibrary(page);
+  const dialog = await addMeal(page);
+  await dialog.getByRole("button", { name: /Add ingredient/ }).click();
+  const ingredient = dialog.getByRole("combobox", { name: "Ingredient name" });
+  await ingredient.fill("Egg");
+  await expect(dialog.getByText("Loading options…")).toBeVisible();
+  release();
+  await expect(dialog.getByRole("button", { name: "Retry ingredients" })).toBeVisible();
+  delete api.readErrors["/ingredients"];
+  await dialog.getByRole("button", { name: "Retry ingredients" }).click();
+  await ingredient.click();
+  await ingredient.fill("Egg");
+  await expect(dialog.getByRole("option", { name: "Egg", exact: true })).toBeVisible();
+});
+
 test("prefills and updates a meal including removing an ingredient", async ({
   page,
   api,
@@ -182,7 +313,7 @@ test("prefills and updates a meal including removing an ingredient", async ({
   );
   await expect(page.getByLabel("Ingredient name")).toHaveValue("Egg");
   await expect(page.getByLabel("Quantity")).toHaveValue("2");
-  await expect(page.getByLabel("Unit", { exact: true })).toHaveValue("pieza");
+  await expect(page.getByRole("combobox", { name: "Unit", exact: true })).toHaveText("pieza");
   await expect(page.getByLabel("Preparation note")).toHaveValue("beaten");
   await page.getByLabel("Meal name", { exact: true }).fill("Huevos con salsa");
   await dialog.getByRole("button", { name: "Remove Egg", exact: true }).click();
@@ -322,7 +453,7 @@ test("waits for form options before initializing an existing meal", async ({
   await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue(
     "Huevos a la mexicana",
   );
-  await expect(page.getByLabel("Unit", { exact: true })).toHaveValue("pieza");
+  await expect(page.getByRole("combobox", { name: "Unit", exact: true })).toHaveText("pieza");
   await dialog
     .getByRole("button", { name: "Update meal", exact: true })
     .click();
@@ -343,14 +474,12 @@ test("preserves ingredient values after removing a middle row", async ({
       .getByLabel("Ingredient name", { exact: true })
       .nth(index)
       .fill(name);
+    await page.getByRole("option", { name: `Create ingredient “${name}”`, exact: true }).click();
     await page
       .getByLabel("Quantity", { exact: true })
       .nth(index)
       .fill(String(index + 1));
-    await page
-      .getByLabel("Unit", { exact: true })
-      .nth(index)
-      .selectOption("pieza");
+    await selectUnit(page, "pieza", index);
     await page
       .getByLabel("Preparation note", { exact: true })
       .nth(index)

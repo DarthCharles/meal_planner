@@ -15,12 +15,45 @@ All responses use a top-level `data` or `errors` key.
 | `PATCH` | `/meals/:id` | Update a meal |
 | `DELETE` | `/meals/:id` | Delete a meal |
 | `GET` | `/units` | List available ingredient units |
+| `GET` | `/ingredients` | List the shared ingredient catalog |
 
 Meal create and update requests may include an `ingredients` array. Each item
-uses `name`, `quantity`, `unit`, and optional `preparation_note` and `position`.
+uses exactly one of `ingredient_id` (an existing catalog ID) or `name` (a new
+ingredient), plus `quantity`, `unit`, and optional `preparation_note` and
+`position`. Existing clients may continue submitting names. Names are trimmed
+and matched case-insensitively to reuse an existing ingredient; otherwise a new
+catalog entry is created as part of the meal save.
 When `ingredients` is included in an update, it replaces the meal's current
 ingredient list. Meal responses include the normalized `ingredients` array.
 The `unit` value must be one of the codes returned by `GET /units`.
+Omitting `ingredients` preserves the list on update; `[]` clears it. Each
+ingredient may occur only once in a meal. Invalid identities, duplicate rows,
+nonpositive quantities, and unknown units return `422` with
+`{"errors":{"ingredients":["…"]}}`. Meal fields, preferences, meal types,
+recipe rows, and new catalog entries save in one transaction; a failure rolls
+back all changes.
+
+`GET /ingredients` returns all ingredients sorted by normalized name, with no
+ownership filtering:
+
+```json
+{"data":[{"id":12,"name":"Egg"},{"id":19,"name":"Potato"}]}
+```
+
+For example, a meal can select an existing ingredient and create another:
+
+```json
+{
+  "ingredients": [
+    {"ingredient_id":12,"quantity":"2","unit":"pieza"},
+    {"name":"Onion","quantity":"100","unit":"g","preparation_note":"diced"}
+  ]
+}
+```
+
+Meal responses retain `ingredient_id`, display `name`, quantity, unit, note,
+position, and the meal-ingredient row `id`. New ingredients are persisted only
+when a meal saves; there is no standalone creation request from the form.
 
 Create and update payload:
 

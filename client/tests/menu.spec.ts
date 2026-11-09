@@ -388,6 +388,7 @@ test("loads each resource only when its screen or form needs it", async ({
       .getByRole("button", { name: "Save meal", exact: true }),
   ).toBeEnabled();
   expect(Object.keys(api.reads).sort()).toEqual([
+    "/ingredients",
     "/meal_types",
     "/meals",
     "/menus",

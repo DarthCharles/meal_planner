@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../api";
 import { queryKeys } from "../../queryKeys";
-import type { Meal, MealForm, Menu } from "../../types";
+import type { IngredientOption, Meal, MealPayload, Menu } from "../../types";
 
 export function useMeals() {
   return useQuery({
@@ -26,13 +26,35 @@ export function useUnits() {
   });
 }
 
+export function useIngredients() {
+  return useQuery({
+    queryKey: queryKeys.ingredients,
+    queryFn: ({ signal }) => api.getIngredients(signal),
+    staleTime: 5 * 60_000,
+  });
+}
+
 function useSyncSavedMeal() {
   const client = useQueryClient();
   return async (meal: Meal) => {
     await Promise.all([
       client.cancelQueries({ queryKey: queryKeys.meals }),
       client.cancelQueries({ queryKey: queryKeys.menus }),
+      client.cancelQueries({ queryKey: queryKeys.ingredients }),
     ]);
+    client.setQueryData<IngredientOption[]>(queryKeys.ingredients, (ingredients) => {
+      if (!ingredients) return undefined;
+      const catalog = new Map(ingredients.map((item) => [item.id, item]));
+      for (const ingredient of meal.ingredients) {
+        if (ingredient.ingredient_id) {
+          catalog.set(ingredient.ingredient_id, {
+            id: ingredient.ingredient_id,
+            name: ingredient.name,
+          });
+        }
+      }
+      return [...catalog.values()].sort((a, b) => a.name.localeCompare(b.name));
+    });
     client.setQueryData<Meal[]>(queryKeys.meals, (meals) => {
       if (!meals) return undefined;
       return meals.some((item) => item.id === meal.id)
@@ -63,7 +85,7 @@ export function useCreateMeal() {
 export function useUpdateMeal() {
   const syncSavedMeal = useSyncSavedMeal();
   return useMutation({
-    mutationFn: ({ id, form }: { id: number; form: MealForm }) =>
+    mutationFn: ({ id, form }: { id: number; form: MealPayload }) =>
       api.updateMeal(id, form),
     onSuccess: syncSavedMeal,
   });

@@ -9,7 +9,7 @@ export const meals: Meal[] = [
     preferred_days: [],
     meal_types: ["breakfast"],
     ingredients: [
-      { name: "Egg", quantity: 2, unit: "pieza", preparation_note: "beaten" },
+      { ingredient_id: 1, name: "Egg", quantity: 2, unit: "pieza", preparation_note: "beaten" },
     ],
   },
   {

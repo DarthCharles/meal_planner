@@ -1,12 +1,13 @@
 import { test as base, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import type { Meal, MealForm, Menu } from "../../src/types";
+import type { IngredientOption, Meal, MealPayload, Menu } from "../../src/types";
 import { meals, mealTypes, menu, units } from "./data";
 
-type SaveRequest = { method: string; path: string; body: MealForm };
+type SaveRequest = { method: string; path: string; body: MealPayload };
 type MockApi = {
   menus: Menu[];
   meals: Meal[];
+  ingredients: IngredientOption[];
   readErrors: Record<string, string>;
   reads: Record<string, number>;
   unavailable: boolean;
@@ -27,6 +28,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
       const api: MockApi = {
         menus: structuredClone([menu]),
         meals: structuredClone(meals),
+        ingredients: [{ id: 1, name: "Egg" }, { id: 2, name: "Tomato" }],
         readErrors: {},
         readBarriers: {},
         reads: {},
@@ -74,6 +76,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           if (path === "/meals") return void (await respond(api.meals));
           if (path === "/meal_types") return void (await respond(mealTypes));
           if (path === "/units") return void (await respond(units));
+          if (path === "/ingredients") return void (await respond(api.ingredients));
         }
         if (path === "/menus/generate" && request.method() === "POST") {
           api.generationRequests++;
@@ -88,12 +91,23 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           (path === "/meals" && request.method() === "POST") ||
           (path === "/meals/1" && request.method() === "PUT")
         ) {
-          const body = request.postDataJSON() as MealForm;
+          const body = request.postDataJSON() as MealPayload;
           api.saves.push({ method: request.method(), path, body });
           await api.saveBarrier;
           if (api.saveError) return void (await fail(api.saveError));
           const savedMeal: Meal = {
             ...body,
+            ingredients: body.ingredients.map((row) => {
+              let ingredient = row.ingredient_id
+                ? api.ingredients.find((item) => item.id === row.ingredient_id)
+                : api.ingredients.find((item) => item.name.toLowerCase() === row.name?.trim().toLowerCase());
+              if (!ingredient) {
+                if (!row.name) throw new Error("Unknown ingredient ID in mocked save");
+                ingredient = { id: Math.max(0, ...api.ingredients.map((item) => item.id)) + 1, name: row.name.trim() };
+                api.ingredients.push(ingredient);
+              }
+              return { ...row, name: ingredient.name, ingredient_id: ingredient.id };
+            }),
             id: request.method() === "POST" ? 4 : 1,
             meal_types: mealTypes
               .filter(([, id]) => body.meal_type_ids.includes(id))
