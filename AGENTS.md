@@ -58,13 +58,18 @@ and implementation rules live in the backend and client instructions above.
 
 ## Verification expectations
 
-- Backend changes: run `bundle exec rails test` from the repository root.
-- Client changes: run `npm run build` and `npm run test:browser` from `client/`.
-  Also run `npx tsc -p tsconfig.tests.json` when changing browser tests or their
-  configuration.
-- Work spanning both sides must satisfy both sets of checks. Validate actual
-  Rails integration separately when the change requires it; browser mocks alone
-  do not cover it.
+- During development, use focused tests or lightweight checks relevant to the
+  change. Do not run full suites after every change or at the end of each agent
+  turn. Avoid repeating successful checks without a relevant new change.
+- Run full suites only when the user says they are done and ready for final
+  verification, or explicitly requests a full run.
+- At that point, backend verification is `bundle exec rails test` from the
+  repository root. Client verification is `npm run build` and
+  `npm run test:browser` from `client/`, plus
+  `npx tsc -p tsconfig.tests.json` when browser tests or their configuration changed.
+- Final verification for work spanning both sides covers both sets of checks.
+  Validate actual Rails integration separately when the change requires it;
+  browser mocks alone do not cover it.
 - Documentation-only changes do not require application tests.
 
 Report the commands run, results, and material coverage limits. If a command

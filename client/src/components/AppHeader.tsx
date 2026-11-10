@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { Button, Popover, PopoverContent, PopoverTrigger } from "@darthcharles/greda";
 import { useMealDialog } from "../features/meals/useMealDialog";
 import { useGenerateMenu, useMenus } from "../features/menu/queries";
@@ -78,25 +78,29 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
                 }
               }}
             >
-              <nav className="hidden flex-col gap-1 desktop:flex" aria-label="Primary navigation">
+              <nav className="flex flex-col gap-1" aria-label="Primary navigation">
                 {([
-                  ["menu", "My menu"],
-                  ["meals", "My meals"],
+                  ["menu", "My Menu"],
+                  ["meals", "My Meals"],
+                  ["history", "Menu History"],
                 ] as const).map(([destination, label]) => (
-                  <Button
-                    key={destination}
-                    variant={view === destination ? "secondary" : "ghost"}
-                    className="w-full justify-start"
-                    aria-current={view === destination ? "page" : undefined}
-                    onClick={() => {
-                      onNavigate(destination);
-                      setActionsOpen(false);
-                    }}
-                  >
-                    {label}
-                  </Button>
+                  <Fragment key={destination}>
+                    {destination === "history" && <hr className="my-1 border-border" />}
+                    <Button
+                      variant={view === destination ? "secondary" : "ghost"}
+                      className="w-full justify-start"
+                      aria-current={view === destination ? "page" : undefined}
+                      onClick={() => {
+                        onNavigate(destination);
+                        setActionsOpen(false);
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  </Fragment>
                 ))}
               </nav>
+              <hr className="my-1 border-border" />
               <Button
                 variant="ghost"
                 className="w-full justify-start"

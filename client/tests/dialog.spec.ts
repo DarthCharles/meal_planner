@@ -217,11 +217,12 @@ test("opens header actions with the keyboard and dismisses with Escape or an out
   const addMeal = page.getByRole("button", { name: "Add a meal", exact: true });
   await trigger.focus();
   await page.keyboard.press("Enter");
-  if (page.viewportSize()!.width < 760) {
-    await expect(addMeal).toBeFocused();
-  } else {
-    await expect(page.getByRole("button", { name: "My menu", exact: true })).toBeFocused();
-  }
+  await expect(page.getByRole("button", { name: "My Menu", exact: true })).toBeFocused();
+  const actions = page.getByRole("dialog", { name: "Actions", exact: true });
+  await expect(actions.getByRole("button")).toHaveText([
+    "My Menu", "My Meals", "Menu History", "Add a meal",
+  ]);
+  await expect(actions.getByRole("separator")).toHaveCount(2);
   await page.keyboard.press("Escape");
   await expect(addMeal).toHaveCount(0);
   await expect(trigger).toBeFocused();

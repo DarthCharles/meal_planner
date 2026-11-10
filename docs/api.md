@@ -98,6 +98,9 @@ apply to every meal time associated with the meal and affect future generation.
 | `GET` | `/menus/:id` | Show one menu |
 | `POST` | `/menus/generate` | Generate the next weekly menu |
 
+`GET /menus` returns menus by start date descending, with descending ID as a
+tie-breaker. The latest weekly plan stays first after generation and on reload.
+
 `POST /menus/generate` plans the next Monday–Sunday week (using the existing UTC
 next-Monday date semantics). It creates seven days with breakfast, lunch, and
 dinner, each using a different meal within the day. A meal may repeat on

@@ -19,17 +19,29 @@ The client uses `VITE_API_URL` for the API base URL. The default is `http://127.
 - View the current menu.
 - Reorder the weekly grid so the current day appears first.
 - Generate a weekly menu.
+- Browse past weeks through History and open their meals.
 - Browse and filter meals.
 - Add a meal to the library.
 - Install the app as a PWA.
 
 The header's Comal logo and name link back to the index (the menu screen).
 
-The header's MC button opens a Greda popover with an “Add a meal” action on all
-screen sizes, with padding around the list and vertical spacing between actions. Choosing it closes the popover and opens the meal form; closing
-the form returns focus to MC. Mobile keeps “My menu” and “My meals” in its bottom navigation. On desktop,
-both navigation actions appear inside the MC popover. The library also keeps
-its own add action.
+History is available in the mobile bottom navigation and desktop MC menu. It
+uses the shared `GET /menus` query and lists completed weeks newest first,
+excluding current and upcoming weeks based on calendar dates in the browser's
+timezone. Date labels preserve the API calendar dates and include the year.
+Selecting a week displays its meals Monday–Sunday and any generation notices;
+meal rows open the existing meal details dialog. Loading, empty, and API error
+states are explicit, with retry on error and no demo history fallback.
+History contains saved weekly assignments, not previous regenerations of the
+same week. Meals still reference the live library, so later recipe edits also
+appear in old menus.
+
+The header's MC button opens a Greda popover on all screen sizes, ordered as
+“My Menu”, “My Meals”, a separator, “Menu History”, a separator, and “Add a meal”.
+Choosing a destination closes the popover. “Add a meal” opens the meal form;
+closing the form returns focus to MC. Mobile also keeps its bottom navigation.
+The library keeps its own add action.
 
 The single “Plan my week” action has a plus icon and sits beside MC in the header on mobile and
 desktop, including while browsing the meal library. It is disabled while menus

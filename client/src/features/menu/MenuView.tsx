@@ -6,10 +6,12 @@ export function MenuView({
   menu,
   loading,
   onOpenMeal,
+  startFromToday = true,
 }: {
   menu: Menu | null;
   loading: boolean;
   onOpenMeal: (meal: Meal) => void;
+  startFromToday?: boolean;
 }) {
   if (loading)
     return (
@@ -23,7 +25,7 @@ export function MenuView({
   const today = new Intl.DateTimeFormat("en-US", { weekday: "long" })
     .format(new Date())
     .toLowerCase();
-  const orderedDays = orderDaysFromToday(menu.days, today);
+  const orderedDays = orderDaysFromToday(menu.days, startFromToday ? today : "monday");
   return (
     <div className="grid grid-cols-1 gap-4 tablet:grid-cols-2 wide:grid-cols-3">
       {orderedDays.map((day) => (

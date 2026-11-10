@@ -25,6 +25,25 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Cannot complete the menu/, json["errors"].to_s)
   end
 
+  test "generated menu remains first when menus are fetched again" do
+    Menu.create!(from: Time.utc(2025, 3, 3), to: Time.utc(2025, 3, 9, 23, 59, 59))
+
+    travel_to Time.utc(2026, 11, 9, 12) do
+      post "/menus/generate", as: :json
+      assert_response :created
+      generated = response.parsed_body.fetch("data")
+
+      # A later insertion for an older week must not displace the latest plan.
+      Menu.create!(from: Time.utc(2026, 11, 2), to: Time.utc(2026, 11, 8, 23, 59, 59))
+
+      get "/menus", as: :json
+      assert_response :ok
+      menus = response.parsed_body.fetch("data")
+      assert_equal generated, menus.first
+      assert_equal %w[2026-11-16 2026-11-02 2025-03-03], menus.map { |menu| menu.fetch("from").first(10) }
+    end
+  end
+
   private
 
   def create_meal_pool_for_generate

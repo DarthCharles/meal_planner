@@ -1,7 +1,7 @@
 import { Button } from "@darthcharles/greda";
 export type NavigationProps = {
-  view: "menu" | "meals";
-  onNavigate: (view: "menu" | "meals") => void;
+  view: "menu" | "meals" | "history";
+  onNavigate: (view: "menu" | "meals" | "history") => void;
 };
 
 export function Navigation({ view, onNavigate }: NavigationProps) {
@@ -18,6 +18,12 @@ export function Navigation({ view, onNavigate }: NavigationProps) {
           onClick: () => onNavigate("menu"),
         },
         {
+          label: "History",
+          icon: "◷",
+          active: view === "history",
+          onClick: () => onNavigate("history"),
+        },
+        {
           label: "My meals",
           icon: "◒",
           active: view === "meals",
@@ -29,6 +35,7 @@ export function Navigation({ view, onNavigate }: NavigationProps) {
           variant={active ? "secondary" : "ghost"}
           className="h-auto min-w-0 flex-1 flex-col gap-[3px] px-[13px] py-2 text-[10px] tablet:min-w-[94px] tablet:flex-initial"
           onClick={onClick}
+          aria-current={active ? "page" : undefined}
         >
           <span className="text-lg leading-[17px]">{icon}</span>
           <span>{label}</span>

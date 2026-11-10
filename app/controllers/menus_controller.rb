@@ -8,7 +8,7 @@ class MenusController < ApplicationController
   end
 
   def index
-    @menus = Menu.all
+    @menus = Menu.order(from: :desc, id: :desc)
     render json: { data: @menus }, status: :ok
   end
 

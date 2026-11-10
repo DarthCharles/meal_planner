@@ -99,17 +99,21 @@ The client uses `VITE_API_URL` when set, and otherwise targets
 
 ## Verification expectations
 
-For client changes, run from `client/`:
+During development, use focused browser tests or lightweight checks appropriate
+to the change. Do not run the full browser suite after each change or agent turn.
+When the user says they are done and ready for final verification, or explicitly
+requests a full run, run from `client/`:
 
 ```bash
 npm run build
 npm run test:browser
 ```
 
-When changing browser tests or their configuration, also type-check them from
-`client/` with `npx tsc -p tsconfig.tests.json`. A single project or test can be
-used while iterating, but run the full browser suite before completing client
-changes.
+When changing browser tests or their configuration, type-check them from
+`client/` with `npx tsc -p tsconfig.tests.json` as appropriate during development
+and include this check in final verification. A single project or test can be
+used while iterating. Do not repeat successful checks without a relevant new
+change, and do not treat the end of an agent turn as final verification.
 
 Playwright starts its own Vite server on port 4173 and intercepts its API traffic
 to port 4174. Keep port 4173 free; do not start a separate test server or point

@@ -270,8 +270,8 @@ test("shows today's menu first and adapts the grid and navigation", async ({
     await expect(navigation).toHaveCount(0);
     await page.getByRole("button", { name: "Open actions" }).click();
     await expect(navigation).toBeVisible();
-    await expect(navigation.getByRole("button", { name: "My menu" })).toHaveAttribute("aria-current", "page");
-    await expect(navigation.getByRole("button", { name: "My meals" })).toBeVisible();
+    await expect(navigation.getByRole("button", { name: "My Menu" })).toHaveAttribute("aria-current", "page");
+    await expect(navigation.getByRole("button", { name: "My Meals" })).toBeVisible();
     await page.keyboard.press("Escape");
   }
 

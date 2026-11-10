@@ -42,12 +42,16 @@ Rails integration.
   duplicating its logic in controllers or Rake tasks.
 - When changing the database schema, add a new migration. Do not edit an old
   migration that may already have run.
-- Update Rails tests for backend behavior changes and run the full test suite.
+- Update Rails tests for backend behavior changes. Use focused tests during
+  development; reserve the full suite for user-requested final verification.
 
 ## Verification expectations
 
 For backend behavior changes, update the appropriate Rails model, controller,
-service, or other tests and run the full suite from the repository root:
+service, or other tests and run relevant test files or individual tests during
+development. Do not run the full suite after each change or agent turn. Run it
+from the repository root only when the user says they are done and ready for
+final verification, or explicitly requests a full run:
 
 ```bash
 bundle exec rails test
