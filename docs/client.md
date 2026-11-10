@@ -26,6 +26,20 @@ The client uses `VITE_API_URL` for the API base URL. The default is `http://127.
 
 The header's Comal logo and name link back to the index (the menu screen).
 
+React Router's declarative mode provides browser routes: `/` for My Menu,
+`/meals` for My Meals, and `/saved-menus` for Saved Menus. Header and bottom
+navigation use real links with an active-page indication. URLs support direct
+visits, reloads, opening in another tab, and browser back/forward navigation.
+Unknown paths show a page-not-found screen with a link home. Meal dialogs,
+library search/filters, and the selected saved week remain local UI state.
+
+Production hosting must serve `client/dist/index.html` for client navigation
+paths (including unknown page paths), while serving static assets normally.
+Vite's development and preview servers already provide this SPA fallback.
+Keep Rails API traffic on its configured API origin; do not rewrite API requests
+to the client entry point. The service worker remains unchanged; offline deep
+links and PWA installation require separate verification.
+
 Saved Menus is available in the mobile bottom navigation and MC menu. It
 uses the shared `GET /menus` query and lists all saved weeks newest first,
 with Upcoming, Current, and Past labels based on calendar dates in the browser's
@@ -96,8 +110,8 @@ The client falls back to demo data when the API is unavailable so the visual she
 ```text
 client/
   src/
-    main.tsx      # React entry point, query/dialog providers, and service worker registration
-    App.tsx       # screen state and screen composition
+    main.tsx      # React entry point, router/query/dialog providers, and service worker registration
+    App.tsx       # shared shell and screen routes
     queryClient.ts # shared server-state cache and request defaults
     queryKeys.ts  # stable cache keys
     components/   # header, navigation, illustrations, and generic dialog host
@@ -142,7 +156,7 @@ Query ownership follows the feature that consumes the data:
   with the correct meal type IDs. `MealForm` owns create/update mutations and
   unsaved input state.
 
-`App.tsx` owns the shell and screen state; it does not fetch data or pass
+`App.tsx` owns the shell and route composition; it does not fetch data or pass
 API collections through props. Display components such as `MenuView`, `DayCard`,
 and `MealsView` receive data and callbacks through props. Nested ingredient
 inputs access their form through React Hook Form context.
@@ -159,7 +173,7 @@ If the meal list has never loaded, it is fetched on the next library visit rathe
 than being replaced with a partial list containing only the saved meal. Creating
 a meal from the menu does not trigger an unused library request.
 
-`App.tsx` keeps the current screen in local state. The dialog provider owns the
+React Router derives the current screen from the URL. The dialog provider owns the
 active dialog. Unsaved form inputs, validation errors, search, and filters stay
 local to their components.
 

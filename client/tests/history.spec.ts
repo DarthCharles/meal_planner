@@ -137,7 +137,7 @@ test("links from an empty current week to the upcoming saved plan", async ({ pag
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Nothing planned for this week." })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
-  await page.getByRole("button", { name: "Browse saved menus" }).click();
+  await page.getByRole("link", { name: "Browse saved menus" }).click();
   await expect(page.getByRole("heading", { name: "Saved Menus", exact: true })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Saved weeks" }).getByRole("button")).toContainText("Upcoming");
   await expect(page.getByRole("article").first().getByText("Upcoming breakfast")).toBeVisible();

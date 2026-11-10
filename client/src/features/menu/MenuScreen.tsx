@@ -1,4 +1,5 @@
 import { Button } from "@darthcharles/greda";
+import { Link } from "react-router";
 import { useMealDialog } from "../meals/useMealDialog";
 import { Notice } from "../../components/Notice";
 import { demoMenu } from "../../demoData";
@@ -7,7 +8,7 @@ import { MenuHero } from "./MenuHero";
 import { isCurrentMenu } from "./menuDates";
 import { useMenus } from "./queries";
 
-export function MenuScreen({ onBrowseMenus }: { onBrowseMenus: () => void }) {
+export function MenuScreen() {
   const { openMeal } = useMealDialog();
   const {
     data: menus,
@@ -28,7 +29,7 @@ export function MenuScreen({ onBrowseMenus }: { onBrowseMenus: () => void }) {
         <section className="rounded-[30px] bg-accent px-6 py-7">
           <h2 className="mb-3 font-display text-[28px] font-semibold">Nothing planned for this week.</h2>
           <p className="mb-4 text-sm text-muted-foreground">Browse your upcoming and past plans in Saved Menus.</p>
-          <Button variant="outline" onClick={onBrowseMenus}>Browse saved menus</Button>
+          <Button variant="outline" asChild><Link to="/saved-menus">Browse saved menus</Link></Button>
         </section>
       ) : <MenuHero
         menu={menu}

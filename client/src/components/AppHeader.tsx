@@ -1,12 +1,12 @@
 import { Fragment, useRef, useState } from "react";
-import { Button, Popover, PopoverContent, PopoverTrigger } from "@darthcharles/greda";
+import { Button, buttonVariants, Popover, PopoverContent, PopoverTrigger } from "@darthcharles/greda";
+import { Link, NavLink } from "react-router";
 import { useMealDialog } from "../features/meals/useMealDialog";
 import { useGenerateMenu, useMenus } from "../features/menu/queries";
 import { Notice } from "./Notice";
 import { BowlLogo } from "./BowlLogo";
-import type { NavigationProps } from "./Navigation";
 
-export function AppHeader({ view, onNavigate }: NavigationProps) {
+export function AppHeader() {
   const { openCreateMeal } = useMealDialog();
   const { isPending: loadingMenus } = useMenus();
   const {
@@ -16,19 +16,15 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
   } = useGenerateMenu();
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsTrigger = useRef<HTMLButtonElement>(null);
+  const menuLink = useRef<HTMLAnchorElement>(null);
   const addingMeal = useRef(false);
   return (
     <>
       <header className="flex h-[70px] items-center justify-between gap-2 tablet:h-[86px]">
-        <a
-          href="/"
+        <Link
+          to="/"
           aria-label="Comal home"
           className="flex items-center gap-[11px] rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-          onClick={(event) => {
-            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-            event.preventDefault();
-            onNavigate("menu");
-          }}
         >
           <div className="grid size-[39px] -rotate-6 place-items-center rounded-[12px_12px_12px_4px] bg-primary text-primary-foreground">
             <BowlLogo />
@@ -39,7 +35,7 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
               comal
             </h1>
           </div>
-        </a>
+        </Link>
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -68,6 +64,10 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
               align="end"
               className="flex w-48 flex-col gap-1 p-1.5"
               aria-label="Actions"
+              onOpenAutoFocus={(event) => {
+                event.preventDefault();
+                menuLink.current?.focus();
+              }}
               onCloseAutoFocus={(event) => {
                 if (addingMeal.current) {
                   event.preventDefault();
@@ -80,23 +80,24 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
             >
               <nav className="flex flex-col gap-1" aria-label="Primary navigation">
                 {([
-                  ["menu", "My Menu"],
-                  ["meals", "My Meals"],
-                  ["savedMenus", "Saved Menus"],
+                  ["/", "My Menu"],
+                  ["/meals", "My Meals"],
+                  ["/saved-menus", "Saved Menus"],
                 ] as const).map(([destination, label]) => (
                   <Fragment key={destination}>
-                    {destination === "savedMenus" && <hr className="my-1 border-border" />}
-                    <Button
-                      variant={view === destination ? "secondary" : "ghost"}
-                      className="w-full justify-start"
-                      aria-current={view === destination ? "page" : undefined}
-                      onClick={() => {
-                        onNavigate(destination);
-                        setActionsOpen(false);
-                      }}
+                    {destination === "/saved-menus" && <hr className="my-1 border-border" />}
+                    <NavLink
+                      ref={destination === "/" ? menuLink : undefined}
+                      to={destination}
+                      end
+                      className={({ isActive }) => buttonVariants({
+                        variant: isActive ? "secondary" : "ghost",
+                        className: "w-full justify-start",
+                      })}
+                      onClick={() => setActionsOpen(false)}
                     >
                       {label}
-                    </Button>
+                    </NavLink>
                   </Fragment>
                 ))}
               </nav>

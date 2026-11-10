@@ -152,5 +152,5 @@ export async function navigateTo(page: Page, name: "My menu" | "My meals" | "Sav
   if (page.viewportSize()!.width >= 760) {
     await page.getByRole("button", { name: "Open actions" }).click();
   }
-  await page.getByRole("navigation").getByRole("button", { name: new RegExp(name, "i") }).click();
+  await page.getByRole("navigation").getByRole("link", { name: new RegExp(name, "i") }).click();
 }
