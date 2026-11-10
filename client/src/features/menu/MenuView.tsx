@@ -13,8 +13,8 @@ export function MenuView({
 }) {
   if (loading)
     return (
-      <div className="grid grid-cols-3 gap-4">
-        <div className="h-[410px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
+      <div className="mt-6 grid grid-cols-1 gap-4 tablet:grid-cols-2 wide:grid-cols-3">
+        <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
         <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
         <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
       </div>

@@ -7,29 +7,28 @@ export function MealRow({
   mealType,
   onOpen,
   className = "",
+  variant = "default",
 }: {
   meal: Meal;
   mealType: MealTypeName;
   onOpen: (meal: Meal) => void;
   className?: string;
+  variant?: "default" | "hero";
 }) {
+  const hero = variant === "hero";
   return (
     <Button
       type="button"
       variant="ghost"
       aria-label={`View ${mealTypeLabels[mealType]}: ${meal.name}`}
-      className={`flex h-auto min-h-[44px] w-full min-w-0 items-center justify-start gap-[11px] rounded-xl bg-card px-3 py-1.5 text-left whitespace-normal hover:bg-muted ${className}`}
+      className={`flex h-auto min-h-[44px] w-full min-w-0 items-center justify-start gap-[11px] rounded-xl bg-card text-left whitespace-normal hover:bg-muted ${hero ? "px-3 py-2 tablet:min-h-[68px]" : "px-3 py-1.5"} ${className}`}
       onClick={() => onOpen(meal)}
     >
-      <span
-        aria-hidden="true"
-        className="size-[9px] shrink-0 rounded-full bg-primary"
-      />
       <span className="grid min-w-0 flex-1 gap-1">
-        <span className="text-[10px] leading-tight font-bold tracking-[.08em] text-muted-foreground uppercase">
+        <span className={`leading-tight text-muted-foreground uppercase ${hero ? "text-[9px] font-medium tracking-[.12em]" : "text-[10px] font-bold tracking-[.08em]"}`}>
           {mealTypeLabels[mealType]}
         </span>
-        <strong className="text-[13px] leading-[1.25] break-words">
+        <strong className={`break-words ${hero ? "text-[13px] leading-snug font-medium text-secondary" : "text-[13px] leading-[1.25]"}`}>
           {meal.name}
         </strong>
       </span>

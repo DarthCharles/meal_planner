@@ -144,7 +144,7 @@ test("a dismissed pending save cannot close the next meal dialog", async ({
   await page
     .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
     .click();
-  const oldDialog = page.getByRole("dialog", { name: "Edit this favorite" });
+  const oldDialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
   await page.getByLabel("Meal name", { exact: true }).fill("First draft");
   await oldDialog
     .getByRole("button", { name: "Update meal", exact: true })

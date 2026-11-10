@@ -7,7 +7,7 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const pointerStartedOutside = useRef(false);
   const titleId = useId();
-  const { title, eyebrow, content, close, opener } = dialog;
+  const { title, hideTitle, eyebrow, content, close, opener } = dialog;
 
   useLayoutEffect(() => {
     const element = elementRef.current!;
@@ -90,7 +90,7 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
               ref={titleRef}
               id={titleId}
               tabIndex={-1}
-              className="mb-0 font-display text-[27px] font-semibold tracking-[-.04em] outline-none"
+              className={hideTitle ? "sr-only" : "mb-0 font-display text-[27px] font-semibold tracking-[-.04em] outline-none"}
             >
               {title}
             </h2>

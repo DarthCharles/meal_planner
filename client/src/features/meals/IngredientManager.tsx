@@ -45,7 +45,10 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
           size="sm"
           className="h-auto px-0 text-[11px]"
           onClick={() =>
-            append({ name: "", quantity: "", unit: "", preparation_note: "" })
+            append(
+              { name: "", quantity: "", unit: "", preparation_note: "" },
+              { focusName: `ingredients.${fields.length}.name` },
+            )
           }
         >
           + Add ingredient

@@ -6,12 +6,12 @@ export const mealTypeLabels: Record<MealTypeName, string> = {
   dinner: "Dinner",
 };
 
-export function mealTypeBadgeClassName(type: string): string {
+export function mealTypeColorClassName(type: string): string {
   switch (type) {
     case "breakfast":
-      return "bg-secondary";
-    case "lunch":
       return "bg-accent";
+    case "lunch":
+      return "bg-secondary";
     case "dinner":
       return "bg-muted";
     default:

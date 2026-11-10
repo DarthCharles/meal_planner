@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 export type DialogOptions = {
   title: string;
+  hideTitle?: boolean;
   eyebrow?: string;
   content: (controls: { close: () => void }) => ReactNode;
 };

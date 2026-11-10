@@ -1,5 +1,39 @@
 import { test, expect, navigateTo } from "./fixtures/app";
 
+test("returns to the menu through the Comal logo and name", async ({ page }) => {
+  await page.goto("/");
+  for (const target of ["logo", "name", "keyboard"]) {
+    await navigateTo(page, "My meals");
+    const home = page.getByRole("link", { name: "Comal home" });
+    await expect(home).toHaveAttribute("href", "/");
+    if (target === "logo") {
+      await home.locator("svg").click();
+    } else if (target === "name") {
+      await home.getByRole("heading", { name: "comal", exact: true }).click();
+    } else {
+      await home.focus();
+      await page.keyboard.press("Enter");
+    }
+    await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
+  }
+});
+
+test("edits a meal from its details and restores focus to the original row", async ({ page }) => {
+  await page.goto("/");
+  const row = page.getByRole("region", { name: "Today’s menu" })
+    .getByRole("button", { name: "View Breakfast: Huevos a la mexicana" });
+  await row.click();
+  await page.getByRole("dialog", { name: "Huevos a la mexicana" })
+    .getByRole("button", { name: "Edit meal", exact: true }).click();
+  const editor = page.getByRole("dialog", { name: "Edit meal", exact: true });
+  await expect(editor.getByLabel("Meal name", { exact: true })).toHaveValue("Huevos a la mexicana");
+  await expect(editor.getByRole("textbox", { name: "Description", exact: true }))
+    .toHaveValue("Eggs with tomato, onion, and chile.");
+  await editor.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await expect(row).toBeFocused();
+});
+
 test("opens the selected hero meal with its ingredients and recipe", async ({
   page,
   api,
@@ -78,8 +112,24 @@ test("summarizes today's actual meals and leaves the library focused on meals", 
   await expect(hero.getByText("Dinner", { exact: true })).toBeVisible();
   await expect(hero.getByText("Avena cocida")).toBeVisible();
   await expect(hero.getByText("Huevos a la mexicana")).toHaveCount(0);
-  const heroBox = await hero.boundingBox();
-  expect(heroBox!.height).toBeLessThan(274);
+  const cards = hero.getByRole("button", { name: /^View / });
+  await expect(cards).toHaveCount(3);
+  const boxes = await cards.evaluateAll((elements) => elements.map((element) => {
+    const { x, y, width, height } = element.getBoundingClientRect();
+    return { x, y, width, height };
+  }));
+  for (const box of boxes) expect(box.height).toBeGreaterThanOrEqual(44);
+  if (page.viewportSize()!.width >= 641) {
+    expect(boxes.map((box) => box.y)).toEqual(Array(3).fill(boxes[0].y));
+    expect(boxes.map((box) => box.height)).toEqual(Array(3).fill(boxes[0].height));
+    expect(boxes[1].x).toBeGreaterThanOrEqual(boxes[0].x + boxes[0].width);
+    expect(boxes[2].x).toBeGreaterThanOrEqual(boxes[1].x + boxes[1].width);
+  } else {
+    expect(boxes[1].y).toBeGreaterThanOrEqual(boxes[0].y + boxes[0].height);
+    expect(boxes[2].y).toBeGreaterThanOrEqual(boxes[1].y + boxes[1].height);
+  }
+  // The overview should leave the weekly plan visible below it.
+  await expect(page.getByRole("article").first()).toBeInViewport();
   const initialMenuReads = api.reads["/menus"];
   await navigateTo(page, "My meals");
   await expect(

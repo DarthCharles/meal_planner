@@ -1,9 +1,9 @@
-import { Badge } from "@darthcharles/greda";
+import { Badge, Button } from "@darthcharles/greda";
 import type { Meal } from "../../types";
 import { preferredDaysLabel } from "./preferredDays";
-import { mealTypeBadgeClassName } from "./mealTypes";
+import { mealTypeColorClassName } from "./mealTypes";
 
-export function MealDetails({ meal }: { meal: Meal }) {
+export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }) {
   return (
     <div className="grid min-w-0 gap-5 break-words">
       <div className="flex flex-wrap gap-2">
@@ -11,7 +11,7 @@ export function MealDetails({ meal }: { meal: Meal }) {
           <Badge
             key={type}
             variant="secondary"
-            className={`border-0 text-secondary uppercase ${mealTypeBadgeClassName(type)}`}
+            className={`border-0 text-secondary uppercase ${mealTypeColorClassName(type)}`}
           >
             {type}
           </Badge>
@@ -60,6 +60,9 @@ export function MealDetails({ meal }: { meal: Meal }) {
           Open recipe
         </a>
       )}
+      <Button variant="link" className="justify-self-start px-0" onClick={onEdit}>
+        Edit meal
+      </Button>
     </div>
   );
 }

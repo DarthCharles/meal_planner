@@ -6,15 +6,6 @@ import { MealDetails } from "./MealDetails";
 
 export function useMealDialog() {
   const { openDialog } = useDialog();
-  const openMeal = useCallback(
-    (meal: Meal) =>
-      openDialog({
-        title: meal.name,
-        eyebrow: "On your table",
-        content: () => <MealDetails meal={meal} />,
-      }),
-    [openDialog],
-  );
   const openCreateMeal = useCallback(
     () =>
       openDialog({
@@ -33,7 +24,8 @@ export function useMealDialog() {
   const openEditMeal = useCallback(
     (meal: Meal) =>
       openDialog({
-        title: "Edit this favorite",
+        title: "Edit meal",
+        hideTitle: true,
         eyebrow: "Update your library",
         content: ({ close }) => (
           <MealDialogContent
@@ -44,6 +36,17 @@ export function useMealDialog() {
         ),
       }),
     [openDialog],
+  );
+  const openMeal = useCallback(
+    (meal: Meal) =>
+      openDialog({
+        title: meal.name,
+        eyebrow: "On your table",
+        content: () => (
+          <MealDetails meal={meal} onEdit={() => openEditMeal(meal)} />
+        ),
+      }),
+    [openDialog, openEditMeal],
   );
   return { openCreateMeal, openEditMeal, openMeal };
 }

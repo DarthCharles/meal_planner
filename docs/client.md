@@ -23,8 +23,10 @@ The client uses `VITE_API_URL` for the API base URL. The default is `http://127.
 - Add a meal to the library.
 - Install the app as a PWA.
 
+The header's Comal logo and name link back to the index (the menu screen).
+
 The header's MC button opens a Greda popover with an “Add a meal” action on all
-screen sizes. Choosing it closes the popover and opens the meal form; closing
+screen sizes, with padding around the list and vertical spacing between actions. Choosing it closes the popover and opens the meal form; closing
 the form returns focus to MC. Mobile keeps “My menu” and “My meals” in its bottom navigation. On desktop,
 both navigation actions appear inside the MC popover. The library also keeps
 its own add action.
@@ -45,16 +47,32 @@ when available while the grid continues to show the latest plan.
 Past or future menus show a saved-menu message; current menus without today's
 meals show an unplanned-day message. Only days in the current menu receive the
 “Today” highlight. The dated weekly grid appears below the overview. Generation failures preserve the current hero and allow retrying.
+Initial loading placeholders have space above the grid, equal heights, and use the weekly grid's
+responsive column layout.
 The meal library has no hero, keeping its heading, search, filters, and add action
-at the top of the screen.
+at the top of the screen. Its initial loading state shows skeletons for the search
+controls, filters, and six meal cards using the same responsive grid. The skeleton
+announces loading once, hides decorative placeholders from assistive technology,
+and disables shimmer for reduced-motion preferences. Cached meals remain visible
+during background refreshes.
 
 Hero meals and weekly day cards reuse `MealRow`: a light button with a meal-time
-label, dot, meal name, and caret. Clicking a row or activating it with Enter or
+label, meal name, and a plain caret. The hero variant uses compact padding,
+quiet meal-time labels, and smaller medium-weight meal names in `text-secondary`;
+cards share an equal minimum height on tablet/desktop and size to their content
+on mobile. Weekly rows retain their
+compact styling. Badges use Greda's
+existing Comal colors directly: sage (`accent`) for breakfast, peach-pink
+(`secondary`) for lunch, and warm gray (`muted`) for dinner.
+Clicking a row or activating it with Enter or
 Space opens the meal card through `useMealDialog` and the shared dialog host.
 The card shows meal types, description, ingredient quantities and preparation
 notes, and an optional recipe link. Missing ingredients have an explicit empty
 message. Details use the meal already embedded in the menu and make no additional
-API requests. Closing the card restores focus to the row that opened it.
+API requests. An “Edit meal” action below the details replaces them with the existing edit
+form, prefilled with that meal. Closing either dialog restores focus to the row
+that opened the details.
+The edit dialog omits its visible title and keeps “Edit meal” as its accessible name.
 
 The client falls back to demo data when the API is unavailable so the visual shell can still be developed.
 
@@ -113,6 +131,7 @@ Query ownership follows the feature that consumes the data:
 API collections through props. Display components such as `MenuView`, `DayCard`,
 and `MealsView` receive data and callbacks through props. Nested ingredient
 inputs access their form through React Hook Form context.
+Adding an ingredient focuses the new row's ingredient-name field.
 Opening the app requests only `/menus`; opening the library adds `/meals`, and
 opening a form adds `/meal_types` and `/units`. Fresh cached data is reused when
 revisiting a screen or reopening a form. The menu planning action lives in the header; the library has its own heading and add/edit actions.
@@ -183,9 +202,11 @@ a fresh form. Failed saves leave the current values intact.
 ## Day preferences
 
 The meal form's **Preferred days** field uses React Hook Form through
-`PreferredDaysField`. Presets select Any day (an empty array), Weekdays
-(Monday–Thursday), or Weekend (Friday–Sunday). Individual weekday toggles support
-custom choices. Clearing all choices restores Any day. Existing meals default to
+`PreferredDaysField`. Individual weekday toggles support custom choices. A
+“Select all | Clear all” pair beside the label selects or clears all seven days
+and uses the same styling as “Add ingredient.” Each action is disabled when
+its selection state is already applied.
+Clearing all choices restores Any day (an empty array). Existing meals default to
 Any day, and the edit form initializes from the saved preference. Meal details
 show the saved days; saving also updates meals embedded in cached menus.
 
@@ -195,7 +216,7 @@ a menu. The weekly view displays the menu's persisted `generation_notices`,
 including after reloading. These notices describe generation-time preferences;
 subsequent meal edits do not rewrite them.
 
-Browser tests cover presets, custom days, clearing preferences, submitted
+Browser tests cover selecting all days, custom days, clearing preferences, submitted
 payloads, nested menu details, and fallback messages on generation/reload across
 all three viewports. Rails tests verify the actual scheduling and API contract.
 
@@ -267,9 +288,9 @@ and `background`. Action-colored text and borders use `text-action` and
 `border-action`; `text-primary` and `border-primary` use neutral category roles.
 
 Meal category badges use soft Comal fills and dark brown (`text-secondary`)
-text consistently in the library and meal details: peach (`secondary`) for
-breakfast, sage (`accent`) for lunch, and warm gray (`muted`) for dinner.
-Unknown categories use cream (`background`). The shared fill mapping lives in
+text consistently in the library and meal details: sage (`accent`) for
+breakfast, peach-pink (`secondary`) for lunch, and warm gray (`muted`) for dinner.
+Unknown categories use cream (`background`). Badges use `mealTypeColorClassName`; the fill mapping lives in
 `features/meals/mealTypes.ts`. Badges use plain text labels without decorative
 dots; the visible labels identify each category without relying on color.
 Notices use neutral `muted` surfaces; errors in forms

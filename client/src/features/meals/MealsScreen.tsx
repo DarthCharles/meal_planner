@@ -1,6 +1,7 @@
 import { useMealDialog } from "./useMealDialog";
 import { Notice } from "../../components/Notice";
 import { demoMeals } from "../../demoData";
+import { MealsSkeleton } from "./MealsSkeleton";
 import { MealsView } from "./MealsView";
 import { useMeals } from "./queries";
 
@@ -28,9 +29,7 @@ export function MealsScreen() {
         </h3>
       </div>
       {loading ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          Loading meals…
-        </p>
+        <MealsSkeleton />
       ) : (
         <MealsView
           meals={meals ?? demoMeals}

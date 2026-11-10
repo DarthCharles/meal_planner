@@ -20,7 +20,16 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
   return (
     <>
       <header className="flex h-[70px] items-center justify-between gap-2 tablet:h-[86px]">
-        <div className="flex items-center gap-[11px]">
+        <a
+          href="/"
+          aria-label="Comal home"
+          className="flex items-center gap-[11px] rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+          onClick={(event) => {
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            onNavigate("menu");
+          }}
+        >
           <div className="grid size-[39px] -rotate-6 place-items-center rounded-[12px_12px_12px_4px] bg-primary text-primary-foreground">
             <BowlLogo />
           </div>
@@ -30,7 +39,7 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
               comal
             </h1>
           </div>
-        </div>
+        </a>
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -57,7 +66,7 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
             </PopoverTrigger>
             <PopoverContent
               align="end"
-              className="w-48 p-1"
+              className="flex w-48 flex-col gap-1 p-1.5"
               aria-label="Actions"
               onCloseAutoFocus={(event) => {
                 if (addingMeal.current) {
@@ -69,7 +78,7 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
                 }
               }}
             >
-              <nav className="hidden desktop:block" aria-label="Primary navigation">
+              <nav className="hidden flex-col gap-1 desktop:flex" aria-label="Primary navigation">
                 {([
                   ["menu", "My menu"],
                   ["meals", "My meals"],

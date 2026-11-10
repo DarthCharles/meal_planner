@@ -95,13 +95,14 @@ export function MenuHero({
         </div>
       </div>
       {today?.meals.length ? (
-        <div className="mt-3 grid gap-2 border-t border-border pt-2 tablet:grid-cols-3 tablet:gap-6 tablet:pt-4">
+        <div className="mt-3 grid gap-2 pt-2 tablet:grid-cols-3 tablet:gap-6 tablet:pt-4">
           {today.meals.map((meal, index) => (
             <MealRow
               key={`${meal.id}-${index}`}
               meal={meal}
               mealType={mealTypeOrder[index]}
               onOpen={onOpenMeal}
+              variant="hero"
             />
           ))}
         </div>

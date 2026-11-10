@@ -31,15 +31,27 @@ async function fillMeal(page: Page) {
     .click();
 }
 
+test("adding an ingredient while editing focuses the new ingredient name", async ({ page }) => {
+  await openLibrary(page);
+  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
+  await expect(dialog.getByLabel("Meal name", { exact: true })).toBeVisible();
+  for (let index = 0; index < 2; index++) {
+    await dialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
+    await expect(dialog.getByRole("combobox", { name: "Ingredient name", exact: true }).last()).toBeFocused();
+  }
+});
+
 test("selecting meal times and preferred days keeps the form layout stable", async ({ page }) => {
   await openLibrary(page);
   const dialog = await addMeal(page);
   for (const [groupName, actions] of [
     ["Meal time", [["lunch", true], ["lunch", false]]],
-    ["Preferred days", [["Weekend (Fri–Sun)", true], ["Any day", true], ["Monday", true], ["Monday", false]]],
+    ["Preferred days", [["Monday", true], ["Monday", false], ["Friday", true], ["Friday", false]]],
   ] as const) {
     const group = dialog.getByRole("group", { name: groupName, exact: true });
     const buttons = group.getByRole("button");
+    const toggles = buttons.and(group.locator("[aria-pressed]"));
     await expect(buttons.first()).toBeVisible();
     const geometry = () => buttons.evaluateAll((elements) => elements.map((element) => {
       const bounds = element.getBoundingClientRect();
@@ -57,9 +69,13 @@ test("selecting meal times and preferred days keeps the form layout stable", asy
       await button.click();
       await expect(button).toHaveAttribute("aria-pressed", String(selected));
       expect(await geometry()).toEqual(before);
-      expect(await buttons.evaluateAll((elements) =>
-        elements.flatMap((element) => element.getAnimations()).length,
-      )).toBe(0);
+      // Action buttons may fade when disabled; selection toggles must not animate.
+      expect(await toggles.evaluateAll((elements) => elements.flatMap((element) =>
+        element.getAnimations().map((animation) => ({
+          label: element.textContent?.trim(),
+          frames: (animation.effect as KeyframeEffect).getKeyframes(),
+        })),
+      ))).toEqual([]);
     }
   }
 });
@@ -334,7 +350,7 @@ test("prefills and updates a meal including removing an ingredient", async ({
   await page
     .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
     .click();
-  const dialog = page.getByRole("dialog", { name: "Edit this favorite" });
+  const dialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
   await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue(
     "Huevos a la mexicana",
   );
@@ -477,7 +493,7 @@ test("waits for form options before initializing an existing meal", async ({
   await page
     .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
     .click();
-  const dialog = page.getByRole("dialog", { name: "Edit this favorite" });
+  const dialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
   await expect(dialog.getByText("Loading meal options…")).toBeVisible();
   await expect(
     dialog.getByRole("button", { name: "Update meal", exact: true }),
@@ -646,9 +662,8 @@ test("creates weekend preferences including Friday", async ({ page, api }) => {
   const dialog = await addMeal(page);
   await fillMeal(page);
   const days = dialog.getByRole("group", { name: "Preferred days" });
-  await expect(days.getByRole("button", { name: "Any day", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await days.getByRole("button", { name: "Weekend (Fri–Sun)", exact: true }).click();
   for (const day of ["Friday", "Saturday", "Sunday"]) {
+    await days.getByRole("button", { name: day, exact: true }).click();
     await expect(days.getByRole("button", { name: day, exact: true })).toHaveAttribute("aria-pressed", "true");
   }
   await expect(days.getByRole("button", { name: "Monday", exact: true })).toHaveAttribute("aria-pressed", "false");
@@ -678,10 +693,49 @@ test("prefills custom preferences, updates nested menu details, and clears to An
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await navigateTo(page, "My meals");
   await edit.click();
-  await days.getByRole("button", { name: "Weekdays (Mon–Thu)", exact: true }).click();
-  await expect(days.getByRole("button", { name: "Friday", exact: true })).toHaveAttribute("aria-pressed", "false");
-  await days.getByRole("button", { name: "Any day", exact: true }).click();
+  await days.getByRole("button", { name: "Select all", exact: true }).click();
+  for (const day of ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]) {
+    await expect(days.getByRole("button", { name: day, exact: true })).toHaveAttribute("aria-pressed", "true");
+  }
+  await expect(days.getByRole("button", { name: "Select all", exact: true })).toBeDisabled();
+  await days.getByRole("button", { name: "Clear all", exact: true }).click();
+  await expect(days.getByRole("button", { name: "Clear all", exact: true })).toBeDisabled();
+  await expect(days.getByRole("button", { name: "Select all", exact: true })).toBeEnabled();
+  for (const day of ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]) {
+    await expect(days.getByRole("button", { name: day, exact: true })).toHaveAttribute("aria-pressed", "false");
+  }
   await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(api.saves[1].body.preferred_days).toEqual([]);
+});
+
+
+test("shows the meal library skeleton until meals load and respects reduced motion", async ({ page, api }) => {
+  let release!: () => void;
+  api.readBarriers["/meals"] = new Promise<void>((resolve) => { release = resolve; });
+  await page.goto("/");
+  await page.getByRole("heading", { name: "Wednesday" }).waitFor();
+  await navigateTo(page, "My meals");
+  const loading = page.getByRole("status", { name: "Loading meals", exact: true });
+  try {
+    await expect(loading).toBeVisible();
+    await expect(loading).toHaveAttribute("aria-busy", "true");
+    await expect(page.getByRole("article")).toHaveCount(0);
+    await expect(page.getByText("No meals found.", { exact: true })).toHaveCount(0);
+    expect(await loading.evaluate((element) =>
+      element.getAnimations({ subtree: true }).length,
+    )).toBeGreaterThan(0);
+    expect(await page.evaluate(() =>
+      document.documentElement.scrollWidth <= innerWidth,
+    )).toBe(true);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect.poll(() => loading.evaluate((element) =>
+      element.getAnimations({ subtree: true }).length,
+    )).toBe(0);
+  } finally {
+    release();
+  }
+  await expect(loading).toHaveCount(0);
+  await expect(page.getByRole("article")).toHaveCount(api.meals.length);
+  await expect(page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })).toBeEnabled();
 });
