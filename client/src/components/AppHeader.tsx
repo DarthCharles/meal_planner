@@ -82,10 +82,10 @@ export function AppHeader({ view, onNavigate }: NavigationProps) {
                 {([
                   ["menu", "My Menu"],
                   ["meals", "My Meals"],
-                  ["history", "Menu History"],
+                  ["savedMenus", "Saved Menus"],
                 ] as const).map(([destination, label]) => (
                   <Fragment key={destination}>
-                    {destination === "history" && <hr className="my-1 border-border" />}
+                    {destination === "savedMenus" && <hr className="my-1 border-border" />}
                     <Button
                       variant={view === destination ? "secondary" : "ghost"}
                       className="w-full justify-start"

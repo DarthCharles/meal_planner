@@ -3,7 +3,7 @@ import { AppHeader } from "./components/AppHeader";
 import { Navigation } from "./components/Navigation";
 import { MenuScreen } from "./features/menu/MenuScreen";
 import { MealsScreen } from "./features/meals/MealsScreen";
-import { MenuHistoryScreen } from "./features/menu/MenuHistoryScreen";
+import { SavedMenusScreen } from "./features/menu/SavedMenusScreen";
 import type { NavigationProps } from "./components/Navigation";
 
 type View = NavigationProps["view"];
@@ -16,7 +16,7 @@ function App() {
       <AppHeader view={view} onNavigate={setView} />
 
       <main>
-        {view === "menu" ? <MenuScreen /> : view === "history" ? <MenuHistoryScreen /> : <MealsScreen />}
+        {view === "menu" ? <MenuScreen onBrowseMenus={() => setView("savedMenus")} /> : view === "savedMenus" ? <SavedMenusScreen /> : <MealsScreen />}
       </main>
 
       <Navigation view={view} onNavigate={setView} />

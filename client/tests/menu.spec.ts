@@ -154,7 +154,7 @@ for (const [label, from, to] of [
     api.menus[0].to = `${to}T23:59:59Z`;
     await page.goto("/");
     await expect(
-      page.getByRole("region", { name: "Your week, planned." }),
+      page.getByRole("heading", { name: "Nothing planned for this week." }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Today’s menu" }),
@@ -182,7 +182,7 @@ test("handles a current menu without meals for today", async ({
   ).toBeEnabled();
 });
 
-test("keeps today's overview available when the latest plan is for next week", async ({
+test("keeps the current week visible when an upcoming plan exists", async ({
   page,
   api,
 }) => {
@@ -197,7 +197,7 @@ test("keeps today's overview available when the latest plan is for next week", a
   await expect(hero.getByText("Huevos a la mexicana")).toBeVisible();
   await expect(hero.getByText("Next week's breakfast")).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Oct 26 — Nov 1" }),
+    page.getByRole("heading", { name: "Oct 19 — Oct 25" }),
   ).toBeVisible();
 });
 

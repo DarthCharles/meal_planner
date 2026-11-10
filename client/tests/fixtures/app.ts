@@ -148,7 +148,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
 
 export { expect };
 
-export async function navigateTo(page: Page, name: "My menu" | "My meals" | "History") {
+export async function navigateTo(page: Page, name: "My menu" | "My meals" | "Saved Menus") {
   if (page.viewportSize()!.width >= 760) {
     await page.getByRole("button", { name: "Open actions" }).click();
   }

@@ -14,6 +14,13 @@ export function localDateKey(now: Date) {
   ].join("-");
 }
 
+export function menuPeriod(menu: Menu, now: Date): "Upcoming" | "Current" | "Past" {
+  const today = localDateKey(now);
+  if (menu.from.slice(0, 10) > today) return "Upcoming";
+  if (menu.to.slice(0, 10) < today) return "Past";
+  return "Current";
+}
+
 export function formatMenuDateRange(menu: Menu) {
   const format = (value: string) => new Date(`${value.slice(0, 10)}T12:00:00Z`)
     .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });

@@ -19,26 +19,26 @@ The client uses `VITE_API_URL` for the API base URL. The default is `http://127.
 - View the current menu.
 - Reorder the weekly grid so the current day appears first.
 - Generate a weekly menu.
-- Browse past weeks through History and open their meals.
+- Browse upcoming, current, and past weeks through Saved Menus and open their meals.
 - Browse and filter meals.
 - Add a meal to the library.
 - Install the app as a PWA.
 
 The header's Comal logo and name link back to the index (the menu screen).
 
-History is available in the mobile bottom navigation and desktop MC menu. It
-uses the shared `GET /menus` query and lists completed weeks newest first,
-excluding current and upcoming weeks based on calendar dates in the browser's
+Saved Menus is available in the mobile bottom navigation and MC menu. It
+uses the shared `GET /menus` query and lists all saved weeks newest first,
+with Upcoming, Current, and Past labels based on calendar dates in the browser's
 timezone. Date labels preserve the API calendar dates and include the year.
 Selecting a week displays its meals Monday–Sunday and any generation notices;
 meal rows open the existing meal details dialog. Loading, empty, and API error
-states are explicit, with retry on error and no demo history fallback.
-History contains saved weekly assignments, not previous regenerations of the
+states are explicit, with retry on error and no demo fallback.
+Saved Menus contains saved weekly assignments, not previous regenerations of the
 same week. Meals still reference the live library, so later recipe edits also
 appear in old menus.
 
 The header's MC button opens a Greda popover on all screen sizes, ordered as
-“My Menu”, “My Meals”, a separator, “Menu History”, a separator, and “Add a meal”.
+“My Menu”, “My Meals”, a separator, “Saved Menus”, a separator, and “Add a meal”.
 Choosing a destination closes the popover. “Add a meal” opens the meal form;
 closing the form returns focus to MC. Mobile also keeps its bottom navigation.
 The library keeps its own add action.
@@ -54,11 +54,14 @@ the hero becomes a compact overview of today's breakfast, lunch, and dinner,
 each on a light card surface within the sage hero, using the same ordered meal
 slots as the day cards. It checks the menu's calendar
 date range against the local date before presenting meals as today's plan.
-If the latest plan is for next week, the overview uses the current week's menu
-when available while the grid continues to show the latest plan.
-Past or future menus show a saved-menu message; current menus without today's
-meals show an unplanned-day message. Only days in the current menu receive the
-“Today” highlight. The dated weekly grid appears below the overview. Generation failures preserve the current hero and allow retrying.
+My Menu uses the current week's menu for both the overview and weekly grid.
+If only upcoming or past menus exist, it shows an empty current-week state with
+a button to browse Saved Menus. On Monday, date selection picks the new current
+week on the next render or page load; no menu records need a status update.
+Current menus without today's meals show an unplanned-day message. Only days in the current menu receive the
+“Today” highlight, using an accent border, the standard card background, and
+the same subtle shadow as the other day cards.
+The dated weekly grid appears below the overview. Generation failures preserve the current hero and allow retrying.
 Initial loading placeholders have space above the grid, equal heights, and use the weekly grid's
 responsive column layout.
 The meal library has no hero, keeping its heading, search, filters, and add action

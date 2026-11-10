@@ -1,7 +1,7 @@
 import { Button } from "@darthcharles/greda";
 export type NavigationProps = {
-  view: "menu" | "meals" | "history";
-  onNavigate: (view: "menu" | "meals" | "history") => void;
+  view: "menu" | "meals" | "savedMenus";
+  onNavigate: (view: "menu" | "meals" | "savedMenus") => void;
 };
 
 export function Navigation({ view, onNavigate }: NavigationProps) {
@@ -18,10 +18,10 @@ export function Navigation({ view, onNavigate }: NavigationProps) {
           onClick: () => onNavigate("menu"),
         },
         {
-          label: "History",
+          label: "Saved Menus",
           icon: "◷",
-          active: view === "history",
-          onClick: () => onNavigate("history"),
+          active: view === "savedMenus",
+          onClick: () => onNavigate("savedMenus"),
         },
         {
           label: "My meals",
