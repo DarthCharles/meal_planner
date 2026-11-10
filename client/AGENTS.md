@@ -58,6 +58,14 @@ The client uses `VITE_API_URL` when set, and otherwise targets
   palette through Greda's standard semantic tokens.
   Keep illustration colors inside SVGs; discuss any additional UI colors with
   the user before adding them.
+- Delegate shared Greda component bugs and reusable component requests to the
+  user-level `greda_maintainer` agent, whose source repository is `../greda`
+  relative to the Meal Planner repository root. Investigate the library before
+  adding consumer overrides for its behavior. Give the agent reproduction
+  details, installed package version, acceptance criteria, and explicit ownership
+  of Greda files; keep Meal Planner changes with the client agent. If the custom
+  agent is unavailable in the current session, use a sub-agent with the same
+  role and repository instructions. Keep investigation-only tasks read-only.
 - Preserve the mobile-first responsive behavior and existing visual language
   when modifying the client.
 

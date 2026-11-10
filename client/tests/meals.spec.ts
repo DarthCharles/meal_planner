@@ -31,6 +31,39 @@ async function fillMeal(page: Page) {
     .click();
 }
 
+test("selecting meal times and preferred days keeps the form layout stable", async ({ page }) => {
+  await openLibrary(page);
+  const dialog = await addMeal(page);
+  for (const [groupName, actions] of [
+    ["Meal time", [["lunch", true], ["lunch", false]]],
+    ["Preferred days", [["Weekend (Fri–Sun)", true], ["Any day", true], ["Monday", true], ["Monday", false]]],
+  ] as const) {
+    const group = dialog.getByRole("group", { name: groupName, exact: true });
+    const buttons = group.getByRole("button");
+    await expect(buttons.first()).toBeVisible();
+    const geometry = () => buttons.evaluateAll((elements) => elements.map((element) => {
+      const bounds = element.getBoundingClientRect();
+      const parent = element.closest("fieldset")!.getBoundingClientRect();
+      return {
+        x: bounds.x - parent.x,
+        y: bounds.y - parent.y,
+        width: bounds.width,
+        height: bounds.height,
+      };
+    }));
+    const before = await geometry();
+    for (const [label, selected] of actions) {
+      const button = group.getByRole("button", { name: label, exact: true });
+      await button.click();
+      await expect(button).toHaveAttribute("aria-pressed", String(selected));
+      expect(await geometry()).toEqual(before);
+      expect(await buttons.evaluateAll((elements) =>
+        elements.flatMap((element) => element.getAnimations()).length,
+      )).toBe(0);
+    }
+  }
+});
+
 test("combines case-insensitive search and meal time filters", async ({
   page,
 }) => {
