@@ -21,8 +21,20 @@ export function menuPeriod(menu: Menu, now: Date): "Upcoming" | "Current" | "Pas
   return "Current";
 }
 
-export function formatMenuDateRange(menu: Menu) {
-  const format = (value: string) => new Date(`${value.slice(0, 10)}T12:00:00Z`)
-    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+function calendarDate(value: string) {
+  return new Date(`${value.slice(0, 10)}T00:00:00Z`);
+}
+
+export function menuDayDate(menu: Menu, weekday: string) {
+  const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const date = calendarDate(menu.from);
+  const offset = (weekdays.indexOf(weekday.toLowerCase()) - date.getUTCDay() + 7) % 7;
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date;
+}
+
+export function formatMenuDateRange(menu: Menu, includeYear = true) {
+  const format = (value: string) => calendarDate(value)
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: includeYear ? "numeric" : undefined, timeZone: "UTC" });
   return `${format(menu.from)} — ${format(menu.to)}`;
 }

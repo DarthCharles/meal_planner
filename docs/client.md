@@ -75,7 +75,11 @@ week on the next render or page load; no menu records need a status update.
 Current menus without today's meals show an unplanned-day message. Only days in the current menu receive the
 “Today” highlight, using an accent border, the standard card background, and
 the same subtle shadow as the other day cards.
-The dated weekly grid appears below the overview. Generation failures preserve the current hero and allow retrying.
+The dated weekly grid appears below the overview. Its range preserves the API
+calendar dates across timezones. Card date numbers come from each weekday's date
+within the menu range, including month and year boundaries, rather than day IDs.
+This also applies to cards in Saved Menus.
+Generation failures preserve the current hero and allow retrying.
 Initial loading placeholders have space above the grid, equal heights, and use the weekly grid's
 responsive column layout.
 The meal library has no hero, keeping its heading, search, filters, and add action

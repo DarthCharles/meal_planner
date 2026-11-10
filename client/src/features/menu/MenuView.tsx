@@ -1,6 +1,6 @@
 import type { Meal, Menu } from "../../types";
 import { DayCard } from "./DayCard";
-import { isCurrentMenu } from "./menuDates";
+import { isCurrentMenu, menuDayDate } from "./menuDates";
 
 export function MenuView({
   menu,
@@ -31,6 +31,7 @@ export function MenuView({
       {orderedDays.map((day) => (
         <DayCard
           day={day}
+          date={menuDayDate(menu, day.weekday)}
           onOpenMeal={onOpenMeal}
           featured={
             isCurrentMenu(menu, new Date()) &&

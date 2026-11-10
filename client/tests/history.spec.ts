@@ -123,7 +123,7 @@ test("moves an upcoming menu into My Menu when its week starts", async ({ page, 
   await expect(weeks.nth(1)).toContainText("Current");
 
   await page.clock.setFixedTime(new Date("2026-10-26T00:01:00Z"));
-  await page.reload();
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: "Oct 26 — Nov 1" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Today’s menu" }).getByText("Next week's breakfast")).toBeVisible();
   await navigateTo(page, "Saved Menus");

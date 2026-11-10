@@ -6,13 +6,16 @@ import type { Meal } from "../../types";
 
 export function DayCard({
   day,
+  date,
   featured,
   onOpenMeal,
 }: {
   day: Menu["days"][number];
+  date: Date;
   featured: boolean;
   onOpenMeal: (meal: Meal) => void;
 }) {
+  const dayNumber = String(date.getUTCDate()).padStart(2, "0");
   return (
     <Card
       role="article"
@@ -21,15 +24,15 @@ export function DayCard({
       <div className="mb-[17px] flex items-start justify-between">
         <div>
           <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-            {featured ? "Today" : `Day ${String(day.id).padStart(2, "0")}`}
+            {featured ? "Today" : `Day ${dayNumber}`}
           </p>
           <h4 className="m-0 font-display text-[23px] font-semibold">
             {day.weekday}
           </h4>
         </div>
-        <span className="font-display text-[27px] font-semibold text-muted-foreground">
-          {String(day.id).padStart(2, "0")}
-        </span>
+        <time dateTime={date.toISOString().slice(0, 10)} className="font-display text-[27px] font-semibold text-muted-foreground">
+          {dayNumber}
+        </time>
       </div>
       <div className="grid gap-0.5">
         {day.meals.map((meal, index) => (

@@ -5,7 +5,7 @@ import { Notice } from "../../components/Notice";
 import { demoMenu } from "../../demoData";
 import { MenuView } from "./MenuView";
 import { MenuHero } from "./MenuHero";
-import { isCurrentMenu } from "./menuDates";
+import { formatMenuDateRange, isCurrentMenu } from "./menuDates";
 import { useMenus } from "./queries";
 
 export function MenuScreen() {
@@ -43,7 +43,7 @@ export function MenuScreen() {
               Weekly menu
             </p>
             <h3 className="mb-0 font-display text-[28px] font-semibold tracking-[-.04em]">
-              {formatDateRange(menu.from, menu.to)}
+              {formatMenuDateRange(menu, false)}
             </h3>
           </div>
         </div>
@@ -64,14 +64,4 @@ export function MenuScreen() {
       <MenuView menu={menu} loading={loading} onOpenMeal={openMeal} />
     </>
   );
-}
-
-function formatDateRange(from: string, to: string) {
-  const start = new Date(from);
-  const end = new Date(to);
-  const options: Intl.DateTimeFormatOptions = {
-    month: "short",
-    day: "numeric",
-  };
-  return `${start.toLocaleDateString("en-US", options)} — ${end.toLocaleDateString("en-US", options)}`;
 }

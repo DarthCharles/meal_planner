@@ -99,21 +99,31 @@ The client uses `VITE_API_URL` when set, and otherwise targets
 
 ## Verification expectations
 
-During development, use focused browser tests or lightweight checks appropriate
-to the change. Do not run the full browser suite after each change or agent turn.
-When the user says they are done and ready for final verification, or explicitly
-requests a full run, run from `client/`:
+Follow the root `AGENTS.md` opt-in verification policy. During normal development,
+review code and diffs and update tests without executing automated checks. Do not
+start Playwright, browser automation, builds, type checks, linters, or verification
+servers during active editing unless the user explicitly requests verification. Do not ask to run them
+after each change; state that they were not run.
+
+When asked to test without a broader scope, run the smallest relevant browser
+test with `--workers=1 --project=desktop-chromium`. Run commands sequentially;
+do not start background or watch runs. Other viewports and the full suite require
+an explicit request for that scope, except for mandatory pre-commit verification.
+
+Before committing client changes, or when the user explicitly requests full
+verification, run from `client/`. A commit request authorizes these required
+checks; they must pass before committing:
 
 ```bash
 npm run build
-npm run test:browser
+npm run test:browser -- --workers=1
 ```
 
-When changing browser tests or their configuration, type-check them from
-`client/` with `npx tsc -p tsconfig.tests.json` as appropriate during development
-and include this check in final verification. A single project or test can be
-used while iterating. Do not repeat successful checks without a relevant new
-change, and do not treat the end of an agent turn as final verification.
+When browser tests or their configuration changed, include
+`npx tsc -p tsconfig.tests.json` in pre-commit or explicitly requested full verification.
+Focused test requests do not authorize additional builds or type checks.
+Do not repeat successful checks without a relevant new change, and do not treat
+the end of an agent turn as final verification.
 
 Playwright starts its own Vite server on port 4173 and intercepts its API traffic
 to port 4174. Keep port 4173 free; do not start a separate test server or point
