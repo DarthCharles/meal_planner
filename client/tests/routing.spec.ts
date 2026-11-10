@@ -1,6 +1,6 @@
 import { test, expect, navigateTo } from "./fixtures/app";
 
-test("keeps navigation in the URL and supports back and forward without reloading", async ({ page, api }) => {
+test("keeps navigation in the URL and supports back and forward without reloading", { tag: "@responsive" }, async ({ page, api }) => {
   await page.goto("/");
   await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
   const initialMenuReads = api.reads["/menus"];

@@ -6,36 +6,6 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
     %w[monday friday].each { |name| Weekday.find_or_create_by!(name: name) }
   end
 
-  test "creates a meal with ingredients" do
-    post "/meals", params: {
-      name: "Tacos de pollo",
-      description: "Tacos con verduras",
-      ingredients: [
-        { name: "  Pollo ", quantity: 500, unit: "g", preparation_note: "En cubos" },
-        { name: "Tortilla", quantity: 12, unit: "pieza" }
-      ]
-    }, as: :json
-
-    assert_response :ok
-    meal = Meal.find(response.parsed_body.dig("data", "id"))
-    assert_equal %w[Pollo Tortilla], meal.meal_ingredients.map { |item| item.ingredient.name }
-    assert_equal "pollo", Ingredient.find_by(name: "Pollo").normalized_name
-  end
-
-  test "replaces ingredients when updating a meal with ingredients" do
-    meal = Meal.create!(name: "Ensalada", description: "Ensalada verde")
-    meal.meal_ingredients.create!(ingredient: Ingredient.create!(name: "Lechuga"), quantity: 1, unit: Unit.find_by!(code: "pieza"))
-
-    put "/meals/#{meal.id}", params: {
-      name: meal.name,
-      description: meal.description,
-      ingredients: [{ name: "Pepino", quantity: 2, unit: "pieza" }]
-    }, as: :json
-
-    assert_response :ok
-    assert_equal ["Pepino"], meal.reload.meal_ingredients.map { |item| item.ingredient.name }
-  end
-
   test "lists the shared ingredient catalog in normalized name order" do
     Ingredient.delete_all
     egg = Ingredient.create!(name: "Egg")
@@ -114,12 +84,9 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "omitted ingredients preserve the recipe and an empty array clears it" do
+  test "an empty ingredient array clears the recipe" do
     meal = Meal.create!(name: "Breakfast", description: "Egg")
     meal.meal_ingredients.create!(ingredient: Ingredient.create!(name: "Egg"), quantity: 2, unit: Unit.find_by!(code: "pieza"))
-    put "/meals/#{meal.id}", params: { description: "Updated" }, as: :json
-    assert_response :ok
-    assert_equal 1, meal.reload.meal_ingredients.count
     put "/meals/#{meal.id}", params: { ingredients: [] }, as: :json
     assert_response :ok
     assert_empty meal.reload.meal_ingredients

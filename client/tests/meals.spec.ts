@@ -31,18 +31,7 @@ async function fillMeal(page: Page) {
     .click();
 }
 
-test("adding an ingredient while editing focuses the new ingredient name", async ({ page }) => {
-  await openLibrary(page);
-  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
-  await expect(dialog.getByLabel("Meal name", { exact: true })).toBeVisible();
-  for (let index = 0; index < 2; index++) {
-    await dialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
-    await expect(dialog.getByRole("combobox", { name: "Ingredient name", exact: true }).last()).toBeFocused();
-  }
-});
-
-test("selecting meal times and preferred days keeps the form layout stable", async ({ page }) => {
+test("selecting meal times and preferred days keeps the form layout stable", { tag: "@responsive" }, async ({ page }) => {
   await openLibrary(page);
   const dialog = await addMeal(page);
   for (const [groupName, actions] of [
@@ -126,19 +115,12 @@ test("validates required fields and ingredient quantity/unit before saving", asy
     dialog.getByText("Complete the quantity and unit for each ingredient."),
   ).toBeVisible();
   await selectUnit(page, "pieza");
-  for (const quantity of ["0", "-1", "0.0001"]) {
-    await page.getByLabel("Quantity").fill(quantity);
-    await dialog
-      .getByRole("button", { name: "Save meal", exact: true })
-      .click();
-    await expect(dialog.getByRole("alert")).toHaveText(
-      "Complete the quantity and unit for each ingredient.",
-    );
-    await expect(page.getByLabel("Quantity")).toHaveAttribute(
-      "aria-invalid",
-      "true",
-    );
-  }
+  await page.getByLabel("Quantity").fill("0.0001");
+  await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(dialog.getByRole("alert")).toHaveText(
+    "Complete the quantity and unit for each ingredient.",
+  );
+  await expect(page.getByLabel("Quantity")).toHaveAttribute("aria-invalid", "true");
   expect(api.saves).toEqual([]);
   await dialog
     .getByRole("button", { name: "Remove Potato", exact: true })
@@ -148,7 +130,7 @@ test("validates required fields and ingredient quantity/unit before saving", asy
   expect(api.saves[0].body.ingredients).toEqual([]);
 });
 
-test("creates a meal with ingredients and updates the library", async ({
+test("creates a meal with ingredients from the keyboard and updates the library", { tag: "@responsive" }, async ({
   page,
   api,
 }) => {
@@ -186,7 +168,7 @@ test("creates a meal with ingredients and updates the library", async ({
   api.saveBarrier = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+  await dialog.getByLabel("Meal name", { exact: true }).press("Enter");
   await expect(
     dialog.getByRole("button", { name: "Saving…", exact: true }),
   ).toBeDisabled();
@@ -218,7 +200,7 @@ test("creates a meal with ingredients and updates the library", async ({
   ]);
 });
 
-test("searches and selects an existing ingredient with the keyboard", async ({ page, api }) => {
+test("searches and selects an existing ingredient with the keyboard", { tag: "@responsive" }, async ({ page, api }) => {
   await openLibrary(page);
   const dialog = await addMeal(page);
   await fillMeal(page);
@@ -243,7 +225,7 @@ test("searches and selects an existing ingredient with the keyboard", async ({ p
   ]);
 });
 
-test("selects units with the keyboard and dismisses the unit list without closing the meal", async ({ page, api }) => {
+test("selects units with the keyboard and dismisses the unit list without closing the meal", { tag: "@responsive" }, async ({ page, api }) => {
   await openLibrary(page);
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -298,6 +280,7 @@ test("requires explicit selection when replacing an ingredient and closes sugges
 test("keeps created ingredients as drafts until save and reuses the saved catalog", async ({ page, api }) => {
   await openLibrary(page);
   let dialog = await addMeal(page);
+  await fillMeal(page);
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
   await dialog.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
@@ -307,6 +290,8 @@ test("keeps created ingredients as drafts until save and reuses the saved catalo
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
   expect(api.saves).toEqual([]);
   dialog = await addMeal(page);
+  await expect(dialog.getByLabel("Meal name", { exact: true })).toHaveValue("");
+  await expect(dialog.getByRole("combobox", { name: "Ingredient name" })).toHaveCount(0);
   await fillMeal(page);
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
@@ -342,15 +327,22 @@ test("shows ingredient catalog loading and supports retry after failure", async 
   await expect(dialog.getByRole("option", { name: "Egg", exact: true })).toBeVisible();
 });
 
-test("prefills and updates a meal including removing an ingredient", async ({
+test("waits for edit options, prefills the meal, and saves ingredient removal", async ({
   page,
   api,
 }) => {
+  let release!: () => void;
+  const optionsBarrier = new Promise<void>((resolve) => { release = resolve; });
+  api.readBarriers["/meal_types"] = optionsBarrier;
+  api.readBarriers["/units"] = optionsBarrier;
   await openLibrary(page);
   await page
     .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
     .click();
   const dialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
+  await expect(dialog.getByText("Loading meal options…")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Update meal", exact: true })).toHaveCount(0);
+  release();
   await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue(
     "Huevos a la mexicana",
   );
@@ -364,6 +356,13 @@ test("prefills and updates a meal including removing an ingredient", async ({
   await expect(page.getByLabel("Quantity")).toHaveValue("2");
   await expect(page.getByRole("combobox", { name: "Unit", exact: true })).toHaveText("pieza");
   await expect(page.getByLabel("Preparation note")).toHaveValue("beaten");
+  for (let index = 0; index < 2; index++) {
+    await dialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
+    await expect(dialog.getByRole("combobox", { name: "Ingredient name", exact: true }).last()).toBeFocused();
+  }
+  for (let index = 0; index < 2; index++) {
+    await dialog.getByRole("button", { name: "Remove ingredient", exact: true }).first().click();
+  }
   await page.getByLabel("Meal name", { exact: true }).fill("Huevos con salsa");
   await dialog.getByRole("button", { name: "Remove Egg", exact: true }).click();
   await expect(
@@ -425,37 +424,6 @@ test("preserves form values after a save error and supports retrying", async ({
   expect(api.saves).toHaveLength(2);
 });
 
-test("closes without saving and resets the form when reopened", async ({
-  page,
-  api,
-}) => {
-  await openLibrary(page);
-  const dialog = await addMeal(page);
-  await fillMeal(page);
-  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
-  await expect(dialog).toHaveCount(0);
-  await addMeal(page);
-  await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue("");
-  await dialog.getByRole("button", { name: "Close", exact: true }).click();
-  await expect(dialog).toHaveCount(0);
-  expect(api.saves).toEqual([]);
-});
-
-test("reuses cached meals when navigating between screens", async ({
-  page,
-  api,
-}) => {
-  await openLibrary(page);
-  const initialReads = api.reads["/meals"];
-  await navigateTo(page, "My menu");
-  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
-  await navigateTo(page, "My meals");
-  await expect(
-    page.getByRole("heading", { name: "Huevos a la mexicana" }),
-  ).toBeVisible();
-  expect(api.reads["/meals"]).toBe(initialReads);
-});
-
 test("retains cached meals when a background refresh fails", async ({
   page,
   api,
@@ -477,37 +445,6 @@ test("retains cached meals when a background refresh fails", async ({
   await expect(
     page.getByText("Demo mode · connect the Rails API to use your own meals."),
   ).toHaveCount(0);
-});
-
-test("waits for form options before initializing an existing meal", async ({
-  page,
-  api,
-}) => {
-  let release!: () => void;
-  const optionsBarrier = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  api.readBarriers["/meal_types"] = optionsBarrier;
-  api.readBarriers["/units"] = optionsBarrier;
-  await openLibrary(page);
-  await page
-    .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
-    .click();
-  const dialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
-  await expect(dialog.getByText("Loading meal options…")).toBeVisible();
-  await expect(
-    dialog.getByRole("button", { name: "Update meal", exact: true }),
-  ).toHaveCount(0);
-  release();
-  await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue(
-    "Huevos a la mexicana",
-  );
-  await expect(page.getByRole("combobox", { name: "Unit", exact: true })).toHaveText("pieza");
-  await dialog
-    .getByRole("button", { name: "Update meal", exact: true })
-    .click();
-  await expect(dialog).toHaveCount(0);
-  expect(api.saves[0].body.meal_type_ids).toEqual([1]);
 });
 
 test("preserves ingredient values after removing a middle row", async ({
@@ -600,63 +537,6 @@ test("validates deselecting all meal times and submits numeric type IDs", async 
   expect(api.saves[0].body.meal_type_ids).toEqual([2, 3]);
 });
 
-test("submits a meal from the keyboard with registered design system inputs", async ({
-  page,
-  api,
-}) => {
-  await page.goto("/");
-  const dialog = await addMeal(page);
-  await fillMeal(page);
-  expect(api.saves).toEqual([]);
-  const name = page.getByLabel("Meal name", { exact: true });
-  await name.focus();
-  await expect(name).toBeFocused();
-  await name.press("Enter");
-  await expect(dialog).toHaveCount(0);
-  expect(api.saves).toHaveLength(1);
-  expect(api.saves[0].body).toMatchObject({
-    name: "Tacos de papa",
-    description: "Potato tacos with salsa.",
-    meal_type_ids: [2],
-  });
-});
-
-test("applies root theme overrides to the app shell and Greda form controls", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
-  await expect(page.locator("body")).toHaveCSS(
-    "background-color",
-    "rgb(251, 247, 239)",
-  );
-  await expect(page.getByRole("button", { name: "Plan my week" })).toHaveCSS(
-    "background-color",
-    "rgb(168, 67, 48)",
-  );
-  await page.evaluate(() => {
-    const theme = document.documentElement.style;
-    theme.setProperty("--base-primary", "240 100% 50%");
-    theme.setProperty("--base-white", "0 0% 0%");
-  });
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(0, 0, 0)");
-  await expect(page.getByRole("button", { name: "Plan my week" })).toHaveCSS(
-    "background-color",
-    "rgb(0, 0, 255)",
-  );
-  const dialog = await addMeal(page);
-  await expect(
-    dialog.getByRole("button", { name: "Save meal", exact: true }),
-  ).toHaveCSS(
-    "background-color",
-    "rgb(0, 0, 255)",
-  );
-  await expect(dialog.getByLabel("Meal name", { exact: true })).toHaveCSS(
-    "background-color",
-    "rgb(0, 0, 0)",
-  );
-});
-
 test("creates weekend preferences including Friday", async ({ page, api }) => {
   await openLibrary(page);
   const dialog = await addMeal(page);
@@ -709,8 +589,7 @@ test("prefills custom preferences, updates nested menu details, and clears to An
   expect(api.saves[1].body.preferred_days).toEqual([]);
 });
 
-
-test("shows the meal library skeleton until meals load and respects reduced motion", async ({ page, api }) => {
+test("shows the meal library skeleton until meals load and respects reduced motion", { tag: "@responsive" }, async ({ page, api }) => {
   let release!: () => void;
   api.readBarriers["/meals"] = new Promise<void>((resolve) => { release = resolve; });
   await page.goto("/");

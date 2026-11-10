@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  workers: 1,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://127.0.0.1:4173",
@@ -18,6 +18,7 @@ export default defineConfig({
   projects: [
     {
       name: "mobile-chromium",
+      grep: /@responsive/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 320, height: 900 },
@@ -27,6 +28,7 @@ export default defineConfig({
     },
     {
       name: "tablet-chromium",
+      grep: /@responsive/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 800, height: 900 },

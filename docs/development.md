@@ -88,6 +88,15 @@ RAILS_ENV=test bundle exec rails zeitwerk:check
 
 The backend tests cover API response shapes, meal writes and validation,
 ingredients, reference data, nested menus, UTC timestamps, CORS, and menu generation.
+Rails tests default to one worker to limit local CPU use. API contract tests own
+basic ingredient writes and association preservation; ingredient-specific tests
+cover catalog identity, clearing, malformed inputs, and transactional rollback.
+Service tests own scheduling rules; controller tests cover HTTP responses and
+saved-menu ordering. Keep these distinct rather than repeating the same happy
+path at each layer. Generated test files with no executable tests are omitted.
+Pure next-Monday calculations live separately from scheduling tests so they do
+not create a database meal pool.
+
 The menu-generation tests cover:
 
 - Seven-day, 21-meal menu creation.

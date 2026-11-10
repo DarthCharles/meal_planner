@@ -3,20 +3,6 @@
 require "test_helper"
 
 class MenusControllerTest < ActionDispatch::IntegrationTest
-  setup do
-    create_meal_pool_for_generate
-  end
-
-  test "generate creates menu and returns 201" do
-    post "/menus/generate", as: :json
-    assert_response :created
-    json = response.parsed_body
-    assert json["data"]["id"].present?
-    assert_equal 7, Menu.find(json["data"]["id"]).days.count
-    assert_equal [], json["data"]["generation_notices"]
-    assert_equal [], json["data"]["days"][0]["meals"][0]["preferred_days"]
-  end
-
   test "generate returns 422 when insufficient meals" do
     Meal.destroy_all
     post "/menus/generate", as: :json
@@ -25,13 +11,17 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Cannot complete the menu/, json["errors"].to_s)
   end
 
-  test "generated menu remains first when menus are fetched again" do
+  test "generation returns the weekly menu and keeps it first on later reads" do
+    create_meal_pool_for_generate
     Menu.create!(from: Time.utc(2025, 3, 3), to: Time.utc(2025, 3, 9, 23, 59, 59))
 
     travel_to Time.utc(2026, 11, 9, 12) do
       post "/menus/generate", as: :json
       assert_response :created
       generated = response.parsed_body.fetch("data")
+      assert_equal 7, generated.fetch("days").size
+      assert_equal [], generated.fetch("generation_notices")
+      assert_equal [], generated.fetch("days").first.fetch("meals").first.fetch("preferred_days")
 
       # A later insertion for an older week must not displace the latest plan.
       Menu.create!(from: Time.utc(2026, 11, 2), to: Time.utc(2026, 11, 8, 23, 59, 59))

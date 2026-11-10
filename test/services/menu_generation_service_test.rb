@@ -8,7 +8,7 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     create_meals_for_generation
   end
 
-  test "creates menu with 7 days and 21 daily_meals" do
+  test "creates a seven-day menu with 21 distinct meals when the pool allows" do
     week_start = Date.new(2025, 3, 3)
 
     menu = MenuGenerationService.new.call(week_start: week_start)
@@ -16,6 +16,7 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     assert menu.persisted?
     assert_equal 7, menu.days.count
     assert_equal 21, DailyMeal.joins(:day).where(days: { menu_id: menu.id }).count
+    assert_equal 21, menu.days.flat_map { |day| day.meals.pluck(:id) }.uniq.size
   end
 
   test "small pools repeat meals to complete a week" do
@@ -23,15 +24,6 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
     assert_equal 21, menu.days.sum { |day| day.daily_meals.count }
     assert_empty menu.generation_notices
-  end
-
-  test "raises InsufficientMealsError when no meals in database" do
-    Meal.destroy_all
-
-    error = assert_raises(MenuGenerationService::InsufficientMealsError) do
-      MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
-    end
-    assert_match(/Cannot complete the menu/, error.message)
   end
 
   test "replaces existing menu for same week" do
@@ -43,16 +35,6 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
 
     assert_equal initial_count, Menu.count
     assert_equal 1, Menu.where('"from" >= ? AND "from" < ?', week_start, week_start + 7.days).count
-  end
-
-  test "next_monday returns next Monday when given Sunday" do
-    sunday = Time.utc(2025, 3, 2, 6, 0, 0)
-    assert_equal Date.new(2025, 3, 3), MenuGenerationService.next_monday(from: sunday)
-  end
-
-  test "next_monday returns next Monday when given Monday" do
-    monday = Time.utc(2025, 3, 3, 6, 0, 0)
-    assert_equal Date.new(2025, 3, 10), MenuGenerationService.next_monday(from: monday)
   end
 
   test "weekend meals never displace suitable weekday meals and Friday is included" do
@@ -71,11 +53,6 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
       end
     end
     assert_empty menu.generation_notices
-  end
-
-  test "unrestricted pools use 21 different meals" do
-    menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
-    assert_equal 21, menu.days.flat_map { |day| day.meals.pluck(:id) }.uniq.size
   end
 
   test "fallbacks are minimal and persist in menu responses" do

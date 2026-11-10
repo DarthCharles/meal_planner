@@ -18,23 +18,7 @@ test("returns to the menu through the Comal logo and name", async ({ page }) => 
   }
 });
 
-test("edits a meal from its details and restores focus to the original row", async ({ page }) => {
-  await page.goto("/");
-  const row = page.getByRole("region", { name: "Today’s menu" })
-    .getByRole("button", { name: "View Breakfast: Huevos a la mexicana" });
-  await row.click();
-  await page.getByRole("dialog", { name: "Huevos a la mexicana" })
-    .getByRole("button", { name: "Edit meal", exact: true }).click();
-  const editor = page.getByRole("dialog", { name: "Edit meal", exact: true });
-  await expect(editor.getByLabel("Meal name", { exact: true })).toHaveValue("Huevos a la mexicana");
-  await expect(editor.getByRole("textbox", { name: "Description", exact: true }))
-    .toHaveValue("Eggs with tomato, onion, and chile.");
-  await editor.getByRole("button", { name: "Close", exact: true }).click();
-  await expect(editor).toHaveCount(0);
-  await expect(row).toBeFocused();
-});
-
-test("opens the selected hero meal with its ingredients and recipe", async ({
+test("opens hero meal details, replaces them with editing, and restores focus", async ({
   page,
   api,
 }) => {
@@ -56,8 +40,14 @@ test("opens the selected hero meal with its ingredients and recipe", async ({
   ).toHaveAttribute("href", "https://example.com/huevos");
   await expect(dialog.getByRole("textbox")).toHaveCount(0);
   expect(Object.keys(api.reads)).toEqual(["/menus"]);
-  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await dialog.getByRole("button", { name: "Edit meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
+  const editor = page.getByRole("dialog", { name: "Edit meal", exact: true });
+  await expect(editor.getByLabel("Meal name", { exact: true })).toHaveValue("Huevos a la mexicana");
+  await expect(editor.getByRole("textbox", { name: "Description", exact: true }))
+    .toHaveValue("Eggs with tomato, onion, and chile.");
+  await editor.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(editor).toHaveCount(0);
   await expect(row).toBeFocused();
   expect(api.saves).toEqual([]);
 });
@@ -95,7 +85,7 @@ test("opens weekly meal rows with the keyboard and handles missing recipe detail
   expect(api.saves).toEqual([]);
 });
 
-test("summarizes today's actual meals and leaves the library focused on meals", async ({
+test("summarizes today's actual meals and leaves the library focused on meals", { tag: "@responsive" }, async ({
   page,
   api,
 }) => {
@@ -201,7 +191,7 @@ test("keeps the current week visible when an upcoming plan exists", async ({
   ).toBeVisible();
 });
 
-test("keeps long meal names readable without horizontal overflow", async ({
+test("keeps long meal names readable without horizontal overflow", { tag: "@responsive" }, async ({
   page,
   api,
 }) => {
@@ -223,29 +213,7 @@ test("keeps long meal names readable without horizontal overflow", async ({
   ).toBe(true);
 });
 
-test("allows retrying planning from the header after an empty-state error", async ({
-  page,
-  api,
-}) => {
-  api.menus = [];
-  api.generationError = "Could not plan this week. Try again.";
-  await page.goto("/");
-  const plan = page.getByRole("button", { name: "Plan my week" });
-  await plan.click();
-  await expect(page.getByText(api.generationError)).toBeVisible();
-  await expect(plan).toBeEnabled();
-  await expect(
-    page.getByRole("region", { name: "Make this week delicious." }),
-  ).toBeVisible();
-  api.generationError = null;
-  await plan.click();
-  await expect(
-    page.getByRole("region", { name: "Today’s menu" }),
-  ).toBeVisible();
-  expect(api.generationRequests).toBe(2);
-});
-
-test("shows today's menu first and adapts the grid and navigation", async ({
+test("shows today's menu first and adapts the grid and navigation", { tag: "@responsive" }, async ({
   page,
 }) => {
   await page.goto("/");
@@ -320,21 +288,27 @@ test("disables planning while the initial menu is loading", async ({
   ).toBeEnabled();
 });
 
-test("generates a menu from the empty state with planning feedback", async ({
+test("retries failed empty-state planning and shows pending feedback before the menu", async ({
   page,
   api,
 }) => {
   api.menus = [];
-  let release!: () => void;
-  api.generationBarrier = new Promise<void>((resolve) => {
-    release = resolve;
-  });
+  api.generationError = "Could not plan this week. Try again.";
   await page.goto("/");
   const hero = page.getByRole("region", { name: "Make this week delicious." });
   await expect(hero).toBeVisible();
   await expect(page.getByRole("button", { name: "Plan my week" })).toHaveCount(
     1,
   );
+  await page.getByRole("button", { name: "Plan my week" }).click();
+  await expect(page.getByText(api.generationError)).toBeVisible();
+  await expect(hero).toBeVisible();
+  await expect(page.getByRole("button", { name: "Plan my week" })).toBeEnabled();
+  api.generationError = null;
+  let release!: () => void;
+  api.generationBarrier = new Promise<void>((resolve) => {
+    release = resolve;
+  });
   await page.getByRole("banner").getByRole("button", { name: "Plan my week" }).click();
   await expect(page.getByRole("button", { name: "Planning" })).toBeDisabled();
   release();
@@ -345,7 +319,7 @@ test("generates a menu from the empty state with planning feedback", async ({
   await expect(
     page.getByRole("region", { name: "Today’s menu" }),
   ).toBeVisible();
-  expect(api.generationRequests).toBe(1);
+  expect(api.generationRequests).toBe(2);
 });
 
 test("keeps the current menu when generation fails and allows retrying", async ({
@@ -470,7 +444,7 @@ test("creating a meal from the menu does not eagerly load the library", async ({
   await expect(page.getByRole("article")).toHaveCount(4);
 });
 
-test("keeps the planning action beside MC on both screens without overflow", async ({ page, api }) => {
+test("keeps the planning action beside MC on both screens without overflow", { tag: "@responsive" }, async ({ page, api }) => {
   await page.goto("/");
   await page.getByRole("heading", { name: "Wednesday" }).waitFor();
   for (const view of ["My menu", "My meals"] as const) {

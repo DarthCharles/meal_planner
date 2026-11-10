@@ -1,6 +1,6 @@
 require "test_helper"
 
-# Characterize the existing JSON API before upgrading Rails and its defaults.
+# Cover the response shapes and write semantics consumed by API clients.
 class ApiContractTest < ActionDispatch::IntegrationTest
   setup do
     @breakfast = MealType.find_or_create_by!(description: "breakfast")
@@ -54,14 +54,16 @@ class ApiContractTest < ActionDispatch::IntegrationTest
     assert_equal "0.25", created.fetch("ingredients").first.fetch("quantity")
 
     put "/meals/#{created.fetch('id')}", params: {
-      name: "Tacos actualizados", meal_type_ids: [@dinner.id], ingredients: []
+      name: "Tacos actualizados", meal_type_ids: [@dinner.id],
+      ingredients: [{ name: "Pepino", quantity: 2, unit: "pieza" }]
     }, as: :json
     assert_response :ok
     updated = response.parsed_body.fetch("data")
     assert_equal "Tacos actualizados", updated.fetch("name")
     assert_equal "Con verduras", updated.fetch("description")
     assert_equal ["dinner"], updated.fetch("meal_types")
-    assert_equal [], updated.fetch("ingredients")
+    assert_equal ["Pepino"], updated.fetch("ingredients").map { |row| row.fetch("name") }
+    assert_equal ["Pepino"], Meal.find(created.fetch("id")).meal_ingredients.map { |row| row.ingredient.name }
   end
 
   test "omitting associations on update preserves them" do

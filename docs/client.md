@@ -250,8 +250,9 @@ including after reloading. These notices describe generation-time preferences;
 subsequent meal edits do not rewrite them.
 
 Browser tests cover selecting all days, custom days, clearing preferences, submitted
-payloads, nested menu details, and fallback messages on generation/reload across
-all three viewports. Rails tests verify the actual scheduling and API contract.
+payloads, nested menu details, and fallback messages on generation/reload in
+desktop Chromium. Preference-toggle layout is also checked at mobile and tablet
+widths. Rails tests verify the actual scheduling and API contract.
 
 ## Dialogs
 
@@ -379,9 +380,15 @@ the fixture intercepts those requests, so no Rails server or database is needed.
 It always starts a fresh server to avoid accidentally testing a development
 server configured with another API URL.
 
-Each test runs in Chromium at 320px, 800px, and 1280px widths. Tests fix the date
-and timezone for predictable weekday ordering and block external Google Fonts
-requests. They cover loading and empty states, menu generation and errors,
+Functional tests run once in desktop Chromium at 1280px. Tests tagged
+`@responsive` also run at 320px and 800px; the mobile and tablet projects select
+only that tag. These cases check the weekly grid, hero layout, header and
+navigation, saved-week overflow, form layout, ingredient overlays, and loading
+layout. Date logic, validation, errors, and cache behavior run once rather than
+repeating across every width. Playwright defaults to one worker locally and in CI.
+
+Tests fix the date and timezone for predictable weekday ordering and block
+external Google Fonts requests. They cover loading and empty states, menu generation and errors,
 demo fallback, navigation and responsive layout, meal search/filtering, form
 validation, ingredient editing, create/update requests, save errors, and cancelling.
 These test client behavior with mocked responses; Rails tests remain responsible
@@ -394,6 +401,10 @@ Useful commands, from `client/`:
 npm run test:browser -- --project=mobile-chromium
 npm run test:browser:ui                      # interactive test runner
 ```
+
+During active editing, run automated checks only on request. The full suite,
+build, and test type check are required before committing client changes, as
+described in `client/AGENTS.md`.
 
 Tests fail on uncaught browser errors and retain traces and screenshots on
 failure. Generated reports and test results are ignored by Git. Prefer role,

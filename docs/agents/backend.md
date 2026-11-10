@@ -45,6 +45,10 @@ Rails integration.
 - Update Rails tests for backend behavior changes. Execute them on user request
   during active editing, and run the full suite before committing, following
   the root verification policy.
+- Give each test a distinct failure to catch. Keep HTTP contracts in integration
+  tests and scheduling rules in service tests; consolidate repeated happy paths
+  while retaining transactional and validation edge cases. Keep pure date tests
+  separate from database-heavy setup. Do not add generated placeholder tests.
 
 ## Verification expectations
 

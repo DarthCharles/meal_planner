@@ -15,7 +15,7 @@ function savedMenu(id: number, from: string, to: string, name: string) {
   return saved;
 }
 
-test("browses upcoming, current, and past weeks newest first and opens their meals", async ({ page, api }) => {
+test("browses upcoming, current, and past weeks newest first and opens their meals", { tag: "@responsive" }, async ({ page, api }) => {
   const older = savedMenu(2, "2025-12-29", "2026-01-04", "New year breakfast");
   const recent = savedMenu(3, "2026-10-12", "2026-10-18", "Last week's breakfast");
   recent.generation_notices = ["A preference needed a fallback in this saved week."];

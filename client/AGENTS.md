@@ -85,9 +85,14 @@ The client uses `VITE_API_URL` when set, and otherwise targets
 - Prefer accessible role, label, and visible-text selectors. Use Playwright's
   waiting assertions and controlled responses for pending states; avoid arbitrary
   sleeps and fragile CSS selectors.
-- Preserve coverage across the configured mobile (320px), tablet (800px), and
-  desktop (1280px) Chromium projects. Check responsive layout and overflow when
-  changing UI structure or styling.
+- Run functional behavior coverage once in the desktop Chromium project. Add
+  `tag: "@responsive"` only for tests with viewport-dependent layout, navigation,
+  or overlay assertions; these also run at mobile (320px) and tablet (800px).
+  Keep those responsive checks across all three widths without repeating date,
+  validation, API-error, or cache scenarios at each width.
+- Before adding a test, identify the distinct failure it catches. Extend a
+  related flow when setup and behavior overlap; avoid testing Greda internals
+  or exact theme values in this consumer suite.
 - Inspect failure screenshots, traces, and error context before changing tests.
   Fix the cause rather than hiding failures with retries or weaker assertions.
   Once relevant checks pass, repeat them only when further changes or unresolved
