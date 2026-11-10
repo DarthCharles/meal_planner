@@ -16,7 +16,7 @@ export function SavedMenusScreen() {
   const selected = savedMenus.find((menu) => menu.id === selectedId) ?? savedMenus[0];
 
   return (
-    <section aria-labelledby="saved-menus-title" className="py-5 tablet:py-8">
+    <section aria-labelledby="saved-menus-title" className="pb-5 tablet:pb-8">
       <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">Your weekly table</p>
       <h2 id="saved-menus-title" className="mb-3 font-display text-[32px] font-semibold tracking-[-.04em]">Saved Menus</h2>
       <p className="mb-6 text-sm text-muted-foreground">Browse upcoming plans, this week's menu, and past weeks.</p>

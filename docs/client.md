@@ -33,6 +33,11 @@ visits, reloads, opening in another tab, and browser back/forward navigation.
 Unknown paths show a page-not-found screen with a link home. Meal dialogs,
 library search/filters, and the selected saved week remain local UI state.
 
+`App.tsx` supplies the shared header, content area, and navigation. Non-index
+routes use a nested `PageLayout` with a consistent 12px top inset; My Meals,
+Saved Menus, and the not-found screen do not add their own top spacing.
+The index menu keeps its hero and weekly-grid spacing.
+
 Production hosting must serve `client/dist/index.html` for client navigation
 paths (including unknown page paths), while serving static assets normally.
 Vite's development and preview servers already provide this SPA fallback.

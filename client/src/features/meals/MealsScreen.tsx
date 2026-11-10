@@ -20,7 +20,7 @@ export function MealsScreen() {
   return (
     <>
       {error && <Notice>{error}</Notice>}
-      <div className="mt-[31px] mb-[17px] tablet:mt-[39px] tablet:mb-5">
+      <div className="mb-[17px] tablet:mb-5">
         <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
           Your collection
         </p>
