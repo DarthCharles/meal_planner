@@ -23,6 +23,11 @@ export function Navigation() {
           icon: "◒",
           to: "/meals",
         },
+        {
+          label: "My Ingredients",
+          icon: "❧",
+          to: "/ingredients",
+        },
       ].map(({ label, icon, to }) => (
         <NavLink
           key={label}
@@ -30,7 +35,7 @@ export function Navigation() {
           end
           className={({ isActive }) => buttonVariants({
             variant: isActive ? "secondary" : "ghost",
-            className: "h-auto min-w-0 flex-1 flex-col gap-[3px] px-[13px] py-2 text-[10px] tablet:min-w-[94px] tablet:flex-initial",
+            className: "h-auto min-w-0 flex-1 flex-col gap-[3px] px-1 py-2 text-[10px] tablet:min-w-[94px] tablet:flex-initial tablet:px-[13px]",
           })}
         >
           <span className="text-lg leading-[17px]">{icon}</span>

@@ -220,7 +220,7 @@ test("opens header actions with the keyboard and dismisses with Escape or an out
   await expect(page.getByRole("link", { name: "My Menu", exact: true })).toBeFocused();
   const actions = page.getByRole("dialog", { name: "Actions", exact: true });
   await expect(actions.getByRole("link")).toHaveText([
-    "My Menu", "My Meals", "Saved Menus",
+    "My Menu", "My Meals", "My Ingredients", "Saved Menus",
   ]);
   await expect(actions.getByRole("button", { name: "Add a meal", exact: true })).toBeVisible();
   await expect(actions.getByRole("separator")).toHaveCount(2);

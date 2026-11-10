@@ -23,12 +23,12 @@ test("keeps navigation in the URL and supports back and forward without reloadin
   expect(api.reads).toEqual({ "/menus": initialMenuReads, "/meals": initialMealReads });
 });
 
-for (const path of ["/meals", "/saved-menus"]) {
+for (const path of ["/meals", "/saved-menus", "/ingredients"]) {
   test(`opens and reloads ${path} directly`, async ({ page, api }) => {
     await page.goto(path);
     const screen = path === "/meals"
       ? page.getByPlaceholder("Search meals")
-      : page.getByRole("heading", { name: "Saved Menus", exact: true });
+      : page.getByRole("heading", { name: path === "/ingredients" ? "My Ingredients" : "Saved Menus", exact: true });
     await expect(screen).toBeVisible();
     const initialMealReads = api.reads["/meals"] ?? 0;
     await page.reload();

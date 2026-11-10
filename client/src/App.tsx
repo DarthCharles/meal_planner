@@ -5,6 +5,7 @@ import { Navigation } from "./components/Navigation";
 import { MenuScreen } from "./features/menu/MenuScreen";
 import { MealsScreen } from "./features/meals/MealsScreen";
 import { SavedMenusScreen } from "./features/menu/SavedMenusScreen";
+import { IngredientsScreen } from "./features/ingredients/IngredientsScreen";
 
 function PageLayout() {
   return <div className="pt-3"><Outlet /></div>;
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={<MenuScreen />} />
           <Route element={<PageLayout />}>
             <Route path="/meals" element={<MealsScreen />} />
+            <Route path="/ingredients" element={<IngredientsScreen />} />
             <Route path="/saved-menus" element={<SavedMenusScreen />} />
             <Route path="*" element={
               <section className="pb-8">

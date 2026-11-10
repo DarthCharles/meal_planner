@@ -1,4 +1,4 @@
-import type { IngredientOption, Meal, MealPayload, MealTypeOption, Menu, UnitOption } from "./types";
+import type { IngredientCatalogEntry, IngredientPayload, Meal, MealPayload, MealTypeOption, Menu, UnitOption } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:3000";
 
@@ -26,12 +26,18 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export const api = {
   getMenus: (signal?: AbortSignal) => request<Menu[]>("/menus", { signal }),
   getMeals: (signal?: AbortSignal) => request<Meal[]>("/meals", { signal }),
+  getMeal: (id: number, signal?: AbortSignal) => request<Meal>(`/meals/${id}`, { signal }),
   getMealTypes: (signal?: AbortSignal) =>
     request<MealTypeOption[]>("/meal_types", { signal }),
   getUnits: (signal?: AbortSignal) =>
     request<UnitOption[]>("/units", { signal }),
   getIngredients: (signal?: AbortSignal) =>
-    request<IngredientOption[]>("/ingredients", { signal }),
+    request<IngredientCatalogEntry[]>("/ingredients", { signal }),
+  createIngredient: (ingredient: IngredientPayload) =>
+    request<IngredientCatalogEntry>("/ingredients", { method: "POST", body: JSON.stringify(ingredient) }),
+  updateIngredient: (id: number, ingredient: IngredientPayload) =>
+    request<IngredientCatalogEntry>(`/ingredients/${id}`, { method: "PUT", body: JSON.stringify(ingredient) }),
+  deleteIngredient: (id: number) => request<boolean>(`/ingredients/${id}`, { method: "DELETE" }),
   generateMenu: () =>
     request<Menu>("/menus/generate", {
       method: "POST",

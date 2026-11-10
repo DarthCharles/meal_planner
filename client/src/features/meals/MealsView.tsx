@@ -25,18 +25,16 @@ export function MealsView({
   );
   return (
     <section>
-      <div className="flex flex-col gap-[10px] tablet:flex-row">
-        <label className="flex min-h-[43px] flex-1 items-center gap-[9px] rounded-xl border border-border bg-card px-[13px]">
-          <span className="-rotate-15 text-[21px] text-muted-foreground">⌕</span>
-          <Input
-            aria-label="Search meals"
-            className="h-auto min-w-0 border-0 bg-transparent px-0 py-3 text-[13px] md:text-[13px] shadow-none"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search meals"
-          />
-        </label>
-        <Button variant="secondary" onClick={onAdd}>
+      <div className="mb-4 flex min-w-0 items-center gap-2 tablet:gap-3">
+        <Input
+          type="search"
+          aria-label="Search meals"
+          className="min-w-0 flex-1 bg-card"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search meals"
+        />
+        <Button className="shrink-0" variant="secondary" onClick={onAdd}>
           + Add meal
         </Button>
       </div>

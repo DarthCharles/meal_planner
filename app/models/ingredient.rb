@@ -7,6 +7,15 @@ class Ingredient < ApplicationRecord
   validates :name, presence: true
   validates :normalized_name, presence: true, uniqueness: true
 
+  def catalog_json
+    {
+      id: id,
+      name: name,
+      meals: meals.sort_by { |meal| [meal.name.downcase, meal.id] }
+        .map { |meal| { id: meal.id, name: meal.name } }
+    }
+  end
+
   private
 
   def normalize_name

@@ -1,6 +1,6 @@
 import { test as base, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import type { IngredientOption, Meal, MealPayload, Menu } from "../../src/types";
+import type { IngredientOption, IngredientPayload, Meal, MealPayload, Menu } from "../../src/types";
 import { meals, mealTypes, menu, units } from "./data";
 
 type SaveRequest = { method: string; path: string; body: MealPayload };
@@ -8,6 +8,12 @@ type MockApi = {
   menus: Menu[];
   meals: Meal[];
   ingredients: IngredientOption[];
+  ingredientSaves: { method: string; path: string; body: IngredientPayload }[];
+  ingredientSaveError: string | null;
+  ingredientSaveBarrier?: Promise<void>;
+  ingredientDeletes: number[];
+  ingredientDeleteError: string | null;
+  ingredientDeleteBarrier?: Promise<void>;
   readErrors: Record<string, string>;
   reads: Record<string, number>;
   unavailable: boolean;
@@ -29,6 +35,10 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         menus: structuredClone([menu]),
         meals: structuredClone(meals),
         ingredients: [{ id: 1, name: "Egg" }, { id: 2, name: "Tomato" }],
+        ingredientSaves: [],
+        ingredientSaveError: null,
+        ingredientDeletes: [],
+        ingredientDeleteError: null,
         readErrors: {},
         readBarriers: {},
         reads: {},
@@ -51,7 +61,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         const path = new URL(request.url()).pathname;
         const headers = {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS",
+          "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
         };
         if (request.method() === "OPTIONS") {
@@ -74,9 +84,14 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
             return void (await fail(api.readErrors[path]));
           if (path === "/menus") return void (await respond(api.menus));
           if (path === "/meals") return void (await respond(api.meals));
+          if (/^\/meals\/\d+$/.test(path)) return void (await respond(api.meals.find((meal) => meal.id === Number(path.split("/").pop()))));
           if (path === "/meal_types") return void (await respond(mealTypes));
           if (path === "/units") return void (await respond(units));
-          if (path === "/ingredients") return void (await respond(api.ingredients));
+          if (path === "/ingredients") return void (await respond(api.ingredients.map((ingredient) => ({
+            ...ingredient,
+            meals: api.meals.filter((meal) => meal.ingredients.some((row) => row.ingredient_id === ingredient.id))
+              .map(({ id, name }) => ({ id, name })),
+          }))));
         }
         if (path === "/menus/generate" && request.method() === "POST") {
           api.generationRequests++;
@@ -86,6 +101,36 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           const generated = { ...structuredClone(menu), generation_notices: api.generationNotices };
           api.menus = [generated];
           return void (await respond(generated));
+        }
+        if (/^\/ingredients\/\d+$/.test(path) && request.method() === "DELETE") {
+          const id = Number(path.split("/").pop());
+          api.ingredientDeletes.push(id);
+          await api.ingredientDeleteBarrier;
+          if (api.ingredientDeleteError) return void (await fail(api.ingredientDeleteError));
+          if (api.meals.some((meal) => meal.ingredients.some((row) => row.ingredient_id === id))) {
+            return void (await fail("Cannot delete an ingredient used by meals. Remove it from those meals first."));
+          }
+          api.ingredients = api.ingredients.filter((ingredient) => ingredient.id !== id);
+          return void (await respond(true));
+        }
+        if ((path === "/ingredients" && request.method() === "POST") ||
+          (/^\/ingredients\/\d+$/.test(path) && request.method() === "PUT")) {
+          const body = request.postDataJSON() as IngredientPayload;
+          api.ingredientSaves.push({ method: request.method(), path, body });
+          await api.ingredientSaveBarrier;
+          if (api.ingredientSaveError) return void (await fail(api.ingredientSaveError));
+          const id = request.method() === "POST"
+            ? Math.max(0, ...api.ingredients.map((item) => item.id)) + 1
+            : Number(path.split("/").pop());
+          const ingredient = { id, name: body.name.trim() };
+          api.ingredients = [...api.ingredients.filter((item) => item.id !== id), ingredient];
+          const rename = (meal: Meal): Meal => ({ ...meal, ingredients: meal.ingredients.map((row) =>
+            row.ingredient_id === id ? { ...row, name: ingredient.name } : row) });
+          api.meals = api.meals.map(rename);
+          api.menus = api.menus.map((menu) => ({ ...menu, days: menu.days.map((day) => ({ ...day, meals: day.meals.map(rename) })) }));
+          return void (await respond({ ...ingredient, meals: api.meals
+            .filter((meal) => meal.ingredients.some((row) => row.ingredient_id === id))
+            .map(({ id, name }) => ({ id, name })) }));
         }
         if (
           (path === "/meals" && request.method() === "POST") ||
@@ -148,7 +193,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
 
 export { expect };
 
-export async function navigateTo(page: Page, name: "My menu" | "My meals" | "Saved Menus") {
+export async function navigateTo(page: Page, name: "My menu" | "My meals" | "My Ingredients" | "Saved Menus") {
   if (page.viewportSize()!.width >= 760) {
     await page.getByRole("button", { name: "Open actions" }).click();
   }

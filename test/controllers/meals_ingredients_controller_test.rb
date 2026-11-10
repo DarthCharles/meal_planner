@@ -12,7 +12,7 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
     apple = Ingredient.create!(name: "Apple")
     get "/ingredients"
     assert_response :ok
-    assert_equal [{ "id" => apple.id, "name" => "Apple" }, { "id" => egg.id, "name" => "Egg" }], response.parsed_body["data"]
+    assert_equal [{ "id" => apple.id, "name" => "Apple", "meals" => [] }, { "id" => egg.id, "name" => "Egg", "meals" => [] }], response.parsed_body["data"]
   end
 
   test "selects existing ingredients by id and creates new names in the same save" do

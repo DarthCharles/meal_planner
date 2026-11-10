@@ -1,12 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../api";
 import { queryKeys } from "../../queryKeys";
-import type { IngredientOption, Meal, MealPayload, Menu } from "../../types";
+import type { IngredientCatalogEntry, Meal, MealPayload, Menu } from "../../types";
 
 export function useMeals() {
   return useQuery({
     queryKey: queryKeys.meals,
     queryFn: ({ signal }) => api.getMeals(signal),
+  });
+}
+
+export function useMeal(id: number) {
+  return useQuery({
+    queryKey: queryKeys.meal(id),
+    queryFn: ({ signal }) => api.getMeal(id, signal),
   });
 }
 
@@ -39,17 +46,22 @@ function useSyncSavedMeal() {
   return async (meal: Meal) => {
     await Promise.all([
       client.cancelQueries({ queryKey: queryKeys.meals }),
+      client.cancelQueries({ queryKey: queryKeys.mealDetails }),
       client.cancelQueries({ queryKey: queryKeys.menus }),
       client.cancelQueries({ queryKey: queryKeys.ingredients }),
     ]);
-    client.setQueryData<IngredientOption[]>(queryKeys.ingredients, (ingredients) => {
+    client.setQueryData<IngredientCatalogEntry[]>(queryKeys.ingredients, (ingredients) => {
       if (!ingredients) return undefined;
-      const catalog = new Map(ingredients.map((item) => [item.id, item]));
+      const catalog = new Map(ingredients.map((item) => [item.id, {
+        ...item, meals: item.meals.filter((entry) => entry.id !== meal.id),
+      }]));
       for (const ingredient of meal.ingredients) {
         if (ingredient.ingredient_id) {
           catalog.set(ingredient.ingredient_id, {
             id: ingredient.ingredient_id,
             name: ingredient.name,
+            meals: [...(catalog.get(ingredient.ingredient_id)?.meals ?? []), { id: meal.id, name: meal.name }]
+              .sort((left, right) => left.name.localeCompare(right.name)),
           });
         }
       }
@@ -61,6 +73,9 @@ function useSyncSavedMeal() {
         ? meals.map((item) => (item.id === meal.id ? meal : item))
         : [...meals, meal];
     });
+    client.setQueriesData<Meal>({ queryKey: queryKeys.mealDetails }, (cached) =>
+      cached?.id === meal.id ? meal : cached,
+    );
     client.setQueryData<Menu[]>(queryKeys.menus, (menus) =>
       menus?.map((menu) => ({
         ...menu,

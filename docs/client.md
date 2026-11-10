@@ -21,13 +21,14 @@ The client uses `VITE_API_URL` for the API base URL. The default is `http://127.
 - Generate a weekly menu.
 - Browse upcoming, current, and past weeks through Saved Menus and open their meals.
 - Browse and filter meals.
+- Browse, search, create, and rename shared ingredients through My Ingredients.
 - Add a meal to the library.
 - Install the app as a PWA.
 
 The header's Comal logo and name link back to the index (the menu screen).
 
 React Router's declarative mode provides browser routes: `/` for My Menu,
-`/meals` for My Meals, and `/saved-menus` for Saved Menus. Header and bottom
+`/meals` for My Meals, `/ingredients` for My Ingredients, and `/saved-menus` for Saved Menus. Header and bottom
 navigation use real links with an active-page indication. URLs support direct
 visits, reloads, opening in another tab, and browser back/forward navigation.
 Unknown paths show a page-not-found screen with a link home. Meal dialogs,
@@ -35,7 +36,7 @@ library search/filters, and the selected saved week remain local UI state.
 
 `App.tsx` supplies the shared header, content area, and navigation. Non-index
 routes use a nested `PageLayout` with a consistent 12px top inset; My Meals,
-Saved Menus, and the not-found screen do not add their own top spacing.
+Saved Menus, My Ingredients, and the not-found screen do not add their own top spacing.
 The index menu keeps its hero and weekly-grid spacing.
 
 Production hosting must serve `client/dist/index.html` for client navigation
@@ -57,10 +58,50 @@ same week. Meals still reference the live library, so later recipe edits also
 appear in old menus.
 
 The header's MC button opens a Greda popover on all screen sizes, ordered as
-“My Menu”, “My Meals”, a separator, “Saved Menus”, a separator, and “Add a meal”.
+“My Menu”, “My Meals”, “My Ingredients”, a separator, “Saved Menus”, a separator, and “Add a meal”.
 Choosing a destination closes the popover. “Add a meal” opens the meal form;
 closing the form returns focus to MC. Mobile also keeps its bottom navigation.
 The library keeps its own add action.
+
+My Ingredients is available in the header actions and mobile bottom navigation.
+It displays the shared catalog alphabetically, with case-insensitive local name
+search and a visible result count. Search and Add ingredient share a row, with
+the search field filling the available width. Search is disabled until catalog
+data is available. Ingredient names wrap on narrow screens.
+My Meals uses the same search field styling and single-row search/Add toolbar.
+The page fetches `GET /ingredients` only when opened and reuses the same React
+Query cache as the meal form. Initial loading uses a shimmer skeleton for the
+result count and six ingredient cards
+in the catalog's responsive grid. The toolbar stays visible during loading.
+The skeleton announces loading once, hides decorative placeholders from
+assistive technology, and disables animation for reduced-motion preferences.
+It also shows empty catalog, no search results, and request errors with retry;
+cached ingredients remain visible if a refresh
+fails. It does not use demo data. Each ingredient card shows its meal usage
+count from the backend catalog response, or an unused message. Cards use larger
+serif ingredient names and rounded usage badges: sage for used ingredients and
+neutral for unused ingredients. The screen does
+not fetch `/meals` to determine usage. The ingredient edit modal lists the meals
+using it; each meal name opens its details in the shared dialog, fetching only
+that meal via `GET /meals/:id`, with loading, retry, and the existing Edit meal
+action. Closing restores focus to the ingredient's original Edit button.
+
+“Add ingredient” and each row's “Edit” action open the shared dialog with a
+React Hook Form name field. Blank names are blocked locally; duplicate names
+and other API errors keep the form open with the draft intact. Saving uses
+`POST /ingredients` or `PUT /ingredients/:id`; cancel creates no changes.
+Renaming preserves ingredient identity and updates names in cached meals and
+menus. Ingredient saves refresh the catalog. Meal saves also synchronize usage
+references in the catalog cache, including removed ingredients and renamed meals.
+The meal form still supports creating ingredients when saving a meal.
+
+The edit dialog shows a Delete ingredient action only for unused ingredients.
+It calls `DELETE /ingredients/:id`
+and removes the ingredient from the shared catalog cache after success. While
+deletion is pending, saving and repeated deletion are disabled. Success closes
+the dialog; failures keep it open with the draft and API error. Used ingredients
+and the create dialog have no Delete button;
+the backend also rejects deletion if an ingredient becomes used after loading.
 
 The single “Plan my week” action has a plus icon and sits beside MC in the header on mobile and
 desktop, including while browsing the meal library. It is disabled while menus
@@ -125,6 +166,7 @@ client/
     queryKeys.ts  # stable cache keys
     components/   # header, navigation, illustrations, and generic dialog host
     features/
+      ingredients/ # shared catalog, ingredient form, and mutation hooks
       menu/       # weekly menu screen, day cards, and query/mutation hooks
       meals/      # library, form, ingredients, query/mutation hooks, and meal type styles
     demoData.ts   # fallback meals and menu for offline development
@@ -150,7 +192,7 @@ window focus or reconnection. Meal types and units remain fresh for five minutes
 The cache lives in memory and is not persisted for offline use.
 
 Feature hooks in `features/menu/queries.ts` and `features/meals/queries.ts` expose
-`useMenus`, `useMeals`, `useMealTypes`, `useUnits`, `useGenerateMenu`,
+`useMenus`, `useMeals`, `useMeal`, `useMealTypes`, `useUnits`, `useGenerateMenu`,
 `useCreateMeal`, and `useUpdateMeal`. Query/mutation status supplies loading,
 saving, and API errors; HTTP calls remain in `api.ts`, using `fetch` with the
 query's abort signal for cancellable reads.
@@ -178,6 +220,7 @@ Successful mutations update the cache from the API response. Generating a menu
 puts it first in the menu list. Saving a meal updates the library and replaces
 that meal wherever it appears in cached menus. In-flight reads are cancelled
 before applying those responses so older data cannot overwrite the update.
+Individually fetched meal details also receive meal and ingredient-name updates.
 If the meal list has never loaded, it is fetched on the next library visit rather
 than being replaced with a partial list containing only the saved meal. Creating
 a meal from the menu does not trigger an unused library request.

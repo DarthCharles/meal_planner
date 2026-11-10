@@ -16,6 +16,9 @@ All responses use a top-level `data` or `errors` key.
 | `DELETE` | `/meals/:id` | Delete a meal |
 | `GET` | `/units` | List available ingredient units |
 | `GET` | `/ingredients` | List the shared ingredient catalog |
+| `POST` | `/ingredients` | Create a standalone ingredient |
+| `PUT` / `PATCH` | `/ingredients/:id` | Rename a shared ingredient |
+| `DELETE` | `/ingredients/:id` | Delete an unused ingredient |
 
 Meal create and update requests may include an `ingredients` array. Each item
 uses exactly one of `ingredient_id` (an existing catalog ID) or `name` (a new
@@ -37,8 +40,30 @@ back all changes.
 ownership filtering:
 
 ```json
-{"data":[{"id":12,"name":"Egg"},{"id":19,"name":"Potato"}]}
+{"data":[{"id":12,"name":"Egg","meals":[{"id":3,"name":"Omelette"}]},{"id":19,"name":"Potato","meals":[]}]}
 ```
+
+Each catalog entry includes the IDs and names of meals using that ingredient,
+sorted by case-insensitive meal name and ID. Unused ingredients have `meals: []`.
+The backend loads meal usage with the catalog; the client does not need to fetch
+the full meal library to display it.
+
+Standalone create and update accept a top-level `{"name":"Tomato"}` payload.
+Create returns `201`; update returns `200`. Both return
+`{"data":{"id":12,"name":"Tomato","meals":[]}}` with current meal usage.
+Names are trimmed and must be nonblank and unique after lowercasing. Duplicate
+names are rejected rather than merged. Validation failures return `422` with
+`{"errors":{"name":["…"]}}`; updating a missing ingredient returns `404`
+with `{"errors":"Ingredient not found"}`. A rename preserves the ingredient
+ID, quantities, units, and recipe notes; every referencing meal and menu returns
+the new name.
+
+`DELETE /ingredients/:id` accepts no payload. Deleting an unused ingredient
+returns `200` with `{"data":true}`. Missing ingredients return `404` with
+`{"errors":"Ingredient not found"}`. Ingredients still referenced by meals
+are preserved and return `422` with
+`{"errors":"Cannot delete an ingredient used by meals. Remove it from those meals first."}`.
+Deletion never removes meals or their recipe rows.
 
 For example, a meal can select an existing ingredient and create another:
 
@@ -52,8 +77,9 @@ For example, a meal can select an existing ingredient and create another:
 ```
 
 Meal responses retain `ingredient_id`, display `name`, quantity, unit, note,
-position, and the meal-ingredient row `id`. New ingredients are persisted only
-when a meal saves; there is no standalone creation request from the form.
+position, and the meal-ingredient row `id`. New ingredients drafted within the
+meal form are persisted only when that meal saves. My Ingredients uses the
+standalone creation endpoint instead.
 
 Create and update payload:
 

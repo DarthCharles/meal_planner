@@ -82,6 +82,7 @@ export function AppHeader() {
                 {([
                   ["/", "My Menu"],
                   ["/meals", "My Meals"],
+                  ["/ingredients", "My Ingredients"],
                   ["/saved-menus", "Saved Menus"],
                 ] as const).map(([destination, label]) => (
                   <Fragment key={destination}>

@@ -52,6 +52,8 @@ export type UnitOption = {
 };
 
 export type IngredientOption = { id: number; name: string };
+export type IngredientCatalogEntry = IngredientOption & { meals: { id: number; name: string }[] };
+export type IngredientPayload = { name: string };
 
 export type MealForm = {
   name: string;

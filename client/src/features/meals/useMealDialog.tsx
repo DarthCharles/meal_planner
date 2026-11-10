@@ -3,6 +3,7 @@ import type { Meal } from "../../types";
 import { useDialog } from "../../components/dialog/useDialog";
 import { MealDialogContent } from "./MealDialogContent";
 import { MealDetails } from "./MealDetails";
+import { MealDetailsContent } from "./MealDetailsContent";
 
 export function useMealDialog() {
   const { openDialog } = useDialog();
@@ -48,5 +49,13 @@ export function useMealDialog() {
       }),
     [openDialog, openEditMeal],
   );
-  return { openCreateMeal, openEditMeal, openMeal };
+  const openMealById = useCallback(
+    (id: number, name: string) => openDialog({
+      title: name,
+      eyebrow: "In your library",
+      content: () => <MealDetailsContent id={id} onEdit={openEditMeal} />,
+    }),
+    [openDialog, openEditMeal],
+  );
+  return { openCreateMeal, openEditMeal, openMeal, openMealById };
 }
