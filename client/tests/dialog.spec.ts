@@ -223,7 +223,10 @@ test("opens header actions with the keyboard and dismisses with Escape or an out
     "My Menu", "My Meals", "My Ingredients", "Saved Menus",
   ]);
   await expect(actions.getByRole("button", { name: "Add a meal", exact: true })).toBeVisible();
-  await expect(actions.getByRole("separator")).toHaveCount(2);
+  await expect(actions.getByRole("separator")).toHaveCount(3);
+  const languages = actions.getByRole("group", { name: "Language", exact: true });
+  await expect(languages.getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(languages.getByRole("button", { name: "Español", exact: true })).toHaveAttribute("aria-pressed", "false");
   await page.keyboard.press("Escape");
   await expect(addMeal).toHaveCount(0);
   await expect(trigger).toBeFocused();

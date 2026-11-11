@@ -1,5 +1,7 @@
+import { useI18n } from "../../i18n";
 import { Card } from "@darthcharles/greda";
 import type { Menu } from "../../types";
+import { dayLabel } from "../meals/preferredDays";
 import { mealTypeOrder } from "../meals/mealTypes";
 import { MealRow } from "../meals/MealRow";
 import type { Meal } from "../../types";
@@ -15,6 +17,7 @@ export function DayCard({
   featured: boolean;
   onOpenMeal: (meal: Meal) => void;
 }) {
+  const { t } = useI18n();
   const dayNumber = String(date.getUTCDate()).padStart(2, "0");
   return (
     <Card
@@ -24,10 +27,10 @@ export function DayCard({
       <div className="mb-[17px] flex items-start justify-between">
         <div>
           <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-            {featured ? "Today" : `Day ${dayNumber}`}
+            {featured ? t("menu.day_card.today") : t("menu.day_card.day_number", { number: dayNumber })}
           </p>
           <h4 className="m-0 font-display text-[23px] font-semibold">
-            {day.weekday}
+            {dayLabel(day.weekday)}
           </h4>
         </div>
         <time dateTime={date.toISOString().slice(0, 10)} className="font-display text-[27px] font-semibold text-muted-foreground">

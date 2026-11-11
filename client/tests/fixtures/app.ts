@@ -6,6 +6,8 @@ import { meals, mealTypes, menu, units } from "./data";
 type SaveRequest = { method: string; path: string; body: MealPayload };
 type MockApi = {
   menus: Menu[];
+  localizedMenus: Partial<Record<"en" | "es", Menu[]>>;
+  requests: { path: string; language: string | undefined }[];
   meals: Meal[];
   ingredients: IngredientOption[];
   ingredientSaves: { method: string; path: string; body: IngredientPayload }[];
@@ -33,6 +35,8 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
     async ({ page }, use) => {
       const api: MockApi = {
         menus: structuredClone([menu]),
+        localizedMenus: {},
+        requests: [],
         meals: structuredClone(meals),
         ingredients: [{ id: 1, name: "Egg" }, { id: 2, name: "Tomato" }],
         ingredientSaves: [],
@@ -68,6 +72,8 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           await route.fulfill({ status: 204, headers });
           return;
         }
+        const language = request.headers()["accept-language"];
+        api.requests.push({ path, language });
         if (api.unavailable) {
           await route.abort();
           return;
@@ -82,7 +88,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           await api.readBarriers[path];
           if (api.readErrors[path])
             return void (await fail(api.readErrors[path]));
-          if (path === "/menus") return void (await respond(api.menus));
+          if (path === "/menus") return void (await respond(api.localizedMenus[language === "es" ? "es" : "en"] ?? api.menus));
           if (path === "/meals") return void (await respond(api.meals));
           if (/^\/meals\/\d+$/.test(path)) return void (await respond(api.meals.find((meal) => meal.id === Number(path.split("/").pop()))));
           if (path === "/meal_types") return void (await respond(mealTypes));
@@ -197,5 +203,9 @@ export async function navigateTo(page: Page, name: "My menu" | "My meals" | "My 
   if (page.viewportSize()!.width >= 760) {
     await page.getByRole("button", { name: "Open actions" }).click();
   }
+  const destination = {
+    "My menu": "/", "My meals": "/meals", "My Ingredients": "/ingredients", "Saved Menus": "/saved-menus",
+  }[name];
   await page.getByRole("navigation").getByRole("link", { name: new RegExp(name, "i") }).click();
+  await expect(page).toHaveURL(destination);
 }

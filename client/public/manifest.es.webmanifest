@@ -1,0 +1,18 @@
+{
+  "name": "Comal Planificador de comidas",
+  "short_name": "Comal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf7ef",
+  "theme_color": "#fbf7ef",
+  "description": "Planea una semana deliciosa, una comida a la vez.",
+  "icons": [
+    {
+      "src": "/comal-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "lang": "es"
+}

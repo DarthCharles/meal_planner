@@ -112,7 +112,11 @@ erDiagram
 - `MealPreferredDay` joins meals to preferred `Weekday` records. No rows means
   Any day. These preferences guide automatic generation and apply across the
   meal's types. They do not prevent assignments on other days.
-- `Menu.generation_notices` stores fallback messages as a generation snapshot.
+- `Menu.generation_notices` stores generation snapshots in the existing JSON
+  array. New entries are objects with `meal_name`, `weekday`, and
+  `preferred_days`; the API renders these as localized strings. Historical
+  string entries remain supported, including translation of the original
+  English notice template. Reading another language does not modify storage.
 - Seeded meal types are `breakfast`, `lunch`, and `dinner`.
 - `Meal` has many `Ingredient` records through `MealIngredient`.
 - `MealIngredient` stores the quantity, unit, preparation note, and display order.

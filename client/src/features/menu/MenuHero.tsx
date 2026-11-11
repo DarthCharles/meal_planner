@@ -1,8 +1,9 @@
+import { formatLocale, useI18n } from "../../i18n";
 import { HeroBowlArt } from "../../components/HeroBowlArt";
 import type { Meal, Menu } from "../../types";
 import { mealTypeOrder } from "../meals/mealTypes";
 import { MealRow } from "../meals/MealRow";
-import { isCurrentMenu } from "./menuDates";
+import { isCurrentMenu, localWeekday } from "./menuDates";
 
 export function MenuHero({
   menu,
@@ -13,8 +14,9 @@ export function MenuHero({
   loading: boolean;
   onOpenMeal: (meal: Meal) => void;
 }) {
+  const { t } = useI18n();
   const now = new Date();
-  const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
+  const weekday = localWeekday(now);
   const isCurrent = menu && isCurrentMenu(menu, now);
   const today = isCurrent
     ? menu.days.find(
@@ -30,19 +32,19 @@ export function MenuHero({
       >
         <div className="relative z-10 tablet:max-w-[400px]">
           <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-            Your weekly table
+            {t("common.weekly_table")}
           </p>
           <h2
             id="menu-hero-title"
             className="mb-4 font-display text-[clamp(37px,5vw,62px)] leading-[.98] font-semibold tracking-[-.055em]"
           >
             {loading ? (
-              "Your next menu"
+              t("menu.hero.next_menu")
             ) : (
               <>
-                Make this week
+                {t("menu.hero.make_week")}
                 <br />
-                <em className="text-action not-italic">delicious.</em>
+                <em className="text-action not-italic">{t("menu.hero.delicious")}</em>
               </>
             )}
           </h2>
@@ -51,8 +53,8 @@ export function MenuHero({
             role={loading ? "status" : undefined}
           >
             {loading
-              ? "Finding your menu…"
-              : "A little structure, plenty of sabor. Plan a week of breakfasts, lunches, and dinners from your meals."}
+              ? t("menu.hero.finding_menu")
+              : t("menu.hero.menu_intro")}
           </p>
         </div>
         <div
@@ -73,7 +75,7 @@ export function MenuHero({
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-            {now.toLocaleDateString("en-US", {
+            {now.toLocaleDateString(formatLocale(), {
               weekday: "long",
               month: "short",
               day: "numeric",
@@ -84,10 +86,10 @@ export function MenuHero({
             className="m-0 font-display text-[26px] leading-tight font-semibold tracking-[-.04em] tablet:text-[36px]"
           >
             {today?.meals.length
-              ? "Today’s menu"
+              ? t("menu.hero.today")
               : isCurrent
-                ? "Nothing planned for today."
-                : "Your week, planned."}
+                ? t("menu.hero.no_today")
+                : t("menu.hero.week_planned")}
           </h2>
         </div>
         <div aria-hidden="true" className="w-[64px] shrink-0 tablet:w-[110px]">
@@ -109,8 +111,8 @@ export function MenuHero({
       ) : (
         <p className="mt-3 mb-0 max-w-[500px] text-sm leading-relaxed text-muted-foreground">
           {isCurrent
-            ? "Plan a fresh week to put something delicious on the table."
-            : "Browse your saved menu below, or plan a fresh week."}
+            ? t("menu.hero.fresh_week")
+            : t("menu.hero.browse_or_plan")}
         </p>
       )}
     </section>

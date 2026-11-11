@@ -18,7 +18,7 @@ class MenusController < ApplicationController
     if @menu.present?
       render json: { data: @menu }, status: :ok
     else
-      render json: { errors: "Menu with id #{params[:id]} not found" }, status: 404
+      render json: { errors: I18n.t("api.menu_not_found", id: params[:id]) }, status: 404
     end
   end
 end

@@ -76,7 +76,7 @@ function useSyncSavedMeal() {
     client.setQueriesData<Meal>({ queryKey: queryKeys.mealDetails }, (cached) =>
       cached?.id === meal.id ? meal : cached,
     );
-    client.setQueryData<Menu[]>(queryKeys.menus, (menus) =>
+    client.setQueriesData<Menu[]>({ queryKey: queryKeys.menus }, (menus) =>
       menus?.map((menu) => ({
         ...menu,
         days: menu.days.map((day) => ({

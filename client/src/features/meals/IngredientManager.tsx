@@ -1,3 +1,4 @@
+import { unitLabel, useI18n } from "../../i18n";
 import {
   Button,
   Combobox,
@@ -21,6 +22,7 @@ import type { IngredientOption, MealForm, UnitOption } from "../../types";
 import { useIngredients } from "./queries";
 
 export function IngredientManager({ units }: { units: UnitOption[] }) {
+  const { t } = useI18n();
   const { control } = useFormContext<MealForm>();
   const {
     data: ingredients,
@@ -36,8 +38,8 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
     <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
       <div className="flex items-center justify-between gap-3">
         <legend className="m-0">
-          Ingredients{" "}
-          <span className="font-normal text-muted-foreground">(optional)</span>
+          {t("common.ingredients")}{" "}
+          <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
         </legend>
         <Button
           type="button"
@@ -51,29 +53,29 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
             )
           }
         >
-          + Add ingredient
+          {t("meals.ingredient_manager.add_ingredient")}
         </Button>
       </div>
       {fields.length === 0 && (
         <p className="m-0 rounded-[10px] border border-dashed border-border p-3 text-xs font-normal text-muted-foreground">
-          Add what you need to cook this meal.
+          {t("meals.ingredient_manager.ingredient_help")}
         </p>
       )}
       {fields.length > 0 && (
         <p className="m-0 text-xs font-normal text-muted-foreground">
-          Choose an ingredient or select Create to add one.
+          {t("meals.ingredient_manager.choose_ingredient_help")}
         </p>
       )}
       {error && (
         <p role="alert" className="m-0 text-xs font-normal text-destructive">
-          Could not load ingredients.{" "}
+          {t("meals.ingredient_manager.load_ingredients_error")}{" "}
           <Button
             type="button"
             variant="link"
             size="sm"
             onClick={() => void refetch()}
           >
-            Retry ingredients
+            {t("meals.ingredient_manager.retry_ingredients")}
           </Button>
         </p>
       )}
@@ -107,6 +109,7 @@ function IngredientRow({
   catalogError?: string;
   onRemove: () => void;
 }) {
+  const { t } = useI18n();
   const {
     register,
     control,
@@ -161,23 +164,28 @@ function IngredientRow({
                   !!event.target.value.trim(),
                 )}
                 className="h-auto min-w-0 rounded-[10px] bg-background px-2 py-[9px] text-[13px] md:text-[13px] font-normal shadow-none"
-                aria-label="Ingredient name"
+                aria-label={t("meals.ingredient_manager.ingredient_name")}
                 aria-invalid={!!errors.ingredients?.[index]?.name}
                 aria-describedby={errors.ingredients?.[index]?.name ? "meal-form-error" : undefined}
-                placeholder="Choose or create"
+                placeholder={t("meals.ingredient_manager.choose_or_create")}
               />
               <ComboboxContent
                 container={container}
-                aria-label="Ingredients"
+                aria-label={t("common.ingredients")}
                 className="max-h-[220px] overflow-y-auto"
-                renderCreateLabel={(query) => `Create ingredient “${query}”`}
+                emptyText={t("meals.ingredient_manager.empty_options")}
+                loadingText={t("meals.ingredient_manager.loading_options_list")}
+                creatingText={t("meals.ingredient_manager.creating_option")}
+                createErrorText={t("meals.ingredient_manager.create_option_error")}
+                getStatusText={(count, canCreate) => `${t("meals.ingredient_manager.options_available", { count })}${canCreate ? ` ${t("meals.ingredient_manager.can_create_option")}` : ""}`}
+                renderCreateLabel={(query) => t("meals.ingredient_manager.create_ingredient", { name: query })}
               />
             </Combobox>
           )}
         />
       </div>
       <Input
-        aria-label="Quantity"
+        aria-label={t("meals.ingredient_manager.quantity")}
         className="h-auto min-w-0 rounded-[10px] bg-background px-2 py-[9px] text-[13px] md:text-[13px] font-normal shadow-none text-center"
         type="number"
         min="0.001"
@@ -191,7 +199,7 @@ function IngredientRow({
         aria-describedby={
           errors.ingredients?.[index]?.quantity ? "meal-form-error" : undefined
         }
-        placeholder="Qty"
+        placeholder={t("meals.ingredient_manager.quantity_short")}
       />
       <Controller
         control={control}
@@ -206,19 +214,19 @@ function IngredientRow({
               ref={field.ref}
               onBlur={field.onBlur}
               type="button"
-              aria-label="Unit"
+              aria-label={t("meals.ingredient_manager.unit")}
               className="h-auto min-w-0 w-full gap-1 rounded-[10px] bg-background px-2 py-[9px] text-[13px] font-normal shadow-none"
               aria-invalid={!!errors.ingredients?.[index]?.unit}
               aria-describedby={
                 errors.ingredients?.[index]?.unit ? "meal-form-error" : undefined
               }
             >
-              <SelectValue placeholder="Unit" />
+              <SelectValue placeholder={t("meals.ingredient_manager.unit")} />
             </SelectTrigger>
             <SelectContent container={container}>
               {units.map((unit) => (
                 <SelectItem key={unit.code} value={unit.code}>
-                  {unit.code}
+                  {unitLabel(unit.code)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -227,9 +235,9 @@ function IngredientRow({
       />
       <Input
         className="col-span-2 tablet:col-span-1 h-auto min-w-0 rounded-[10px] bg-background px-2 py-[9px] text-[13px] md:text-[13px] font-normal shadow-none"
-        aria-label="Preparation note"
+        aria-label={t("meals.ingredient_manager.preparation_note")}
         {...register(`ingredients.${index}.preparation_note`)}
-        placeholder="Note (optional)"
+        placeholder={t("meals.ingredient_manager.note_optional")}
       />
       <Button
         type="button"
@@ -237,7 +245,7 @@ function IngredientRow({
         size="icon"
         className="col-start-3 row-start-1 tablet:col-start-auto tablet:row-start-auto size-[25px] rounded-full text-[17px]"
         onClick={onRemove}
-        aria-label={`Remove ${name || "ingredient"}`}
+        aria-label={t("meals.ingredient_manager.remove_ingredient", { name: name || t("meals.ingredient_manager.ingredient") })}
       >
         ×
       </Button>

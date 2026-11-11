@@ -50,7 +50,7 @@ test("browses upcoming, current, and past weeks newest first and opens their mea
   await row.click();
   const dialog = page.getByRole("dialog", { name: "New year breakfast" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText("2 pieza · Eggbeaten")).toBeVisible();
+  await expect(dialog.getByText("2 pieces · Eggbeaten")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(row).toBeFocused();
   expect(Object.keys(api.reads)).toEqual(["/menus"]);

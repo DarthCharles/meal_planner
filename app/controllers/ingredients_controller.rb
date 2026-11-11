@@ -10,7 +10,7 @@ class IngredientsController < ApplicationController
   def update
     ingredient = Ingredient.find_by(id: params[:id])
     unless ingredient
-      render json: { errors: "Ingredient not found" }, status: :not_found
+      render json: { errors: I18n.t("api.ingredient_not_found") }, status: :not_found
       return
     end
 
@@ -20,14 +20,14 @@ class IngredientsController < ApplicationController
   def destroy
     ingredient = Ingredient.find_by(id: params[:id])
     unless ingredient
-      render json: { errors: "Ingredient not found" }, status: :not_found
+      render json: { errors: I18n.t("api.ingredient_not_found") }, status: :not_found
       return
     end
 
     ingredient.destroy!
     render json: { data: true }, status: :ok
   rescue ActiveRecord::DeleteRestrictionError, ActiveRecord::InvalidForeignKey
-    render json: { errors: "Cannot delete an ingredient used by meals. Remove it from those meals first." }, status: :unprocessable_entity
+    render json: { errors: I18n.t("api.ingredient_in_use") }, status: :unprocessable_entity
   end
 
   private

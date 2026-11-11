@@ -16,7 +16,7 @@ async function addMeal(page: Page) {
 
 async function selectUnit(page: Page, code: string, index = 0) {
   await page.getByRole("combobox", { name: "Unit", exact: true }).nth(index).click();
-  await page.getByRole("option", { name: code, exact: true }).click();
+  await page.getByRole("option", { name: code === "pieza" ? "pieces" : code, exact: true }).click();
 }
 
 async function fillMeal(page: Page) {
@@ -27,7 +27,7 @@ async function fillMeal(page: Page) {
   await page.getByPlaceholder("https://...").fill("https://example.com/tacos");
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "lunch", exact: true })
+    .getByRole("button", { name: "Lunch", exact: true })
     .click();
 }
 
@@ -35,7 +35,7 @@ test("selecting meal times and preferred days keeps the form layout stable", { t
   await openLibrary(page);
   const dialog = await addMeal(page);
   for (const [groupName, actions] of [
-    ["Meal time", [["lunch", true], ["lunch", false]]],
+    ["Meal time", [["Lunch", true], ["Lunch", false]]],
     ["Preferred days", [["Monday", true], ["Monday", false], ["Friday", true], ["Friday", false]]],
   ] as const) {
     const group = dialog.getByRole("group", { name: groupName, exact: true });
@@ -230,11 +230,11 @@ test("selects units with the keyboard and dismisses the unit list without closin
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
   const dialog = page.getByRole("dialog");
   const unit = dialog.getByRole("combobox", { name: "Unit", exact: true });
-  await expect(unit).toHaveText("pieza");
+  await expect(unit).toHaveText("pieces");
   await unit.focus();
   await unit.press("ArrowDown");
   await expect(dialog.getByRole("listbox")).toBeVisible();
-  await expect(dialog.getByRole("option", { name: "pieza", exact: true })).toBeFocused();
+  await expect(dialog.getByRole("option", { name: "pieces", exact: true })).toBeFocused();
   await page.keyboard.press("Home");
   await expect(dialog.getByRole("option", { name: "g", exact: true })).toBeFocused();
   await page.keyboard.press("Enter");
@@ -354,7 +354,7 @@ test("waits for edit options, prefills the meal, and saves ingredient removal", 
   );
   await expect(page.getByLabel("Ingredient name")).toHaveValue("Egg");
   await expect(page.getByLabel("Quantity")).toHaveValue("2");
-  await expect(page.getByRole("combobox", { name: "Unit", exact: true })).toHaveText("pieza");
+  await expect(page.getByRole("combobox", { name: "Unit", exact: true })).toHaveText("pieces");
   await expect(page.getByLabel("Preparation note")).toHaveValue("beaten");
   for (let index = 0; index < 2; index++) {
     await dialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
@@ -515,7 +515,7 @@ test("validates deselecting all meal times and submits numeric type IDs", async 
     .click();
   const dialog = page.getByRole("dialog");
   const breakfast = dialog.getByRole("button", {
-    name: "breakfast",
+    name: "Breakfast",
     exact: true,
   });
   await expect(breakfast).toHaveAttribute("aria-pressed", "true");
@@ -528,8 +528,8 @@ test("validates deselecting all meal times and submits numeric type IDs", async 
     "Add a name, description, and at least one meal time.",
   );
   expect(api.saves).toEqual([]);
-  await dialog.getByRole("button", { name: "lunch", exact: true }).click();
-  await dialog.getByRole("button", { name: "dinner", exact: true }).click();
+  await dialog.getByRole("button", { name: "Lunch", exact: true }).click();
+  await dialog.getByRole("button", { name: "Dinner", exact: true }).click();
   await dialog
     .getByRole("button", { name: "Update meal", exact: true })
     .click();

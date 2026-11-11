@@ -1,12 +1,14 @@
+import { useI18n } from "../i18n";
 import { Fragment, useRef, useState } from "react";
 import { Button, buttonVariants, Popover, PopoverContent, PopoverTrigger } from "@darthcharles/greda";
-import { Link, NavLink } from "react-router";
+import { Link, NavLink, useLocation, useNavigate } from "react-router";
 import { useMealDialog } from "../features/meals/useMealDialog";
 import { useGenerateMenu, useMenus } from "../features/menu/queries";
 import { Notice } from "./Notice";
 import { BowlLogo } from "./BowlLogo";
 
 export function AppHeader() {
+  const { t, locale, setLocale } = useI18n();
   const { openCreateMeal } = useMealDialog();
   const { isPending: loadingMenus } = useMenus();
   const {
@@ -18,19 +20,22 @@ export function AppHeader() {
   const actionsTrigger = useRef<HTMLButtonElement>(null);
   const menuLink = useRef<HTMLAnchorElement>(null);
   const addingMeal = useRef(false);
+  const pendingDestination = useRef<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
   return (
     <>
       <header className="flex h-[70px] items-center justify-between gap-2 tablet:h-[86px]">
         <Link
           to="/"
-          aria-label="Comal home"
+          aria-label={t("app_header.home")}
           className="flex items-center gap-[11px] rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
         >
           <div className="grid size-[39px] -rotate-6 place-items-center rounded-[12px_12px_12px_4px] bg-primary text-primary-foreground">
             <BowlLogo />
           </div>
           <div>
-            <p className="hidden">Your weekly table</p>
+            <p className="hidden">{t("common.weekly_table")}</p>
             <h1 className="m-0 font-display text-[27px] font-bold tracking-[-.06em]">
               comal
             </h1>
@@ -46,7 +51,7 @@ export function AppHeader() {
             <span aria-hidden="true" className="text-xl leading-none font-normal">
               {generating ? "…" : "+"}
             </span>
-            {generating ? "Planning" : "Plan my week"}
+            {generating ? t("app_header.planning") : t("app_header.plan_week")}
           </Button>
           <Popover open={actionsOpen} onOpenChange={setActionsOpen}>
             <PopoverTrigger asChild>
@@ -55,21 +60,28 @@ export function AppHeader() {
                 variant="outline"
                 size="icon"
                 className="rounded-full text-[11px]"
-                aria-label="Open actions"
+                aria-label={t("app_header.open_actions")}
               >
                 MC
               </Button>
             </PopoverTrigger>
             <PopoverContent
               align="end"
-              className="flex w-48 flex-col gap-1 p-1.5"
-              aria-label="Actions"
+              className="flex w-64 max-w-[calc(100vw-30px)] flex-col gap-1 p-1.5"
+              aria-label={t("app_header.actions")}
               onOpenAutoFocus={(event) => {
                 event.preventDefault();
                 menuLink.current?.focus();
               }}
               onCloseAutoFocus={(event) => {
-                if (addingMeal.current) {
+                const destination = pendingDestination.current;
+                pendingDestination.current = null;
+                if (destination !== null) {
+                  event.preventDefault();
+                  actionsTrigger.current?.focus();
+                  // Leave the exiting popover's keyboard layer before showing the new screen.
+                  navigate(destination, { replace: destination === location.pathname });
+                } else if (addingMeal.current) {
                   event.preventDefault();
                   addingMeal.current = false;
                   // Open after the popover closes so the dialog restores focus to MC.
@@ -78,12 +90,12 @@ export function AppHeader() {
                 }
               }}
             >
-              <nav className="flex flex-col gap-1" aria-label="Primary navigation">
+              <nav className="flex flex-col gap-1" aria-label={t("navigation.primary_navigation")}>
                 {([
-                  ["/", "My Menu"],
-                  ["/meals", "My Meals"],
-                  ["/ingredients", "My Ingredients"],
-                  ["/saved-menus", "Saved Menus"],
+                  ["/", t("navigation.my_menu")],
+                  ["/meals", t("navigation.my_meals")],
+                  ["/ingredients", t("navigation.my_ingredients")],
+                  ["/saved-menus", t("navigation.saved_menus")],
                 ] as const).map(([destination, label]) => (
                   <Fragment key={destination}>
                     {destination === "/saved-menus" && <hr className="my-1 border-border" />}
@@ -95,7 +107,12 @@ export function AppHeader() {
                         variant: isActive ? "secondary" : "ghost",
                         className: "w-full justify-start",
                       })}
-                      onClick={() => setActionsOpen(false)}
+                      onClick={(event) => {
+                        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                        event.preventDefault();
+                        pendingDestination.current = destination;
+                        setActionsOpen(false);
+                      }}
                     >
                       {label}
                     </NavLink>
@@ -111,8 +128,24 @@ export function AppHeader() {
                   setActionsOpen(false);
                 }}
               >
-                Add a meal
+                {t("app_header.add_meal_action")}
               </Button>
+              <hr className="my-1 border-border" />
+              <div role="group" aria-label={t("app_header.language")} className="flex gap-1">
+                {([["en", "English"], ["es", "Español"]] as const).map(([code, label]) => (
+                  <Button
+                    key={code}
+                    lang={code}
+                    variant={locale === code ? "secondary" : "ghost"}
+                    size="sm"
+                    className="flex-1"
+                    aria-pressed={locale === code}
+                    onClick={() => setLocale(code)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
             </PopoverContent>
           </Popover>
         </div>

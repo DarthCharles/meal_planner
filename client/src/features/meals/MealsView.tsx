@@ -1,7 +1,8 @@
+import { useI18n } from "../../i18n";
 import { Badge, Button, Card, Input } from "@darthcharles/greda";
 import { useMemo, useState } from "react";
-import type { Meal, MealTypeName } from "../../types";
-import { mealTypeOrder, mealTypeLabels, mealTypeColorClassName } from "./mealTypes";
+import type { Meal } from "../../types";
+import { mealTypeOrder, mealTypeLabel, mealTypeColorClassName } from "./mealTypes";
 
 export function MealsView({
   meals,
@@ -12,6 +13,7 @@ export function MealsView({
   onAdd: () => void;
   onEdit: (meal: Meal) => void;
 }) {
+  const { t } = useI18n();
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const filtered = useMemo(
@@ -28,14 +30,14 @@ export function MealsView({
       <div className="mb-4 flex min-w-0 items-center gap-2 tablet:gap-3">
         <Input
           type="search"
-          aria-label="Search meals"
+          aria-label={t("meals.screen.search_meals")}
           className="min-w-0 flex-1 bg-card"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search meals"
+          placeholder={t("meals.screen.search_meals")}
         />
         <Button className="shrink-0" variant="secondary" onClick={onAdd}>
-          + Add meal
+          {t("meals.screen.add_meal")}
         </Button>
       </div>
       <div className="my-[18px] flex gap-2 overflow-x-auto">
@@ -49,8 +51,8 @@ export function MealsView({
             onClick={() => setFilter(item)}
           >
             {item === "all"
-              ? "All meals"
-              : mealTypeLabels[item as MealTypeName]}
+              ? t("meals.screen.all_meals")
+              : mealTypeLabel(item)}
           </Button>
         ))}
       </div>
@@ -69,7 +71,7 @@ export function MealsView({
                     className={`rounded-[5px] border-0 px-[6px] py-1 text-[9px] font-bold text-secondary uppercase ${mealTypeColorClassName(type)}`}
                     key={type}
                   >
-                    {type}
+                    {mealTypeLabel(type)}
                   </Badge>
                 ))}
               </div>
@@ -85,19 +87,19 @@ export function MealsView({
               size="sm"
               className="ml-auto self-start"
               onClick={() => onEdit(meal)}
-              aria-label={`Edit ${meal.name}`}
+              aria-label={t("common.edit_name", { name: meal.name })}
             >
-              Edit
+              {t("common.edit")}
             </Button>
           </Card>
         ))}
         {filtered.length === 0 && (
           <div className="grid min-h-[180px] content-center justify-items-center rounded-[20px] border border-dashed border-border px-5 py-[42px] text-center col-span-full">
             <h3 className="font-display text-[28px] mb-[9px] font-semibold tracking-[-.04em]">
-              No meals found.
+              {t("meals.screen.no_meals")}
             </h3>
             <p className="mb-[1em] max-w-[300px] text-sm leading-normal text-muted-foreground">
-              Try another search or add something new.
+              {t("meals.screen.try_meals")}
             </p>
           </div>
         )}

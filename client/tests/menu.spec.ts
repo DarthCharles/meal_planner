@@ -34,7 +34,7 @@ test("opens hero meal details, replaces them with editing, and restores focus", 
   ).toBeVisible();
   await expect(
     dialog.getByRole("region", { name: "Ingredients" }).getByRole("listitem"),
-  ).toHaveText("2 pieza · Eggbeaten");
+  ).toHaveText("2 pieces · Eggbeaten");
   await expect(
     dialog.getByRole("link", { name: "Open recipe" }),
   ).toHaveAttribute("href", "https://example.com/huevos");
@@ -404,7 +404,7 @@ test("loads each resource only when its screen or form needs it", async ({
   await expect(
     page
       .getByRole("dialog")
-      .getByRole("button", { name: "breakfast", exact: true }),
+      .getByRole("button", { name: "Breakfast", exact: true }),
   ).toBeVisible();
   await expect(
     page
@@ -433,7 +433,7 @@ test("creating a meal from the menu does not eagerly load the library", async ({
   await page
     .getByRole("textbox", { name: "Description", exact: true })
     .fill("Fresh from the kitchen.");
-  await dialog.getByRole("button", { name: "breakfast", exact: true }).click();
+  await dialog.getByRole("button", { name: "Breakfast", exact: true }).click();
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(api.reads["/meals"]).toBeUndefined();

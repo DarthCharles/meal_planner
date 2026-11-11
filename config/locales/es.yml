@@ -1,0 +1,60 @@
+es:
+  api:
+    ingredient_not_found: "Ingrediente no encontrado"
+    ingredient_in_use: "No se puede eliminar un ingrediente usado en comidas. Primero quítalo de esas comidas."
+    meal_not_found: "No se encontró la comida con id %{id}"
+    menu_not_found: "No se encontró el menú con id %{id}"
+  menu:
+    insufficient_meals: "No se puede completar el menú. Agrega comidas para cada horario; cada día necesita tres comidas diferentes."
+    preference_notice: "Se programó %{meal} el %{weekday} para completar el menú; sus días preferidos son %{preferred}."
+  weekdays:
+    monday: "lunes"
+    tuesday: "martes"
+    wednesday: "miércoles"
+    thursday: "jueves"
+    friday: "viernes"
+    saturday: "sábado"
+    sunday: "domingo"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: "no puede estar en blanco"
+      taken: "ya está en uso"
+      required: "debe existir"
+      not_a_number: "debe ser un número"
+      greater_than: "debe ser mayor que %{count}"
+  support:
+    array:
+      words_connector: ", "
+      two_words_connector: " y "
+      last_word_connector: " y "
+  activerecord:
+    attributes:
+      meal:
+        name: "Nombre"
+        description: "Descripción"
+        preferred_days: "Días preferidos"
+        ingredients: "Ingredientes"
+      ingredient:
+        name: "Nombre"
+        normalized_name: "Nombre"
+      meal_ingredient:
+        quantity: "Cantidad"
+        ingredient_id: "Ingrediente"
+        ingredient: "Ingrediente"
+        unit: "Unidad"
+        meal: "Comida"
+      day:
+        menu: "Menú"
+        weekday: "Día de la semana"
+    errors:
+      models:
+        meal:
+          attributes:
+            preferred_days:
+              invalid_weekdays: "debe ser una lista de nombres de días de la semana"
+            ingredients:
+              invalid_array: "debe ser una lista"
+              invalid_identity: "debe usar ingredient_id o name, pero no ambos"
+              unknown_ingredient: "contiene un ingrediente desconocido"
+              unknown_unit: "contiene una unidad desconocida"

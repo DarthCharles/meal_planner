@@ -22,8 +22,7 @@ class MenuGenerationService
       end
       notices = schedule.select { |assignment| assignment[:exception] }.map do |assignment|
         meal = assignment[:meal]
-        preferred = meal.preferred_days.map(&:capitalize).join(", ")
-        "#{meal.name} was scheduled on #{assignment[:weekday].capitalize} to complete the menu; its preferred days are #{preferred}."
+        { "meal_name" => meal.name, "weekday" => assignment[:weekday], "preferred_days" => meal.preferred_days }
       end
       menu.update!(generation_notices: notices)
       menu

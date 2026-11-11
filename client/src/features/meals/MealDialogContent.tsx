@@ -1,3 +1,4 @@
+import { useI18n } from "../../i18n";
 import type { Meal } from "../../types";
 import { Notice } from "../../components/Notice";
 import { demoMealTypes, demoUnits } from "../../demoData";
@@ -15,6 +16,7 @@ export function MealDialogContent({
   onClose,
   onSaved,
 }: MealDialogContentProps) {
+  const { t } = useI18n();
   const {
     data: types,
     isPending: loadingTypes,
@@ -30,14 +32,14 @@ export function MealDialogContent({
   const loading = loadingTypes || loadingUnits;
   const optionsError =
     (typesFailed && !types) || (unitsFailed && !units)
-      ? "Demo mode · connect the Rails API to use your own meals."
+      ? t("common.demo_mode")
       : (typesError?.message ?? unitsError?.message);
   return (
     <>
       {optionsError && <Notice>{optionsError}</Notice>}
       {loading ? (
         <p role="status" className="text-sm text-muted-foreground">
-          Loading meal options…
+          {t("meals.dialog.loading_options")}
         </p>
       ) : (
         <MealForm

@@ -1,9 +1,11 @@
+import { useI18n } from "../../i18n";
 import { Button } from "@darthcharles/greda";
 import { Controller, useFormContext } from "react-hook-form";
 import type { MealForm } from "../../types";
 import { dayLabel, weekdays } from "./preferredDays";
 
 export function PreferredDaysField() {
+  const { t } = useI18n();
   const { control } = useFormContext<MealForm>();
   return (
     <Controller
@@ -15,7 +17,7 @@ export function PreferredDaysField() {
           className="mb-4 grid gap-2 text-xs font-bold text-foreground"
         >
           <div className="flex items-center justify-between gap-3">
-            <span id="preferred-days-label">Preferred days</span>
+            <span id="preferred-days-label">{t("meals.preferred_days.preferred_days")}</span>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -26,7 +28,7 @@ export function PreferredDaysField() {
                 onBlur={field.onBlur}
                 onClick={() => field.onChange([...weekdays])}
               >
-                Select all
+                {t("meals.preferred_days.select_all")}
               </Button>
               <span aria-hidden="true" className="font-normal text-muted-foreground">|</span>
               <Button
@@ -38,12 +40,12 @@ export function PreferredDaysField() {
                 onBlur={field.onBlur}
                 onClick={() => field.onChange([])}
               >
-                Clear all
+                {t("meals.preferred_days.clear_all")}
               </Button>
             </div>
           </div>
           <p id="preferred-days-help" className="m-0 font-normal text-muted-foreground">
-            Prefer these days. Leave blank for any day.
+            {t("meals.preferred_days.preferred_days_help")}
           </p>
           <div className="flex flex-wrap gap-2">
             {weekdays.map((day, index) => (

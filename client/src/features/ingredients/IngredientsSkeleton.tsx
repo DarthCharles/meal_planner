@@ -1,9 +1,11 @@
+import { useI18n } from "../../i18n";
 const shimmer = "animate-shimmer bg-skeleton bg-size-[200%_100%] motion-reduce:animate-none";
 
 export function IngredientsSkeleton() {
+  const { t } = useI18n();
   return (
-    <div role="status" aria-label="Loading ingredients" aria-busy="true">
-      <span className="sr-only">Loading ingredients…</span>
+    <div role="status" aria-label={t("ingredients.screen.loading_ingredients_label")} aria-busy="true">
+      <span className="sr-only">{t("ingredients.screen.loading_ingredients")}</span>
       <div aria-hidden="true">
         <div className={`mb-3 h-4 w-28 rounded ${shimmer}`} />
         <div className="grid grid-cols-1 gap-3 tablet:grid-cols-2 wide:grid-cols-3">

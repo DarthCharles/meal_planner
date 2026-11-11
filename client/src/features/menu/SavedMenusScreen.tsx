@@ -1,3 +1,4 @@
+import { useI18n } from "../../i18n";
 import { useState } from "react";
 import { Button } from "@darthcharles/greda";
 import { Notice } from "../../components/Notice";
@@ -7,6 +8,7 @@ import { MenuView } from "./MenuView";
 import { useMenus } from "./queries";
 
 export function SavedMenusScreen() {
+  const { t } = useI18n();
   const { data: menus, isPending: loading, error, refetch, isFetching } = useMenus();
   const { openMeal } = useMealDialog();
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -17,25 +19,25 @@ export function SavedMenusScreen() {
 
   return (
     <section aria-labelledby="saved-menus-title" className="pb-5 tablet:pb-8">
-      <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">Your weekly table</p>
-      <h2 id="saved-menus-title" className="mb-3 font-display text-[32px] font-semibold tracking-[-.04em]">Saved Menus</h2>
-      <p className="mb-6 text-sm text-muted-foreground">Browse upcoming plans, this week's menu, and past weeks.</p>
+      <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">{t("common.weekly_table")}</p>
+      <h2 id="saved-menus-title" className="mb-3 font-display text-[32px] font-semibold tracking-[-.04em]">{t("navigation.saved_menus")}</h2>
+      <p className="mb-6 text-sm text-muted-foreground">{t("menu.saved.saved_intro")}</p>
       {error && (
         <div className="mb-5 space-y-3">
           <Notice>{error.message}</Notice>
-          <Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>Try again</Button>
+          <Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{t("common.try_again")}</Button>
         </div>
       )}
-      {loading && <p role="status">Loading saved menus…</p>}
+      {loading && <p role="status">{t("menu.saved.loading_saved")}</p>}
       {!loading && !error && !savedMenus.length && (
         <div className="rounded-[20px] border border-border bg-card p-6">
-          <h3 className="mb-2 font-display text-xl font-semibold">No saved menus yet</h3>
-          <p className="m-0 text-sm text-muted-foreground">Your weekly plans will appear here when they are saved.</p>
+          <h3 className="mb-2 font-display text-xl font-semibold">{t("menu.saved.no_saved")}</h3>
+          <p className="m-0 text-sm text-muted-foreground">{t("menu.saved.saved_help")}</p>
         </div>
       )}
       {!!savedMenus.length && (
         <div className="grid min-w-0 gap-6 desktop:grid-cols-[260px_minmax(0,1fr)]">
-          <nav aria-label="Saved weeks" className="flex min-w-0 flex-col gap-2">
+          <nav aria-label={t("menu.saved.saved_weeks")} className="flex min-w-0 flex-col gap-2">
             {savedMenus.map((menu) => (
               <Button
                 key={menu.id}
@@ -56,7 +58,7 @@ export function SavedMenusScreen() {
               {!!selected.generation_notices?.length && (
                 <Notice>
                   <div>
-                    <p className="m-0 font-semibold">Some day preferences needed a fallback.</p>
+                    <p className="m-0 font-semibold">{t("menu.notices.preference_fallback")}</p>
                     <ul className="mt-2 mb-0 pl-5">
                       {selected.generation_notices.map((notice, index) => <li key={index}>{notice}</li>)}
                     </ul>

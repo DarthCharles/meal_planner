@@ -1,5 +1,5 @@
-const CACHE_NAME = "comal-shell-v1";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/comal-icon.svg"];
+const CACHE_NAME = "comal-shell-v2";
+const APP_SHELL = ["/", "/manifest.webmanifest", "/manifest.es.webmanifest", "/comal-icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));

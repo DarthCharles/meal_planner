@@ -1,6 +1,6 @@
 import type { Meal, Menu } from "../../types";
 import { DayCard } from "./DayCard";
-import { isCurrentMenu, menuDayDate } from "./menuDates";
+import { isCurrentMenu, localWeekday, menuDayDate } from "./menuDates";
 
 export function MenuView({
   menu,
@@ -22,9 +22,7 @@ export function MenuView({
       </div>
     );
   if (!menu) return null;
-  const today = new Intl.DateTimeFormat("en-US", { weekday: "long" })
-    .format(new Date())
-    .toLowerCase();
+  const today = localWeekday(new Date());
   const orderedDays = orderDaysFromToday(menu.days, startFromToday ? today : "monday");
   return (
     <div className="grid grid-cols-1 gap-4 tablet:grid-cols-2 wide:grid-cols-3">

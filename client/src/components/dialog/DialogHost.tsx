@@ -1,13 +1,17 @@
+import { useI18n } from "../../i18n";
 import { Button } from "@darthcharles/greda";
 import { useId, useLayoutEffect, useRef } from "react";
 import type { DialogInstance } from "./useDialog";
 
 export function DialogHost({ dialog }: { dialog: DialogInstance }) {
+  const { t } = useI18n();
   const elementRef = useRef<HTMLDialogElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const pointerStartedOutside = useRef(false);
   const titleId = useId();
   const { title, hideTitle, eyebrow, content, close, opener } = dialog;
+  const titleText = typeof title === "function" ? title() : title;
+  const eyebrowText = typeof eyebrow === "function" ? eyebrow() : eyebrow;
 
   useLayoutEffect(() => {
     const element = elementRef.current!;
@@ -81,9 +85,9 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
       <section className="max-h-[calc(100dvh-30px)] w-full max-w-[520px] overflow-y-auto overscroll-contain rounded-[24px_24px_15px_15px] bg-card p-[25px] shadow-lg desktop:rounded-3xl">
         <div className="mb-[22px] flex items-start justify-between">
           <div>
-            {eyebrow && (
+            {eyebrowText && (
               <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-                {eyebrow}
+                {eyebrowText}
               </p>
             )}
             <h2
@@ -92,7 +96,7 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
               tabIndex={-1}
               className={hideTitle ? "sr-only" : "mb-0 font-display text-[27px] font-semibold tracking-[-.04em] outline-none"}
             >
-              {title}
+              {titleText}
             </h2>
           </div>
           <Button
@@ -101,7 +105,7 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
             size="icon"
             className="size-[31px] shrink-0 rounded-full text-[22px]"
             onClick={close}
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ×
           </Button>

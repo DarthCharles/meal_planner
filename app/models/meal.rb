@@ -49,7 +49,7 @@ class Meal < ApplicationRecord
   def valid_preferred_days
     names = preferred_days
     unless names.is_a?(Array) && names.all? { |name| WEEKDAY_NAMES.include?(name) }
-      errors.add(:preferred_days, "must be an array of weekday names")
+      errors.add(:preferred_days, :invalid_weekdays)
     end
   end
 

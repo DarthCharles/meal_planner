@@ -14,6 +14,60 @@ Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/).
 
 The client uses `VITE_API_URL` for the API base URL. The default is `http://127.0.0.1:3000`.
 
+## Languages and translation keys
+
+Comal supports English and Spanish. Choose **English** or **Español** in the
+header's MC actions menu. The choice is stored locally as `comal.locale` and
+synchronized across tabs. Incoming storage events apply the latest stored choice
+without writing it back, so queued events cannot replay old preferences between
+tabs. Without a saved choice, the first supported browser
+language is selected (including regional tags); English is the fallback.
+Switching language preserves the current route, library filters, and saved-week
+selection. The interface, accessibility labels, form validation, unit labels,
+page title/description, document language, and selected PWA manifest follow the
+choice. Date and number formatting uses `en-US` or `es-MX`.
+
+Client copy lives in **one TypeScript catalog per language**:
+`src/i18n/en.ts` and `src/i18n/es.ts`. Both use nested objects grouped by screen
+or component, following the structure of Rails locale YAML. Shared labels live
+under `common`, and stable domain labels under `reference`. For example:
+
+```ts
+export const en = {
+  menu: {
+    hero: { today: "Today’s menu" },
+  },
+  meals: {
+    form: { name: "Meal name" },
+  },
+};
+```
+
+Read copy with `const { t } = useI18n()` and `t("menu.hero.today")`. Interpolation
+uses Rails-style `%{name}` placeholders, for example
+`t("common.edit_name", { name: meal.name })`. Plural entries use nested `one`
+and `other` keys; `t("ingredients.usage", { count: 2 })` selects the appropriate
+form with `Intl.PluralRules` and formats numeric values for the selected locale.
+Plural categories absent from a catalog fall back to its `other` entry.
+The English catalog defines the valid key paths; the Spanish catalog must match
+its structure through TypeScript. Add entries to both files when changing copy.
+No translation loader or extra dependency is needed.
+
+Weekday matching and scheduling use stable English identifiers rather than
+translated date labels. Calendar dates still preserve the API's UTC boundaries;
+"today" uses the browser's local timezone. Meal and ingredient names,
+descriptions, recipe notes, URLs, and submitted unit codes remain user content
+or stable identifiers. Unknown meal types and units retain their original value.
+
+API calls send `Accept-Language: en` or `es`. Menu query keys include the locale
+because their persisted notices are rendered by Rails. Meal and ingredient saves
+synchronize embedded meals across both cached menu languages. Regenerating a week
+invalidates the other language's menu cache. Existing server errors reflect the
+language requested when the error occurred; retrying uses the current language.
+The browser suite uses mocks; Rails localization and stored notice rendering
+have separate integration/service coverage. PWA installation and offline
+language behavior still need separate verification.
+
 ## Current flows
 
 - View the current menu.
@@ -43,7 +97,7 @@ Production hosting must serve `client/dist/index.html` for client navigation
 paths (including unknown page paths), while serving static assets normally.
 Vite's development and preview servers already provide this SPA fallback.
 Keep Rails API traffic on its configured API origin; do not rewrite API requests
-to the client entry point. The service worker remains unchanged; offline deep
+to the client entry point. The service worker caches the app shell and both language manifests; offline deep
 links and PWA installation require separate verification.
 
 Saved Menus is available in the mobile bottom navigation and MC menu. It
@@ -59,7 +113,8 @@ appear in old menus.
 
 The header's MC button opens a Greda popover on all screen sizes, ordered as
 “My Menu”, “My Meals”, “My Ingredients”, a separator, “Saved Menus”, a separator, and “Add a meal”.
-Choosing a destination closes the popover. “Add a meal” opens the meal form;
+Choosing a destination closes the popover before navigating, so its exiting
+keyboard layer cannot intercept Escape in a dialog on the destination screen. “Add a meal” opens the meal form;
 closing the form returns focus to MC. Mobile also keeps its bottom navigation.
 The library keeps its own add action.
 
@@ -163,7 +218,8 @@ client/
     main.tsx      # React entry point, router/query/dialog providers, and service worker registration
     App.tsx       # shared shell and screen routes
     queryClient.ts # shared server-state cache and request defaults
-    queryKeys.ts  # stable cache keys
+    queryKeys.ts  # cache key prefixes (menu queries also include locale)
+    i18n/         # nested English/Spanish catalogs and locale/formatting helpers
     components/   # header, navigation, illustrations, and generic dialog host
     features/
       ingredients/ # shared catalog, ingredient form, and mutation hooks
@@ -307,7 +363,11 @@ widths. Rails tests verify the actual scheduling and API contract.
 `DialogProvider` in `components/dialog/` wraps the application beneath
 `QueryClientProvider`. `useDialog` exposes stable `openDialog` and `closeDialog`
 actions. The provider supports one active dialog with a required title, optional
-eyebrow, and content render function:
+eyebrow, and content render function. Title and eyebrow accept either a string or
+a function returning a string. Use `title: () => t("meals.dialog.new_favorite")`
+for translated labels so an open dialog updates its visible and accessible name
+when another tab changes the language, without replacing the draft or focus.
+The generic API also supports plain strings:
 
 ```tsx
 const { openDialog } = useDialog();

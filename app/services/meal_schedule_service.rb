@@ -59,7 +59,7 @@ class MealScheduleService
       end
       unless previous[sink]
         raise MenuGenerationService::InsufficientMealsError,
-              "Cannot complete the menu. Add meals for each meal time; each day needs three different meals."
+              I18n.t("menu.insufficient_meals")
       end
 
       current = sink

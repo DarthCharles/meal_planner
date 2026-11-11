@@ -1,10 +1,12 @@
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 
+type DialogText = string | (() => string);
+
 export type DialogOptions = {
-  title: string;
+  title: DialogText;
   hideTitle?: boolean;
-  eyebrow?: string;
+  eyebrow?: DialogText;
   content: (controls: { close: () => void }) => ReactNode;
 };
 

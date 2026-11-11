@@ -1,3 +1,4 @@
+import { useI18n } from "../../i18n";
 import { Button, Input, Textarea } from "@darthcharles/greda";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import type {
@@ -9,6 +10,7 @@ import type {
 } from "../../types";
 import { useCreateMeal, useUpdateMeal } from "./queries";
 import { PreferredDaysField } from "./PreferredDaysField";
+import { mealTypeLabel } from "./mealTypes";
 import { IngredientManager } from "./IngredientManager";
 
 export function MealForm({
@@ -24,6 +26,7 @@ export function MealForm({
   types: MealTypeOption[];
   units: UnitOption[];
 }) {
+  const { t } = useI18n();
   const methods = useForm<MealFormValues>({
     defaultValues: {
       name: initialMeal?.name ?? "",
@@ -68,11 +71,11 @@ export function MealForm({
   const saving = creating || updating;
   const validationError =
     errors.name || errors.description || errors.meal_type_ids
-      ? "Add a name, description, and at least one meal time."
+      ? t("meals.form.meal_required")
       : errors.ingredients
         ? errors.ingredients.some?.((row) => row?.name)
-          ? "Choose an ingredient or select Create for each typed name."
-          : "Complete the quantity and unit for each ingredient."
+          ? t("meals.form.ingredient_selection_required")
+          : t("meals.form.ingredient_amount_required")
         : undefined;
   const error = validationError || createError?.message || updateError?.message;
   const clearSaveErrors = () => {
@@ -101,17 +104,17 @@ export function MealForm({
     <FormProvider {...methods}>
       <form noValidate onSubmit={handleSubmit(submit, clearSaveErrors)}>
         <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-          Meal name
+          {t("meals.form.name")}
           <Input
             className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
             {...register("name", { validate: (value) => !!value.trim() })}
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? "meal-form-error" : undefined}
-            placeholder="e.g. Tacos de papa"
+            placeholder={t("meals.form.meal_example")}
           />
         </label>
         <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-          Description
+          {t("meals.form.description")}
           <Textarea
             className="h-auto resize-y rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
             {...register("description", {
@@ -121,13 +124,13 @@ export function MealForm({
             aria-describedby={
               errors.description ? "meal-form-error" : undefined
             }
-            placeholder="What makes it delicious?"
+            placeholder={t("meals.form.description_help")}
             rows={3}
           />
         </label>
         <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-          Recipe URL{" "}
-          <span className="font-normal text-muted-foreground">(optional)</span>
+          {t("meals.form.recipe_url")}{" "}
+          <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
           <Input
             className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
             {...register("recipe_url")}
@@ -135,7 +138,7 @@ export function MealForm({
           />
         </label>
         <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-          <legend className="mb-[7px]">Meal time</legend>
+          <legend className="mb-[7px]">{t("meals.form.meal_time")}</legend>
           <Controller
             name="meal_type_ids"
             control={control}
@@ -166,7 +169,7 @@ export function MealForm({
                         )
                       }
                     >
-                      {name}
+                      {mealTypeLabel(name)}
                     </Button>
                   );
                 })}
@@ -187,10 +190,10 @@ export function MealForm({
         )}
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" variant="default" loading={saving}>
-            {saving ? "Saving…" : initialMeal ? "Update meal" : "Save meal"}
+            {saving ? t("common.saving") : initialMeal ? t("meals.form.update_meal") : t("meals.form.save_meal")}
           </Button>
         </div>
       </form>

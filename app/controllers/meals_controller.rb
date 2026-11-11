@@ -10,7 +10,7 @@ class MealsController < ApplicationController
     if @meal.present?
       render json: { data: @meal }, status: :ok
     else
-      render json: { errors: "Meal with id #{params[:id]} not found" }, status: 404
+      render json: { errors: I18n.t("api.meal_not_found", id: params[:id]) }, status: 404
     end
   end
 

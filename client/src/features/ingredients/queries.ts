@@ -39,7 +39,7 @@ export function useSaveIngredient() {
       });
       client.setQueryData<Meal[]>(queryKeys.meals, (meals) => meals?.map(updateMeal));
       client.setQueriesData<Meal>({ queryKey: queryKeys.mealDetails }, (meal) => meal && updateMeal(meal));
-      client.setQueryData<Menu[]>(queryKeys.menus, (menus) => menus?.map((menu) => ({
+      client.setQueriesData<Menu[]>({ queryKey: queryKeys.menus }, (menus) => menus?.map((menu) => ({
         ...menu,
         days: menu.days.map((day) => ({ ...day, meals: day.meals.map(updateMeal) })),
       })));

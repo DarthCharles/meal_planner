@@ -4,6 +4,32 @@ The Rails API runs on `http://127.0.0.1:3000` by default.
 
 All responses use a top-level `data` or `errors` key.
 
+## Response language
+
+Requests may send `Accept-Language: en` or `es`. Regional tags (such as `es-MX`)
+and quality weights are supported. Unsupported or excluded languages fall back
+to English. Locale selection is scoped to each request. Responses include
+`Content-Language` and `Vary: Accept-Language`.
+
+Validation and application error messages, including menu generation failures,
+are translated. Field keys and the `data`/`errors` envelopes stay unchanged.
+Weekday names, preferred-day values, meal-type selection pairs, unit codes and
+catalog names, timestamps, and user-entered content are stable across languages.
+Clients translate reference display labels using those stable values. For example,
+Spanish blank-name validation returns:
+
+```json
+{"errors":{"name":["no puede estar en blanco"]}}
+```
+
+`generation_notices` remains an array of strings, rendered in the request language
+from generation-time snapshots. New snapshots store the original meal name,
+assigned weekday, and preferred days in the existing JSON column. Editing a meal
+never rewrites these snapshots. Old English notices matching the original
+application template are also translated when read; unrecognized historical
+text is returned unchanged. No database migration or client payload change is
+required.
+
 ## Meals
 
 | Method | Endpoint | Purpose |
@@ -150,8 +176,9 @@ contains messages such as:
 }
 ```
 
-These notices are saved with the menu as a generation snapshot; editing a meal
-later does not rewrite historical notices. Existing menus default to no notices.
+These notices are rendered from the menu’s generation snapshot in the requested
+language; editing a meal later does not rewrite the snapshot. Existing menus
+default to no notices.
 The previous menu for that week is replaced atomically only after a complete
 schedule has been found. Failed generation preserves it.
 

@@ -1,11 +1,28 @@
+import { getLocale, t } from "./i18n";
+import type { Locale } from "./i18n";
 import type { IngredientCatalogEntry, IngredientPayload, Meal, MealPayload, MealTypeOption, Menu, UnitOption } from "./types";
+
+function errorFieldLabel(field: string) {
+  switch (field) {
+    case "name": return t("api.field_name");
+    case "description": return t("api.field_description");
+    case "ingredients": return t("api.field_ingredients");
+    case "preferred_days": return t("api.field_preferred_days");
+    case "quantity": return t("api.field_quantity");
+    case "unit": return t("api.field_unit");
+    default: return field;
+  }
+}
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:3000";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
+    headers: { "Content-Type": "application/json", "Accept-Language": getLocale(), ...options?.headers },
+  }).catch((error: unknown) => {
+    if (options?.signal?.aborted) throw error;
+    throw new Error(t("api.network_error"));
   });
 
   const body = await response.json().catch(() => ({}));
@@ -15,16 +32,17 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
         ? body.errors
         : body.errors && typeof body.errors === "object"
           ? Object.entries(body.errors)
-              .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
+              .map(([field, messages]) => `${errorFieldLabel(field)}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
               .join(". ")
-          : "Something went wrong.",
+          : t("api.generic_error"),
     );
   }
   return body.data as T;
 }
 
 export const api = {
-  getMenus: (signal?: AbortSignal) => request<Menu[]>("/menus", { signal }),
+  getMenus: (signal?: AbortSignal, locale: Locale = getLocale()) =>
+    request<Menu[]>("/menus", { signal, headers: { "Accept-Language": locale } }),
   getMeals: (signal?: AbortSignal) => request<Meal[]>("/meals", { signal }),
   getMeal: (id: number, signal?: AbortSignal) => request<Meal>(`/meals/${id}`, { signal }),
   getMealTypes: (signal?: AbortSignal) =>

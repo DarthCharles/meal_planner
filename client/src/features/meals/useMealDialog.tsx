@@ -1,3 +1,4 @@
+import { useI18n } from "../../i18n";
 import { useCallback } from "react";
 import type { Meal } from "../../types";
 import { useDialog } from "../../components/dialog/useDialog";
@@ -6,12 +7,13 @@ import { MealDetails } from "./MealDetails";
 import { MealDetailsContent } from "./MealDetailsContent";
 
 export function useMealDialog() {
+  const { t } = useI18n();
   const { openDialog } = useDialog();
   const openCreateMeal = useCallback(
     () =>
       openDialog({
-        title: "A new favorite",
-        eyebrow: "Add to your library",
+        title: () => t("meals.dialog.new_favorite"),
+        eyebrow: () => t("meals.dialog.add_to_library"),
         content: ({ close }) => (
           <MealDialogContent
             initialMeal={null}
@@ -25,9 +27,9 @@ export function useMealDialog() {
   const openEditMeal = useCallback(
     (meal: Meal) =>
       openDialog({
-        title: "Edit meal",
+        title: () => t("meals.details.edit_meal"),
         hideTitle: true,
-        eyebrow: "Update your library",
+        eyebrow: () => t("meals.dialog.update_library"),
         content: ({ close }) => (
           <MealDialogContent
             initialMeal={meal}
@@ -42,7 +44,7 @@ export function useMealDialog() {
     (meal: Meal) =>
       openDialog({
         title: meal.name,
-        eyebrow: "On your table",
+        eyebrow: () => t("meals.dialog.on_table"),
         content: () => (
           <MealDetails meal={meal} onEdit={() => openEditMeal(meal)} />
         ),
@@ -52,7 +54,7 @@ export function useMealDialog() {
   const openMealById = useCallback(
     (id: number, name: string) => openDialog({
       title: name,
-      eyebrow: "In your library",
+      eyebrow: () => t("meals.dialog.in_library"),
       content: () => <MealDetailsContent id={id} onEdit={openEditMeal} />,
     }),
     [openDialog, openEditMeal],

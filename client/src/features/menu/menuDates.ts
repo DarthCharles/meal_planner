@@ -1,3 +1,4 @@
+import { formatLocale, t } from "../../i18n";
 import type { Menu } from "../../types";
 
 export function isCurrentMenu(menu: Menu, now: Date) {
@@ -14,11 +15,15 @@ export function localDateKey(now: Date) {
   ].join("-");
 }
 
-export function menuPeriod(menu: Menu, now: Date): "Upcoming" | "Current" | "Past" {
+export function menuPeriod(menu: Menu, now: Date) {
   const today = localDateKey(now);
-  if (menu.from.slice(0, 10) > today) return "Upcoming";
-  if (menu.to.slice(0, 10) < today) return "Past";
-  return "Current";
+  if (menu.from.slice(0, 10) > today) return t("menu.saved.upcoming");
+  if (menu.to.slice(0, 10) < today) return t("menu.saved.past");
+  return t("menu.saved.current");
+}
+
+export function localWeekday(now: Date) {
+  return ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][now.getDay()];
 }
 
 function calendarDate(value: string) {
@@ -35,6 +40,6 @@ export function menuDayDate(menu: Menu, weekday: string) {
 
 export function formatMenuDateRange(menu: Menu, includeYear = true) {
   const format = (value: string) => calendarDate(value)
-    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: includeYear ? "numeric" : undefined, timeZone: "UTC" });
+    .toLocaleDateString(formatLocale(), { month: "short", day: "numeric", year: includeYear ? "numeric" : undefined, timeZone: "UTC" });
   return `${format(menu.from)} — ${format(menu.to)}`;
 }

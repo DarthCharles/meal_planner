@@ -1,3 +1,4 @@
+import { useI18n } from "../../i18n";
 import { Button, Input } from "@darthcharles/greda";
 import { useForm } from "react-hook-form";
 import type { IngredientCatalogEntry, IngredientPayload } from "../../types";
@@ -5,6 +6,7 @@ import { useDeleteIngredient, useSaveIngredient } from "./queries";
 import { useMealDialog } from "../meals/useMealDialog";
 
 export function IngredientForm({ ingredient, close }: { ingredient?: IngredientCatalogEntry; close: () => void }) {
+  const { t } = useI18n();
   const { openMealById } = useMealDialog();
   const { register, handleSubmit, formState: { errors } } = useForm<IngredientPayload>({
     defaultValues: { name: ingredient?.name ?? "" },
@@ -21,19 +23,19 @@ export function IngredientForm({ ingredient, close }: { ingredient?: IngredientC
       saveIngredient({ id: ingredient?.id, values: { name: values.name.trim() } }, { onSuccess: close });
     }, () => { resetSave(); resetDelete(); })}>
       <label className="mb-4 grid gap-2 text-xs font-bold">
-        Ingredient name
+        {t("ingredients.form.name")}
         <Input
-          {...register("name", { validate: (value) => !!value.trim() || "Enter an ingredient name." })}
+          {...register("name", { validate: (value) => !!value.trim() || t("ingredients.form.ingredient_required") })}
           disabled={busy}
           aria-invalid={!!fieldError}
           aria-describedby={fieldError && !deleteError ? "ingredient-form-error" : undefined}
-          placeholder="e.g. Tomato"
+          placeholder={t("ingredients.form.ingredient_example")}
         />
       </label>
-      {ingredient && <p className="mb-4 text-sm text-muted-foreground">Renaming this ingredient updates its name in every meal that uses it.</p>}
+      {ingredient && <p className="mb-4 text-sm text-muted-foreground">{t("ingredients.form.rename_ingredient_help")}</p>}
       {ingredient && (
-        <section aria-label="Meals using this ingredient" className="mb-4">
-          <h3 className="mb-1 font-display text-xl font-semibold">Used in {ingredient.meals.length} {ingredient.meals.length === 1 ? "meal" : "meals"}</h3>
+        <section aria-label={t("ingredients.form.meals_using")} className="mb-4">
+          <h3 className="mb-1 font-display text-xl font-semibold">{t("ingredients.usage", { count: ingredient.meals.length })}</h3>
           {ingredient.meals.length ? (
             <ul className="m-0 grid list-none gap-0 p-0">
               {ingredient.meals.map((meal) => (
@@ -42,7 +44,7 @@ export function IngredientForm({ ingredient, close }: { ingredient?: IngredientC
                 </li>
               ))}
             </ul>
-          ) : <p className="m-0 text-sm text-muted-foreground">Not used in any meals yet.</p>}
+          ) : <p className="m-0 text-sm text-muted-foreground">{t("ingredients.form.unused_ingredient")}</p>}
         </section>
       )}
       {message && <p id="ingredient-form-error" role="alert" className="mb-4 text-sm text-destructive">{message}</p>}
@@ -53,11 +55,11 @@ export function IngredientForm({ ingredient, close }: { ingredient?: IngredientC
             resetSave();
             deleteIngredient(ingredient.id, { onSuccess: close });
           }}>
-            {deleting ? "Deleting…" : "Delete ingredient"}
+            {deleting ? t("ingredients.form.deleting") : t("ingredients.form.delete_ingredient")}
           </Button>
         )}
-        <Button variant="ghost" onClick={close}>Cancel</Button>
-        <Button type="submit" disabled={busy}>{saving ? "Saving…" : "Save ingredient"}</Button>
+        <Button variant="ghost" onClick={close}>{t("common.cancel")}</Button>
+        <Button type="submit" disabled={busy}>{saving ? t("common.saving") : t("ingredients.form.save_ingredient")}</Button>
       </div>
     </form>
   );

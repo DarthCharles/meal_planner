@@ -106,6 +106,7 @@ test("renames ingredients in cached meals and menus", async ({ page, api }) => {
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
   await expect(page.getByRole("combobox", { name: "Ingredient name" })).toHaveValue("Free range egg");
   await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(api.reads["/meals"]).toBe(mealReads);
   await navigateTo(page, "My menu");
   await page.getByRole("button", { name: /Huevos a la mexicana/ }).first().click();
@@ -210,7 +211,7 @@ test("deletes an unused ingredient from its dialog and updates the shared catalo
   release();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Edit Tomato", exact: true })).toHaveCount(0);
-  await expect(page.getByText("1 of 1 ingredients")).toBeVisible();
+  await expect(page.getByText("1 of 1 ingredient")).toBeVisible();
   expect(api.ingredientDeletes).toEqual([2]);
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();

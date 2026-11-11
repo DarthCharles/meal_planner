@@ -59,9 +59,20 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     Meal.lunch.each { |meal| meal.update!(preferred_days: %w[friday saturday sunday]) }
     menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
     assert_equal 4, menu.generation_notices.size
-    assert menu.generation_notices.any? { |notice| notice.include?("on Monday") }
-    assert menu.generation_notices.all? { |notice| notice.include?("Friday, Saturday, Sunday") }
-    assert_equal menu.generation_notices, menu.reload.as_json[:generation_notices]
+    assert menu.generation_notices.any? { |notice| notice.fetch("weekday") == "monday" }
+    assert menu.generation_notices.all? { |notice| notice.fetch("preferred_days") == %w[friday saturday sunday] }
+    messages = menu.as_json[:generation_notices]
+    assert messages.any? { |notice| notice.include?("on Monday") }
+    assert_equal messages, menu.reload.as_json[:generation_notices]
+    snapshots = menu.generation_notices.deep_dup
+    Meal.lunch.each { |meal| meal.update!(name: "Renamed", preferred_days: []) }
+    I18n.with_locale(:es) do
+      translated = menu.reload.as_json[:generation_notices]
+      assert translated.any? { |notice| notice.include?("el lunes") }
+      assert translated.all? { |notice| notice.include?("viernes, sábado, domingo") }
+      assert translated.none? { |notice| notice.include?("Renamed") }
+    end
+    assert_equal snapshots, menu.reload.generation_notices
   end
 
   test "global planning preserves an unrestricted meal for another meal time" do
