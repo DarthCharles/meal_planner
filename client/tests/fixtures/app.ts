@@ -1,6 +1,6 @@
 import { test as base, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import type { IngredientOption, IngredientPayload, Meal, MealPayload, Menu } from "../../src/types";
+import type { IngredientOption, IngredientPayload, IngredientShoppingProfile, IngredientShoppingProfilePayload, Meal, MealPayload, Menu } from "../../src/types";
 import { meals, mealTypes, menu, units } from "./data";
 
 type SaveRequest = { method: string; path: string; body: MealPayload };
@@ -10,6 +10,11 @@ type MockApi = {
   requests: { path: string; language: string | undefined }[];
   meals: Meal[];
   ingredients: IngredientOption[];
+  ingredientProfiles: Record<number, IngredientShoppingProfile | null>;
+  profileSaves: { id: number; body: IngredientShoppingProfilePayload }[];
+  profileDeletes: number[];
+  profileSaveError: string | null;
+  profileSaveBarrier?: Promise<void>;
   ingredientSaves: { method: string; path: string; body: IngredientPayload }[];
   ingredientSaveError: string | null;
   ingredientSaveBarrier?: Promise<void>;
@@ -39,6 +44,10 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         requests: [],
         meals: structuredClone(meals),
         ingredients: [{ id: 1, name: "Egg" }, { id: 2, name: "Tomato" }],
+        ingredientProfiles: {},
+        profileSaves: [],
+        profileDeletes: [],
+        profileSaveError: null,
         ingredientSaves: [],
         ingredientSaveError: null,
         ingredientDeletes: [],
@@ -88,6 +97,10 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           await api.readBarriers[path];
           if (api.readErrors[path])
             return void (await fail(api.readErrors[path]));
+          if (/^\/ingredients\/\d+\/shopping_profile$/.test(path)) {
+            const id = Number(path.split("/")[2]);
+            return void (await respond(api.ingredientProfiles[id] ?? null));
+          }
           if (path === "/menus") return void (await respond(api.localizedMenus[language === "es" ? "es" : "en"] ?? api.menus));
           if (path === "/meals") return void (await respond(api.meals));
           if (/^\/meals\/\d+$/.test(path)) return void (await respond(api.meals.find((meal) => meal.id === Number(path.split("/").pop()))));
@@ -107,6 +120,23 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           const generated = { ...structuredClone(menu), generation_notices: api.generationNotices };
           api.menus = [generated];
           return void (await respond(generated));
+        }
+        if (/^\/ingredients\/\d+\/shopping_profile$/.test(path) && request.method() === "PUT") {
+          const id = Number(path.split("/")[2]);
+          const body = request.postDataJSON() as IngredientShoppingProfilePayload;
+          api.profileSaves.push({ id, body });
+          await api.profileSaveBarrier;
+          if (api.profileSaveError) return void (await fail(api.profileSaveError));
+          const profile = { ...body, ingredient_id: id };
+          api.ingredientProfiles[id] = profile;
+          return void (await respond(profile));
+        }
+        if (/^\/ingredients\/\d+\/shopping_profile$/.test(path) && request.method() === "DELETE") {
+          const id = Number(path.split("/")[2]);
+          api.profileDeletes.push(id);
+          if (api.profileSaveError) return void (await fail(api.profileSaveError));
+          api.ingredientProfiles[id] = null;
+          return void (await respond(true));
         }
         if (/^\/ingredients\/\d+$/.test(path) && request.method() === "DELETE") {
           const id = Number(path.split("/").pop());

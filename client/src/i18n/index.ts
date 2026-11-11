@@ -58,7 +58,11 @@ export const t: Translate = (key, values = {}) => {
   });
 };
 
-export function unitLabel(code: string) {
+export function unitLabel(code: string, count?: number) {
+  if (count === 1) {
+    const singularKey = `reference.single_units.${code}`;
+    if (lookup(catalogs.en, singularKey)) return t(singularKey as TranslationKey);
+  }
   const key = `reference.units.${code}`;
   return lookup(catalogs.en, key) ? t(key as TranslationKey) : code;
 }

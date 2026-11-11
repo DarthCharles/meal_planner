@@ -8,7 +8,7 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     @grams = Unit.find_or_create_by!(code: "g") { |unit| unit.name = "grams" }
   end
 
-  test "scales each occurrence and sums shared ingredients without merging units or identities" do
+  test "scales each occurrence and combines compatible units without merging ingredient identities" do
     rice = Ingredient.create!(name: "Rice")
     other_rice = Ingredient.create!(name: "Brown rice")
     kilograms = Unit.find_or_create_by!(code: "kg") { |unit| unit.name = "kilograms" }
@@ -28,8 +28,88 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     other.days.create!(weekday: @monday.weekday).daily_meals.create!(meal: first)
 
     items = MenuShoppingListService.new.call(menu: @menu).fetch(:items)
-    assert_equal [[other_rice.id, "g", "30.0"], [rice.id, "g", "0.5"], [rice.id, "kg", "1.5"]],
+    assert_equal [[other_rice.id, "g", "30.0"], [rice.id, "g", "1500.5"]],
       items.map { |item| item.values_at(:ingredient_id, :unit, :quantity) }
+  end
+
+  test "combines onion grams and pieces before rounding the purchase quantity" do
+    @menu.update!(people_count: 1)
+    onion = Ingredient.create!(name: "Cebolla")
+    piece = Unit.find_or_create_by!(code: "pieza") { |unit| unit.name = "pieces" }
+    profile = configure_shopping(onion)
+    first = Meal.create!(name: "First", description: "Recipe")
+    second = Meal.create!(name: "Second", description: "Recipe")
+    first.meal_ingredients.create!(ingredient: onion, unit: @grams, quantity: "80.25")
+    second.meal_ingredients.create!(ingredient: onion, unit: piece, quantity: "1.25")
+    @monday.daily_meals.create!(meal: first)
+    @tuesday.daily_meals.create!(meal: second)
+
+    result = MenuShoppingListService.new.call(menu: @menu)
+    assert_equal [{ ingredient_id: onion.id, name: "Cebolla", unit: "pieza",
+      quantity: "2", required_quantity: "1.792", approximate: true }], result[:items]
+    assert_empty result[:conversion_warnings]
+    profile.update!(round_up: false)
+    item = MenuShoppingListService.new.call(menu: @menu)[:items].first
+    assert_equal "1.792", item[:quantity]
+    assert_not item.key?(:required_quantity)
+  end
+
+  test "sums all recipe requirements before calculating jars" do
+    @menu.update!(people_count: 1)
+    jar = Unit.find_or_create_by!(code: "frasco") { |unit| unit.name = "jars" }
+    mayonnaise = Ingredient.create!(name: "Mayonnaise")
+    configure_shopping(mayonnaise, unit: "frasco", quantity: "390", approximate: false)
+    meal = Meal.create!(name: "Sandwich", description: "Recipe", servings: 2)
+    meal.meal_ingredients.create!(ingredient: mayonnaise, unit: @grams, quantity: 400)
+    @monday.daily_meals.create!(meal: meal)
+    @tuesday.daily_meals.create!(meal: meal)
+    item = MenuShoppingListService.new.call(menu: @menu)[:items].first
+    assert_equal jar.code, item[:unit]
+    assert_equal "2", item[:quantity]
+    assert_equal "1.026", item[:required_quantity]
+    assert_not item.key?(:approximate)
+  end
+
+  test "keeps quantities and warns when conversions are unavailable" do
+    @menu.update!(people_count: 1)
+    onion = Ingredient.create!(name: "Onion")
+    piece = Unit.find_or_create_by!(code: "pieza") { |unit| unit.name = "pieces" }
+    cup = Unit.find_or_create_by!(code: "taza") { |unit| unit.name = "cups" }
+    units = [@grams, piece, cup]
+    units.each_with_index do |unit, index|
+      meal = Meal.create!(name: "Recipe #{index}", description: "Recipe")
+      meal.meal_ingredients.create!(ingredient: onion, unit: unit, quantity: 1)
+      @monday.daily_meals.create!(meal: meal, position: index)
+    end
+    result = MenuShoppingListService.new.call(menu: @menu)
+    assert_equal %w[g pieza taza], result[:items].map { |item| item[:unit] }
+    assert_equal "shopping_profile_missing", result[:conversion_warnings].first[:reason]
+
+    configure_shopping(onion)
+    result = MenuShoppingListService.new.call(menu: @menu)
+    assert_equal %w[pieza taza], result[:items].map { |item| item[:unit] }
+    assert_equal [{ ingredient_id: onion.id, name: "Onion", units: ["taza"],
+      target_unit: "pieza", reason: "equivalence_missing" }], result[:conversion_warnings]
+    assert_equal "1.0", result[:items].last[:quantity]
+  end
+
+  test "converts liters exactly and never borrows another ingredient's equivalence" do
+    @menu.update!(people_count: 1)
+    liters = Unit.find_or_create_by!(code: "l") { |unit| unit.name = "liters" }
+    milliliters = Unit.find_or_create_by!(code: "ml") { |unit| unit.name = "milliliters" }
+    first = Meal.create!(name: "First", description: "Recipe")
+    second = Meal.create!(name: "Second", description: "Recipe")
+    milk = Ingredient.create!(name: "Milk")
+    first.meal_ingredients.create!(ingredient: milk, unit: liters, quantity: "0.5")
+    second.meal_ingredients.create!(ingredient: milk, unit: milliliters, quantity: "250")
+    @monday.daily_meals.create!(meal: first)
+    @tuesday.daily_meals.create!(meal: second)
+    other = Ingredient.create!(name: "Unrelated")
+    Unit.find_or_create_by!(code: "pieza") { |unit| unit.name = "pieces" }
+    configure_shopping(other)
+    result = MenuShoppingListService.new.call(menu: @menu)
+    assert_equal [{ ingredient_id: milk.id, name: "Milk", unit: "ml", quantity: "750.0" }], result[:items]
+    assert_empty result[:conversion_warnings]
   end
 
   test "rounds only final totals and keeps tiny positive requirements visible" do
@@ -52,4 +132,15 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_empty result[:items]
     assert_equal [{ id: meal.id, name: meal.name }], result[:meals_without_ingredients]
   end
+
+  private
+
+  def configure_shopping(ingredient, unit: "pieza", quantity: "148", approximate: true)
+    IngredientShoppingProfileSaveService.new.call(ingredient: ingredient, attributes: {
+      base_unit: "g", shopping_unit: unit, round_up: true,
+      equivalences: [{ unit: unit, quantity: quantity, source: "Test measurement",
+        description: "Example ingredient conversion", approximate: approximate }]
+    })
+  end
+
 end

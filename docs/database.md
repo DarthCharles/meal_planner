@@ -16,6 +16,28 @@ erDiagram
   MEALS ||--o{ MEAL_INGREDIENTS : contains
   INGREDIENTS ||--o{ MEAL_INGREDIENTS : used_in
   UNITS ||--o{ MEAL_INGREDIENTS : measures
+  INGREDIENTS ||--o| INGREDIENT_SHOPPING_PROFILES : configures
+  INGREDIENT_SHOPPING_PROFILES ||--o{ INGREDIENT_UNIT_EQUIVALENCES : contains
+  UNITS ||--o{ INGREDIENT_SHOPPING_PROFILES : measures
+  UNITS ||--o{ INGREDIENT_UNIT_EQUIVALENCES : identifies
+
+  INGREDIENT_SHOPPING_PROFILES {
+    int id PK
+    int ingredient_id FK "unique, not null"
+    int base_unit_id FK "not null"
+    int shopping_unit_id FK "not null"
+    boolean round_up "default false, not null"
+  }
+
+  INGREDIENT_UNIT_EQUIVALENCES {
+    int id PK
+    int ingredient_shopping_profile_id FK "not null"
+    int unit_id FK "unique per profile, not null"
+    decimal quantity "positive, precision 18 scale 6"
+    string source "not null"
+    string description "not null"
+    boolean approximate "default false, not null"
+  }
 
   MENUS {
     int id PK
@@ -111,8 +133,8 @@ erDiagram
   to `1`, including records predating the fields. Changing either count does
   not rewrite ingredient quantities.
 - Shopping lists are calculated from live recipes for each scheduled occurrence
-  using `quantity × people_count ÷ servings`, grouped by ingredient and exact
-  unit. There are no shopping-list tables or checked-item records. Regeneration
+  using `quantity × people_count ÷ servings`, converted to compatible shopping
+  units and grouped by ingredient. There are no shopping-list or checked-item records. Regeneration
   replaces a week's menu ID, preserving its people count unless overridden.
 - `Day` belongs to a `Menu` and a `Weekday`.
 - `Day` has many `Meal` records through `DailyMeal`.
@@ -131,6 +153,18 @@ erDiagram
 - `Meal` has many `Ingredient` records through `MealIngredient`.
 - `MealIngredient` stores the quantity, unit, preparation note, and display order.
 - Units are selected from the structured `Unit` catalog instead of free text.
+- An optional `IngredientShoppingProfile` selects the base and shopping units
+  and whether to round the final purchase quantity up to whole units. Each
+  `IngredientUnitEquivalence` expresses one unit in base units and records its
+  source, description, and approximation flag. The base can be grams,
+  milliliters, or pieces. Profiles and equivalences belong to the shared
+  ingredient, not to a recipe or menu. Removing an unused ingredient removes
+  its profile and equivalences; changing profiles never rewrites recipes.
+- Exact `kg → g` and `l → ml` conversions are application rules; household
+  measures, density, piece weights, and package sizes require an explicit
+  ingredient-specific equivalence. Missing conversions preserve quantities
+  and return warnings. Equivalences and their measurement sources are stored
+  directly in the database; no template catalog or name matching is involved.
 
 ## Constraints
 
@@ -145,3 +179,6 @@ The schema enforces required foreign keys and prevents duplicate relationships:
 - Weekday names and meal type descriptions are unique.
 - Recipe servings and menu people counts must be non-null positive integers,
   enforced by model validations and SQLite check constraints.
+- Each ingredient has at most one shopping profile. Each profile can have only
+  one equivalence for a given unit. Equivalence factors must be positive at
+  database level; models also reject nonfinite factors and conflicting units.

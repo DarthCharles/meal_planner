@@ -84,7 +84,7 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal({ "menu_id" => menu.id, "people_count" => 4,
       "items" => [{ "ingredient_id" => row.ingredient_id, "name" => "Rice", "unit" => "g", "quantity" => "200.0" }],
-      "meals_without_ingredients" => [] }, response.parsed_body.fetch("data"))
+      "meals_without_ingredients" => [], "conversion_warnings" => [] }, response.parsed_body.fetch("data"))
 
     row.update!(quantity: 150)
     meal.update!(servings: 4)

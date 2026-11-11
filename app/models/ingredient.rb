@@ -1,6 +1,7 @@
 class Ingredient < ApplicationRecord
   has_many :meal_ingredients, dependent: :restrict_with_exception
   has_many :meals, through: :meal_ingredients
+  has_one :shopping_profile, class_name: "IngredientShoppingProfile", dependent: :destroy
 
   before_validation :normalize_name
 

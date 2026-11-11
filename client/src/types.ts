@@ -55,6 +55,22 @@ export type IngredientOption = { id: number; name: string };
 export type IngredientCatalogEntry = IngredientOption & { meals: { id: number; name: string }[] };
 export type IngredientPayload = { name: string };
 
+export type IngredientShoppingProfile = {
+  ingredient_id: number;
+  base_unit: string;
+  shopping_unit: string;
+  round_up: boolean;
+  equivalences: {
+    unit: string;
+    quantity: string;
+    source: string;
+    description: string;
+    approximate: boolean;
+  }[];
+};
+
+export type IngredientShoppingProfilePayload = Omit<IngredientShoppingProfile, "ingredient_id">;
+
 export type MealForm = {
   name: string;
   description: string;

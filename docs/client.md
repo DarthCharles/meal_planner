@@ -150,6 +150,60 @@ menus. Ingredient saves refresh the catalog. Meal saves also synchronize usage
 references in the catalog cache, including removed ingredients and renamed meals.
 The meal form still supports creating ingredients when saving a meal.
 
+Existing ingredient dialogs also show a Shopping setup section, loaded lazily
+from `GET /ingredients/:id/shopping_profile`. The profile query is keyed by
+ingredient ID and locale, refreshes on reopening, and is not fetched while
+browsing the catalog or creating an ingredient. Loading, retry, unconfigured,
+and cached refresh-error states are explicit. A missing profile is shown as
+unconfigured; piece weights and package sizes are never invented.
+
+The shopping section appears below the meals that use the ingredient.
+The summary uses familiar buying units (including translated jar/piece labels),
+known amounts, whole-unit purchasing behavior, and Estimated badges. Source and
+size/product descriptions are available in a disclosure. HTTP(S) sources are
+links; other source text is displayed without creating an executable link.
+Raw database IDs and conversion factors are not presented as setup requirements.
+
+Editing shopping setup asks one main question: how the ingredient is bought.
+Visible selector labels use Greda's `Label` associated with the `SelectTrigger`
+through `htmlFor` and `id`, following Greda's Select Storybook example.
+A Greda dropdown offers three choices and shows only the relevant fields:
+
+- Individual pieces: enter the approximate weight of one piece in grams. This
+  is required to save, allowing recipe amounts in grams and pieces to be combined.
+  Existing profiles without this weight must supply it when saved again.
+- Weight or volume: choose grams, kilograms, milliliters, or liters. No
+  ingredient conversion factor is requested for these exact metric units.
+- Package: choose a jar, bag, can, bottle, or package, then enter the contents
+  printed on the label and select grams or milliliters. No container type is
+  selected by default. The client only offers package units available in the
+  API catalog.
+
+Base units,
+source fields, equivalence rows, and rounding controls are not shown in this
+workflow. The client constructs the API payload, records new package sizes as
+user-entered values and piece weights as approximate user-entered estimates,
+and defaults new pieces/packages to whole-unit purchasing and bulk amounts to
+fractional quantities. Existing rounding settings are preserved for unchanged
+buying units. Sources remain inspectable in the summary disclosure.
+
+Shopping setup has separate Save, Cancel, and Remove actions. Saves use
+`PUT /ingredients/:id/shopping_profile`; removal uses `DELETE`. Profile caches
+are updated across locales and cached shopping lists are invalidated. Existing
+extra measurements are preserved when their base unit stays the same. A change
+that would invalidate additional saved measurements is blocked with explanatory
+feedback instead of silently deleting them. Failed saves preserve the draft.
+While editing shopping setup, the name form, usage links, and ingredient footer
+are hidden, leaving only the active workflow. The name draft is retained.
+Creating an ingredient remains a name-only action; shopping setup becomes
+available when editing its saved catalog entry. The dialog shell is unchanged.
+
+`IngredientShoppingEditor` owns loading, form submission, mutations, and errors.
+`IngredientShoppingFields` renders the fields using React Hook Form context.
+`shoppingProfileForm.ts` contains pure draft/payload transformations, amount
+validation, and unit selection rules. API calls and cache updates remain in
+`queries.ts`.
+
 The edit dialog shows a Delete ingredient action only for unused ingredients.
 It calls `DELETE /ingredients/:id`
 and removes the ingredient from the shared catalog cache after success. While

@@ -39,7 +39,15 @@ export const mealTypes: MealTypeOption[] = [
 ];
 export const units: UnitOption[] = [
   { code: "g", name: "grams" },
+  { code: "kg", name: "kilograms" },
+  { code: "l", name: "liters" },
   { code: "pieza", name: "pieces" },
+  { code: "ml", name: "milliliters" },
+  { code: "frasco", name: "jars" },
+  { code: "bag", name: "bags" },
+  { code: "can", name: "cans" },
+  { code: "bottle", name: "bottles" },
+  { code: "package", name: "packages" },
 ];
 export const menu: Menu = {
   id: 1,

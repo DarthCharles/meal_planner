@@ -1,9 +1,13 @@
 import { getLocale, t } from "./i18n";
 import type { Locale } from "./i18n";
-import type { IngredientCatalogEntry, IngredientPayload, Meal, MealPayload, MealTypeOption, Menu, UnitOption } from "./types";
+import type { IngredientCatalogEntry, IngredientPayload, IngredientShoppingProfile, IngredientShoppingProfilePayload, Meal, MealPayload, MealTypeOption, Menu, UnitOption } from "./types";
 
 function errorFieldLabel(field: string) {
+  if (field.startsWith("equivalences")) return t("ingredients.shopping.amounts");
   switch (field) {
+    case "base_unit":
+    case "shopping_unit":
+    case "round_up": return t("ingredients.shopping.title");
     case "name": return t("api.field_name");
     case "description": return t("api.field_description");
     case "ingredients": return t("api.field_ingredients");
@@ -51,6 +55,14 @@ export const api = {
     request<UnitOption[]>("/units", { signal }),
   getIngredients: (signal?: AbortSignal) =>
     request<IngredientCatalogEntry[]>("/ingredients", { signal }),
+  getIngredientShoppingProfile: (id: number, signal?: AbortSignal, locale: Locale = getLocale()) =>
+    request<IngredientShoppingProfile | null>(`/ingredients/${id}/shopping_profile`, {
+      signal, headers: { "Accept-Language": locale },
+    }),
+  saveIngredientShoppingProfile: (id: number, profile: IngredientShoppingProfilePayload) =>
+    request<IngredientShoppingProfile>(`/ingredients/${id}/shopping_profile`, { method: "PUT", body: JSON.stringify(profile) }),
+  clearIngredientShoppingProfile: (id: number) =>
+    request<boolean>(`/ingredients/${id}/shopping_profile`, { method: "DELETE" }),
   createIngredient: (ingredient: IngredientPayload) =>
     request<IngredientCatalogEntry>("/ingredients", { method: "POST", body: JSON.stringify(ingredient) }),
   updateIngredient: (id: number, ingredient: IngredientPayload) =>

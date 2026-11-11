@@ -1,7 +1,39 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useI18n } from "../../i18n";
 import { api } from "../../api";
 import { queryKeys } from "../../queryKeys";
-import type { IngredientCatalogEntry, IngredientPayload, Meal, Menu } from "../../types";
+import type { IngredientCatalogEntry, IngredientPayload, IngredientShoppingProfile, IngredientShoppingProfilePayload, Meal, Menu } from "../../types";
+
+export function useIngredientShoppingProfile(id: number) {
+  const { locale } = useI18n();
+  return useQuery({
+    queryKey: [...queryKeys.ingredientProfile(id), locale],
+    queryFn: ({ signal }) => api.getIngredientShoppingProfile(id, signal, locale),
+    staleTime: 0,
+  });
+}
+
+function useSyncShoppingProfile(id: number) {
+  const client = useQueryClient();
+  return async (profile: IngredientShoppingProfile | null) => {
+    await client.cancelQueries({ queryKey: queryKeys.ingredientProfile(id) });
+    client.setQueriesData<IngredientShoppingProfile | null>({ queryKey: queryKeys.ingredientProfile(id) }, () => profile);
+    await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
+  };
+}
+
+export function useSaveIngredientShoppingProfile(id: number) {
+  const sync = useSyncShoppingProfile(id);
+  return useMutation({
+    mutationFn: (profile: IngredientShoppingProfilePayload) => api.saveIngredientShoppingProfile(id, profile),
+    onSuccess: sync,
+  });
+}
+
+export function useClearIngredientShoppingProfile(id: number) {
+  const sync = useSyncShoppingProfile(id);
+  return useMutation({ mutationFn: () => api.clearIngredientShoppingProfile(id), onSuccess: () => sync(null) });
+}
 
 export function useDeleteIngredient() {
   const client = useQueryClient();
@@ -9,6 +41,8 @@ export function useDeleteIngredient() {
     mutationFn: api.deleteIngredient,
     onSuccess: async (_, id) => {
       await client.cancelQueries({ queryKey: queryKeys.ingredients });
+      await client.cancelQueries({ queryKey: queryKeys.ingredientProfile(id) });
+      client.removeQueries({ queryKey: queryKeys.ingredientProfile(id) });
       client.setQueryData<IngredientCatalogEntry[]>(queryKeys.ingredients, (catalog) =>
         catalog?.filter((ingredient) => ingredient.id !== id),
       );

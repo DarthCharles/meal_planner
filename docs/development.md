@@ -120,6 +120,44 @@ After changing Ruby or dependencies, stop any existing `bin/dev` process, select
 the pinned Ruby, run `bundle install`, and restart `bin/dev`. A running server
 continues using the Ruby and gems with which it started.
 
+## Ingredient equivalences
+
+Run `bundle exec rails db:migrate` after updating the backend. The migration
+creates shopping-profile and equivalence tables and adds the jar unit to the
+catalog if absent. The following packaging migration adds bags, cans, bottles,
+and packages. Catalog additions preserve existing units. Rolling back the
+profile migration removes configuration tables; packaging units are intentionally
+retained because recipes or profiles may already reference them.
+
+Configure an existing ingredient directly through its shopping-profile endpoint:
+
+```http
+PUT /ingredients/12/shopping_profile
+Content-Type: application/json
+
+{
+  "base_unit": "g",
+  "shopping_unit": "pieza",
+  "round_up": true,
+  "equivalences": [{
+    "unit": "pieza",
+    "quantity": "200",
+    "source": "Manual household measurement",
+    "description": "Example average weight of the onions normally purchased",
+    "approximate": true
+  }]
+}
+```
+
+Use the actual ingredient ID from `GET /ingredients` and replace the example
+factor with a documented reference or household measurement. Equivalences are
+stored directly in the database; there is no YAML template catalog or automatic
+matching by ingredient name. Stored recipe quantities remain unchanged, and
+menu calculation makes no external API calls. Do not generalize a product
+package size to every brand or treat edible-portion vegetable weights as
+guaranteed whole purchase weights. See `docs/api.md` for the request and warning
+contracts, including stable unit codes and their English display labels.
+
 ## Scheduled generation
 
 The backend also exposes a Rake task:

@@ -45,6 +45,9 @@ required.
 | `POST` | `/ingredients` | Create a standalone ingredient |
 | `PUT` / `PATCH` | `/ingredients/:id` | Rename a shared ingredient |
 | `DELETE` | `/ingredients/:id` | Delete an unused ingredient |
+| `GET` | `/ingredients/:ingredient_id/shopping_profile` | Show shopping units and equivalences |
+| `PUT` / `PATCH` | `/ingredients/:ingredient_id/shopping_profile` | Replace shopping configuration |
+| `DELETE` | `/ingredients/:ingredient_id/shopping_profile` | Clear shopping configuration |
 
 Meal create and update requests may include an `ingredients` array. Each item
 uses exactly one of `ingredient_id` (an existing catalog ID) or `name` (a new
@@ -236,28 +239,109 @@ If meals are insufficient, the endpoint returns `422`:
     "items": [
       {"ingredient_id": 3, "name": "Huevo", "quantity": "24.0", "unit": "pieza"}
     ],
-    "meals_without_ingredients": [{"id": 7, "name": "Ensalada de pollo"}]
+    "meals_without_ingredients": [{"id": 7, "name": "Ensalada de pollo"}],
+    "conversion_warnings": []
   }
 }
 ```
 
 Each scheduled meal contributes `quantity × people_count ÷ servings`.
-Repeated meals count once per scheduled occurrence. Rows are grouped by
-ingredient ID and exact unit code; `g` and `kg` remain separate, as do different
-catalog entries. Preparation notes do not affect grouping. The endpoint returns
+Repeated meals count once per scheduled occurrence. Kilograms are normalized
+to grams and liters to milliliters, including for ingredients without a shopping
+profile. Ingredient-specific equivalences convert other units to the configured
+shopping unit before grouping. Different catalog entries remain separate;
+preparation notes do not affect grouping. The endpoint returns
 current ingredient names, quantities, and servings, so recipe edits affect
 historical menus' lists too. No shopping-list or purchase state is stored.
 
 Aggregation uses exact rational arithmetic and rounds only final totals to
 three decimal places, halfway away from zero. Quantities are decimal strings
-(including whole values such as `"24.0"`); positive totals smaller than the
-display precision are shown as `"0.001"` instead of zero. Fractional pieces
-remain fractional; there is no package rounding or unit conversion.
+(including whole values such as `"24.0"` or `"2"`); positive totals smaller than
+the display precision are shown as `"0.001"` instead of zero. A profile with
+`round_up: true` rounds the unrounded final total up to whole shopping units,
+after combining all occurrences. That item additionally returns
+`required_quantity`, the fractional requirement rounded for display. Without
+this setting, pieces and package quantities remain fractional. No pantry stock
+is subtracted.
+
+An item includes `approximate: true` only if a conversion used an approximate
+equivalence. Its absence means no approximate conversion was used; it does not
+guarantee the original recipe measurements are exact. Matching units do not
+need a weight conversion even if a profile has an approximate piece weight.
+
+If an equivalence is missing, the original quantity is retained in its canonical
+unit and is not rounded using the shopping preference. Converted and unconverted
+quantities can therefore remain separate. `conversion_warnings` identifies the
+ingredient, source `units`, desired `target_unit`, and a stable `reason`:
+`equivalence_missing` for a configured profile or `shopping_profile_missing`
+when an unconfigured ingredient has multiple incompatible units. For example:
+
+```json
+{"ingredient_id":12,"name":"Cebolla","units":["taza"],"target_unit":"pieza","reason":"equivalence_missing"}
+```
 
 Items are sorted by lowercased ingredient name, ingredient ID, then unit code.
 Meals with no ingredient rows are listed once each, sorted by lowercased name
 then ID, while available totals are still returned. Partially entered recipes
-cannot be detected automatically. Empty menus return both arrays empty.
+cannot be detected automatically. Empty menus return all three arrays empty.
+
+## Ingredient shopping profiles
+
+Shopping configuration is optional and separate from the existing ingredient
+catalog payload; `/ingredients` continues to return `id`, `name`, and `meals`.
+`GET /ingredients/:ingredient_id/shopping_profile` returns `{"data":null}` when
+there is no configuration. A missing ingredient returns the existing localized
+`404` string error. Clearing a profile returns `{"data":true}` and restores
+metric normalization without ingredient-specific conversions.
+
+`PUT` and `PATCH` replace the entire configuration atomically, including its
+equivalences. Both return `200` with the saved configuration in `data`:
+
+```json
+{
+  "base_unit": "g",
+  "shopping_unit": "pieza",
+  "round_up": true,
+  "equivalences": [{
+    "unit": "pieza",
+    "quantity": "148",
+    "source": "https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/nutrition-information-raw-vegetables",
+    "description": "One medium raw onion; edible portion. Whole purchase sizes vary.",
+    "approximate": true
+  }]
+}
+```
+
+The response adds `ingredient_id`; quantities are decimal strings. The base unit
+must be `g`, `ml`, or `pieza`. Each equivalence means **one of its unit equals
+quantity base units**, e.g. one piece equals 148 g or one jar equals 390 g.
+Factors must be finite and positive, at most `1000000000`, and remain positive
+after storage rounding to six decimal places. Oversized factors return `422`;
+unusable legacy factors are treated as missing conversions. Source and
+description are required text; source can be a reference URL or a description
+of a household measurement. `round_up` and `approximate` accept JSON booleans
+only and default to false when omitted. Duplicate equivalent units, unknown
+units, missing factors for the shopping unit, and malformed inputs return
+localized `422` field errors and preserve the previous configuration.
+
+Equivalences use canonical units: use `g` instead of `kg` and `ml` instead of
+`l`. Do not repeat the base unit or override its exact metric conversions.
+For example, a profile with base `g` can define `ml` for that ingredient's
+density; liters then use that same density through the exact metric conversion.
+There is no global weight-to-volume or weight-to-piece conversion. Cups,
+spoons, cloves, and jars need explicit ingredient-specific factors. The unit
+catalog includes jars (`frasco`), bags (`bag`), cans (`can`), bottles (`bottle`),
+and packages (`package`). Display labels are English; existing API unit codes
+remain stable, including `pieza` for pieces. Package sizes are configured per
+ingredient and are never inferred from the container type. Recipe quantities
+and ingredient identities are never rewritten by configuring a profile.
+
+Equivalences are entered directly for an ingredient and stored in the database.
+There is no external template catalog or automatic matching by ingredient name.
+The source and description document the measurement or selected product label;
+they do not trigger an external lookup or import. Vegetable piece weights are
+approximate and should specify size and whether they cover only edible material.
+Package sizes apply only to the selected presentation, not every brand or size.
 
 ## Days
 

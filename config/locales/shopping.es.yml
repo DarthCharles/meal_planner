@@ -1,0 +1,25 @@
+es:
+  errors:
+    messages:
+      invalid: "no es válido"
+      inclusion: "no está incluido en la lista"
+      invalid_base_unit: "debe ser g, ml o pieza"
+      duplicate_units: "debe incluir cada unidad una sola vez"
+      missing_equivalence: "requiere una equivalencia a la unidad base"
+      redundant_equivalence: "debe usar una unidad canónica distinta de la unidad base"
+      invalid_array: "debe ser una lista de equivalencias"
+  activerecord:
+    attributes:
+      ingredient_shopping_profile:
+        ingredient: "Ingrediente"
+        base_unit: "Unidad base"
+        shopping_unit: "Unidad de compra"
+        round_up: "Redondeo de compra"
+        equivalences: "Equivalencias"
+        unit_equivalences: "Equivalencias"
+      ingredient_unit_equivalence:
+        unit: "Unidad"
+        quantity: "Cantidad"
+        source: "Fuente"
+        description: "Descripción"
+        approximate: "Aproximación"
