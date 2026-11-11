@@ -18,6 +18,8 @@ es:
   errors:
     format: "%{attribute} %{message}"
     messages:
+      positive_integer: "debe ser un número entero positivo"
+      less_than_or_equal_to: "debe ser menor o igual que %{count}"
       blank: "no puede estar en blanco"
       taken: "ya está en uso"
       required: "debe existir"
@@ -31,6 +33,7 @@ es:
   activerecord:
     attributes:
       meal:
+        servings: "Porciones"
         name: "Nombre"
         description: "Descripción"
         preferred_days: "Días preferidos"
@@ -47,6 +50,8 @@ es:
       day:
         menu: "Menú"
         weekday: "Día de la semana"
+      menu:
+        people_count: "Personas"
     errors:
       models:
         meal:

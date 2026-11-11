@@ -129,3 +129,7 @@ bin/rake menu:generate
 ```
 
 It generates the next Monday–Sunday menu using the same service as the API endpoint.
+For a new week, the people count defaults to `1`. Regenerating an existing week
+preserves its saved count. Set a different count through `PATCH /menus/:id` or
+by sending `people_count` to `POST /menus/generate`; there is no global household
+default. Generation replaces the menu ID while keeping these count semantics.

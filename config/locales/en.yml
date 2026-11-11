@@ -1,4 +1,7 @@
 en:
+  errors:
+    messages:
+      positive_integer: "must be a positive whole number"
   api:
     ingredient_not_found: "Ingredient not found"
     ingredient_in_use: "Cannot delete an ingredient used by meals. Remove it from those meals first."

@@ -21,6 +21,7 @@ class ApiContractTest < ActionDispatch::IntegrationTest
     )
     expected = {
       "id" => @meal.id, "name" => "Avena", "description" => "Con leche",
+      "servings" => 1,
       "recipe_url" => nil, "meal_types" => ["breakfast"],
       "preferred_days" => [],
       "ingredients" => [
@@ -90,6 +91,20 @@ class ApiContractTest < ActionDispatch::IntegrationTest
     assert_equal "Avena", @meal.reload.name
   end
 
+  test "oversized counts return field errors instead of overflowing storage" do
+    menu = Menu.create!(from: Time.utc(2026, 11, 16), to: Time.utc(2026, 11, 22))
+    [["meals", @meal, :servings], ["menus", menu, :people_count]].each do |resource, record, attribute|
+      [2**63, (2**63).to_s].each do |invalid|
+        patch "/#{resource}/#{record.id}", params: { attribute => invalid },
+          headers: { "Accept-Language" => "es" }, as: :json
+        assert_response :unprocessable_entity
+        assert_equal ["debe ser menor o igual que 9223372036854775807"],
+          response.parsed_body.dig("errors", attribute.to_s)
+        assert_equal 1, record.reload.public_send(attribute)
+      end
+    end
+  end
+
   test "deleting a meal removes joins and returns a boolean" do
     @meal.meal_ingredients.create!(
       ingredient: Ingredient.create!(name: "Avena"), unit: @unit, quantity: 1
@@ -142,7 +157,8 @@ class ApiContractTest < ActionDispatch::IntegrationTest
     get "/menus/#{menu.id}", as: :json
     assert_response :ok
     expected = response.parsed_body.fetch("data")
-    assert_equal %w[created_at days from generation_notices id to], expected.keys.sort
+    assert_equal %w[created_at days from generation_notices id people_count to], expected.keys.sort
+    assert_equal 1, expected.fetch("people_count")
     assert_equal "2026-10-26T00:00:00.000Z", expected.fetch("from")
     assert_equal "2026-11-01T23:59:59.000Z", expected.fetch("to")
     assert_equal menu.created_at.iso8601(3), expected.fetch("created_at")

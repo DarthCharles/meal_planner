@@ -10,8 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
-  create_table "daily_meals", force: :cascade do |t|
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
+  create_table "daily_meals", id: :integer, default: nil, force: :cascade do |t|
     t.integer "day_id", null: false
     t.integer "meal_id", null: false
     t.datetime "created_at", null: false
@@ -22,7 +22,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.index ["meal_id"], name: "index_daily_meals_on_meal_id"
   end
 
-  create_table "days", force: :cascade do |t|
+  create_table "days", id: :integer, default: nil, force: :cascade do |t|
     t.integer "menu_id", null: false
     t.integer "weekday_id", null: false
     t.datetime "created_at", null: false
@@ -40,7 +40,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.index ["normalized_name"], name: "index_ingredients_on_normalized_name", unique: true
   end
 
-  create_table "meal_ingredients", force: :cascade do |t|
+  create_table "meal_ingredients", id: :integer, default: nil, force: :cascade do |t|
     t.integer "meal_id", null: false
     t.integer "ingredient_id", null: false
     t.decimal "quantity", precision: 12, scale: 3, null: false
@@ -87,6 +87,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.string "description", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "servings", default: 1, null: false
+    t.check_constraint "servings > 0 AND typeof(servings) = 'integer'", name: "meals_positive_servings"
   end
 
   create_table "menus", force: :cascade do |t|
@@ -95,6 +97,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.json "generation_notices", default: [], null: false
+    t.integer "people_count", default: 1, null: false
+    t.check_constraint "people_count > 0 AND typeof(people_count) = 'integer'", name: "menus_positive_people_count"
   end
 
   create_table "units", force: :cascade do |t|

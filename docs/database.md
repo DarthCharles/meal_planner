@@ -22,6 +22,7 @@ erDiagram
     datetime from "not null"
     datetime to "not null"
     json generation_notices "default [], not null"
+    int people_count "default 1, positive, not null"
     datetime created_at
     datetime updated_at
   }
@@ -55,6 +56,7 @@ erDiagram
     string name "not null"
     string description "not null"
     string recipe_url
+    int servings "default 1, positive, not null"
     datetime created_at
     datetime updated_at
   }
@@ -104,6 +106,14 @@ erDiagram
 ## Summary
 
 - `Menu` has many `Day` records, one for each weekday.
+- `Menu.people_count` stores how many people the menu feeds. `Meal.servings`
+  records how many people its stored ingredient quantities serve. Both default
+  to `1`, including records predating the fields. Changing either count does
+  not rewrite ingredient quantities.
+- Shopping lists are calculated from live recipes for each scheduled occurrence
+  using `quantity × people_count ÷ servings`, grouped by ingredient and exact
+  unit. There are no shopping-list tables or checked-item records. Regeneration
+  replaces a week's menu ID, preserving its people count unless overridden.
 - `Day` belongs to a `Menu` and a `Weekday`.
 - `Day` has many `Meal` records through `DailyMeal`.
 - `DailyMeal.position` orders meals within a day: `0` breakfast, `1` lunch, `2` dinner.
@@ -133,3 +143,5 @@ The schema enforces required foreign keys and prevents duplicate relationships:
 - An ingredient cannot be added twice to the same meal.
 - Meal ingredient units must reference the unit catalog.
 - Weekday names and meal type descriptions are unique.
+- Recipe servings and menu people counts must be non-null positive integers,
+  enforced by model validations and SQLite check constraints.

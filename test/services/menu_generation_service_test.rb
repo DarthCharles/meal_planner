@@ -28,13 +28,24 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
 
   test "replaces existing menu for same week" do
     week_start = Date.new(2025, 3, 3)
-    MenuGenerationService.new.call(week_start: week_start)
+    MenuGenerationService.new.call(week_start: week_start, people_count: 4)
     initial_count = Menu.count
 
-    MenuGenerationService.new.call(week_start: week_start)
+    replacement = MenuGenerationService.new.call(week_start: week_start)
 
     assert_equal initial_count, Menu.count
+    assert_equal 4, replacement.people_count
     assert_equal 1, Menu.where('"from" >= ? AND "from" < ?', week_start, week_start + 7.days).count
+  end
+
+  test "people default to one for new weeks and explicit values override an existing week" do
+    week_start = Date.new(2025, 3, 3)
+    menu = MenuGenerationService.new.call(week_start: week_start)
+    assert_equal 1, menu.people_count
+    replacement = MenuGenerationService.new.call(week_start: week_start, people_count: 3)
+    assert_equal 3, replacement.people_count
+    next_week = MenuGenerationService.new.call(week_start: week_start + 7.days)
+    assert_equal 1, next_week.people_count
   end
 
   test "weekend meals never displace suitable weekday meals and Friday is included" do

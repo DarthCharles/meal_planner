@@ -43,10 +43,15 @@ class MealsController < ApplicationController
       :name,
       :recipe_url,
       :description,
+      :servings,
       preferred_days: [],
       meal_type_ids: [],
       ingredients: %i[ingredient_id name quantity unit preparation_note position]
     )
+    if params.key?(:servings)
+      value = params[:servings]
+      permitted[:servings] = value.is_a?(Integer) || value.is_a?(String) ? value : nil
+    end
     if params.key?(:preferred_days)
       days = params[:preferred_days]
       permitted[:preferred_days] = days.is_a?(Array) && days.all? { |day| day.is_a?(String) } ? days : nil

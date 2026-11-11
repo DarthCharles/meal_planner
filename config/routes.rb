@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   post "menus/generate", to: "menus#generate"
-  resources :meals, :menus
+  resources :meals
+  resources :menus do
+    get :shopping_list, on: :member
+  end
 
   resources :days, only: :create
   resources :meal_types, only: :index

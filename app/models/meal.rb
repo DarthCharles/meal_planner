@@ -31,12 +31,14 @@ class Meal < ApplicationRecord
   scope :dinner,    -> { joins(:meal_types).where(meal_types: { description: "dinner" }).distinct }
 
   validates :name, :description, presence: true
+  validates :servings, positive_integer: true
 
   def as_json(options = {})
     {}.tap do |h|
       h[:id] = id
       h[:description] = description
       h[:name] = name
+      h[:servings] = servings
       h[:recipe_url] = recipe_url
       h[:meal_types] = meal_types.pluck(:description)
       h[:preferred_days] = preferred_days

@@ -112,6 +112,7 @@ Create and update payload:
 ```json
 {
   "name": "Avena cocida",
+  "servings": 1,
   "description": "Warm oats with cinnamon and fruit.",
   "recipe_url": "https://example.com/recipe",
   "meal_type_ids": [1, 3],
@@ -126,6 +127,7 @@ Meal responses include meal type descriptions:
   "data": {
     "id": 1,
     "name": "Avena cocida",
+    "servings": 1,
     "description": "Warm oats with cinnamon and fruit.",
     "recipe_url": "https://example.com/recipe",
     "meal_types": ["breakfast", "dinner"],
@@ -133,6 +135,16 @@ Meal responses include meal type descriptions:
   }
 }
 ```
+
+`servings` records how many people the recipe's ingredient quantities serve.
+It is a positive integer, defaulting to `1` for existing meals and new meals
+that omit it. Omission on update preserves the saved value. Changing servings
+does not change stored ingredient quantities. All meal responses, including
+meals nested inside menus, include it. Integer strings such as `"2"` are also
+accepted; fractional values, booleans, nulls, arrays, and objects return `422`
+with a localized `servings` field error.
+Counts must fit SQLite's signed 64-bit integer range (maximum
+`9223372036854775807`); larger values return a localized `422` field error.
 
 `preferred_days` is an array of lowercase English weekday names, returned in
 Monday–Sunday order with duplicates removed. An empty array means **Any day**.
@@ -149,6 +161,28 @@ apply to every meal time associated with the meal and affect future generation.
 | `GET` | `/menus` | List menus |
 | `GET` | `/menus/:id` | Show one menu |
 | `POST` | `/menus/generate` | Generate the next weekly menu |
+| `PUT` / `PATCH` | `/menus/:id` | Update the menu's people count |
+| `GET` | `/menus/:id/shopping_list` | Calculate the menu's shopping list |
+
+Every menu response includes the positive integer `people_count`. Existing
+menus default to `1`. Generation optionally accepts `{"people_count":4}`.
+When omitted, a new week defaults to `1`; regenerating an existing week
+preserves its people count. An explicit value overrides it. Regeneration
+replaces the menu record and its ID, so clients must use the returned menu ID.
+
+`PUT` and `PATCH /menus/:id` accept `{"people_count":4}` and return `200`
+with the full updated menu in `data`. Only `people_count` is editable;
+omitting it leaves the menu unchanged. The value must be a positive integer
+or an integer string such as `"4"`, at most `9223372036854775807`.
+Invalid values return `422`, for example:
+
+```json
+{"errors":{"people_count":["must be a positive whole number"]}}
+```
+
+Invalid updates and generation requests preserve existing data. Missing menus
+return localized `404` errors for update and shopping-list requests, using
+the same string error envelope as menu detail.
 
 `GET /menus` returns menus by start date descending, with descending ID as a
 tie-breaker. The latest weekly plan stays first after generation and on reload.
@@ -189,6 +223,41 @@ If meals are insufficient, the endpoint returns `422`:
   "errors": "Cannot complete the menu. Add meals for each meal time; each day needs three different meals."
 }
 ```
+
+## Shopping lists
+
+`GET /menus/:id/shopping_list` returns a view-only list computed on demand:
+
+```json
+{
+  "data": {
+    "menu_id": 12,
+    "people_count": 4,
+    "items": [
+      {"ingredient_id": 3, "name": "Huevo", "quantity": "24.0", "unit": "pieza"}
+    ],
+    "meals_without_ingredients": [{"id": 7, "name": "Ensalada de pollo"}]
+  }
+}
+```
+
+Each scheduled meal contributes `quantity × people_count ÷ servings`.
+Repeated meals count once per scheduled occurrence. Rows are grouped by
+ingredient ID and exact unit code; `g` and `kg` remain separate, as do different
+catalog entries. Preparation notes do not affect grouping. The endpoint returns
+current ingredient names, quantities, and servings, so recipe edits affect
+historical menus' lists too. No shopping-list or purchase state is stored.
+
+Aggregation uses exact rational arithmetic and rounds only final totals to
+three decimal places, halfway away from zero. Quantities are decimal strings
+(including whole values such as `"24.0"`); positive totals smaller than the
+display precision are shown as `"0.001"` instead of zero. Fractional pieces
+remain fractional; there is no package rounding or unit conversion.
+
+Items are sorted by lowercased ingredient name, ingredient ID, then unit code.
+Meals with no ingredient rows are listed once each, sorted by lowercased name
+then ID, while available totals are still returned. Partially entered recipes
+cannot be detected automatically. Empty menus return both arrays empty.
 
 ## Days
 
