@@ -140,12 +140,12 @@ test("preserves failed edits, prevents duplicate saves, and cancels without savi
 test("shows usage counts on cards and opens linked meals from the ingredient modal", { tag: "@responsive" }, async ({ page, api }) => {
   await page.goto("/ingredients");
   const egg = page.getByRole("listitem").filter({ has: page.getByRole("button", { name: "Edit Egg", exact: true }) });
-  await expect(egg.getByText("Used in 1 meal", { exact: true })).toBeVisible();
+  await expect(egg.getByRole("button", { name: "Used in 1 meal", exact: true })).toBeVisible();
   await expect(egg.getByText("Huevos a la mexicana", { exact: true })).toHaveCount(0);
   const tomato = page.getByRole("listitem").filter({ has: page.getByRole("button", { name: "Edit Tomato", exact: true }) });
-  await expect(tomato.getByText("Not used in any meals yet")).toBeVisible();
+  await expect(tomato.getByRole("button", { name: "Not used in any meals yet", exact: true })).toBeVisible();
   expect(api.reads["/meals"] ?? 0).toBe(0);
-  await egg.getByRole("button", { name: "Edit Egg", exact: true }).click();
+  await egg.getByRole("button", { name: "Used in 1 meal", exact: true }).click();
   const ingredientDialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
   await expect(ingredientDialog.getByRole("button", { name: "Delete ingredient", exact: true })).toHaveCount(0);
   const usage = ingredientDialog.getByRole("region", { name: "Meals using this ingredient" });
@@ -157,7 +157,7 @@ test("shows usage counts on cards and opens linked meals from the ingredient mod
   expect(initialMealReads).toBeGreaterThan(0);
   expect(api.reads["/meals"] ?? 0).toBe(0);
   await page.keyboard.press("Escape");
-  await expect(egg.getByRole("button", { name: "Edit Egg", exact: true })).toBeFocused();
+  await expect(egg.getByRole("button", { name: "Used in 1 meal", exact: true })).toBeFocused();
   await egg.getByRole("button", { name: "Edit Egg", exact: true }).click();
   await page.getByRole("dialog", { name: "Edit ingredient", exact: true })
     .getByRole("button", { name: "Huevos a la mexicana", exact: true }).click();

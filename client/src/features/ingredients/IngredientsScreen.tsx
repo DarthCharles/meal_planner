@@ -1,5 +1,5 @@
 import { formatLocale, useI18n } from "../../i18n";
-import { Badge, Button, Input } from "@darthcharles/greda";
+import { Button, Input } from "@darthcharles/greda";
 import { useState } from "react";
 import { Notice } from "../../components/Notice";
 import { useIngredients } from "../meals/queries";
@@ -59,12 +59,14 @@ export function IngredientsScreen() {
                     <span className="min-w-0 flex-1 break-words font-display text-lg leading-tight font-semibold tracking-[-.03em]">{ingredient.name}</span>
                     <Button variant="ghost" size="sm" className="shrink-0" aria-label={t("common.edit_name", { name: ingredient.name })} onClick={() => openForm(ingredient)}>{t("common.edit")}</Button>
                   </div>
-                  <Badge
-                    variant="secondary"
-                    className={`mt-2 max-w-full whitespace-normal rounded-full border-0 px-3 py-1.5 text-[11px] leading-normal font-medium ${ingredient.meals.length ? "bg-accent text-secondary" : "bg-muted text-muted-foreground"}`}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="mt-2 h-auto max-w-full whitespace-normal break-words px-0 py-1 text-left"
+                    onClick={() => openForm(ingredient)}
                   >
                     {ingredient.meals.length ? t("ingredients.usage", { count: ingredient.meals.length }) : t("ingredients.screen.unused_badge")}
-                  </Badge>
+                  </Button>
                 </li>
               ))}
             </ul>

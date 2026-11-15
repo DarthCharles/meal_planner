@@ -138,12 +138,12 @@ It also shows empty catalog, no search results, and request errors with retry;
 cached ingredients remain visible if a refresh
 fails. It does not use demo data. Each ingredient card shows its meal usage
 count from the backend catalog response, or an unused message. Cards use larger
-serif ingredient names and rounded usage badges: sage for used ingredients and
-neutral for unused ingredients. The screen does
+serif ingredient names and link-style (`link`) usage buttons that open the
+ingredient edit dialog, including for unused ingredients. The screen does
 not fetch `/meals` to determine usage. The ingredient edit modal lists the meals
 using it; each meal name opens its details in the shared dialog, fetching only
 that meal via `GET /meals/:id`, with loading, retry, and the existing Edit meal
-action. Closing restores focus to the ingredient's original Edit button.
+action. Closing restores focus to the ingredient button that opened the dialog.
 
 “Add ingredient” and each row's “Edit” action open the shared dialog with a
 React Hook Form name field. Blank names are blocked locally; duplicate names
