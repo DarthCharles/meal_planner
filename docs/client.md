@@ -220,7 +220,7 @@ appear below the header and allow retrying without discarding the saved menu.
 The menu screen owns the bowl hero. Before a menu exists, it explains weekly
 planning. While menus load, the hero shows a loading message. Once a menu exists,
 the hero becomes a compact overview of today's breakfast, lunch, and dinner,
-each on a light card surface within the sage hero, using the same ordered meal
+each on a light card surface within the pale green hero, using the same ordered meal
 slots as the day cards. It checks the menu's calendar
 date range against the local date before presenting meals as today's plan.
 My Menu uses the current week's menu for both the overview and weekly grid.
@@ -250,8 +250,8 @@ quiet meal-time labels, and smaller medium-weight meal names in `text-secondary`
 cards share an equal minimum height on tablet/desktop and size to their content
 on mobile. Weekly rows retain their
 compact styling. Badges use Greda's
-existing Comal colors directly: sage (`accent`) for breakfast, peach-pink
-(`secondary`) for lunch, and warm gray (`muted`) for dinner.
+existing Comal colors directly: pale green (`accent`) for breakfast, moss-green
+(`secondary`) for lunch, and clay (`muted`) for dinner.
 Clicking a row or activating it with Enter or
 Space opens the meal card through `useMealDialog` and the shared dialog host.
 The card shows meal types, description, ingredient quantities and preparation
@@ -467,7 +467,7 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.3.1. `styles.css` imports Tailwind,
+The client pins `@darthcharles/greda` 1.4.1. `styles.css` imports Tailwind,
 Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, the
 packaged `@darthcharles/greda/themes/comal.css` theme, then `theme.css`. Do not
 also import Greda CSS in JavaScript. This layer order lets app utilities override
@@ -477,15 +477,20 @@ component styles.
 `data-color-scheme="light"` on `<html>`, so dialogs inherit it too. The dialog
 test fixture selects the same theme. Comal supplies the palette, font stacks,
 and base radii; the app loads DM Sans and Fraunces through the existing font
-import. No palette values are copied into the app. Greda derives surface, text,
+import. Greda 1.4.0 refreshes Comal with clay backgrounds, sienna-brown actions,
+amber surfaces, and moss-green accents; typography, shape, and semantic roles
+remain the same. The optional La Viuda theme is not selected. No palette values
+are copied into the app. Greda derives surface, text,
 border, component color, and shadow tokens. `theme.css` only keeps app font
 sizes/weight, the existing large radius, and a loading gradient using `muted`
 and `background`. Action-colored text and borders use `text-action` and
 `border-action`; `text-primary` and `border-primary` use neutral category roles.
 
 Meal category badges use soft Comal fills and dark brown (`text-secondary`)
-text consistently in the library and meal details: sage (`accent`) for
-breakfast, peach-pink (`secondary`) for lunch, and warm gray (`muted`) for dinner.
+text consistently in the library and meal details: `accent` for breakfast,
+`secondary` for lunch, and `muted` for dinner. Greda 1.4.1 separates the pale
+green `accent` from moss-green `secondary`, keeping breakfast and lunch distinct.
+Menu heroes, including loading and empty states, use `bg-accent` directly.
 Unknown categories use cream (`background`). Badges use `mealTypeColorClassName`; the fill mapping lives in
 `features/meals/mealTypes.ts`. Badges use plain text labels without decorative
 dots; the visible labels identify each category without relying on color.
