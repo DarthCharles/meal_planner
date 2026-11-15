@@ -116,6 +116,10 @@ The header's MC button opens a Greda popover on all screen sizes, ordered as
 Choosing a destination closes the popover before navigating, so its exiting
 keyboard layer cannot intercept Escape in a dialog on the destination screen. “Add a meal” opens the meal form;
 closing the form returns focus to MC. Mobile also keeps its bottom navigation.
+The MC popover uses Greda's primary (`default`) button variant for the current
+destination and selected language, with `ghost` for the other choices.
+All choices use `primary-hover` backgrounds and `primary-foreground` text on
+hover and visible keyboard focus.
 The library keeps its own add action.
 
 My Ingredients is available in the header actions and mobile bottom navigation.
@@ -159,9 +163,8 @@ unconfigured; piece weights and package sizes are never invented.
 
 The shopping section appears below the meals that use the ingredient.
 The summary uses familiar buying units (including translated jar/piece labels),
-known amounts, whole-unit purchasing behavior, and Estimated badges. Source and
-size/product descriptions are available in a disclosure. HTTP(S) sources are
-links; other source text is displayed without creating an executable link.
+known amounts, whole-unit purchasing behavior, and Estimated badges. Sources and
+descriptions remain stored with the equivalences but are not displayed in the modal.
 Raw database IDs and conversion factors are not presented as setup requirements.
 
 Editing shopping setup asks one main question: how the ingredient is bought.
@@ -185,7 +188,7 @@ workflow. The client constructs the API payload, records new package sizes as
 user-entered values and piece weights as approximate user-entered estimates,
 and defaults new pieces/packages to whole-unit purchasing and bulk amounts to
 fractional quantities. Existing rounding settings are preserved for unchanged
-buying units. Sources remain inspectable in the summary disclosure.
+buying units.
 
 Shopping setup has separate Save, Cancel, and Remove actions. Saves use
 `PUT /ingredients/:id/shopping_profile`; removal uses `DELETE`. Profile caches
@@ -250,7 +253,7 @@ quiet meal-time labels, and smaller medium-weight meal names in `text-secondary`
 cards share an equal minimum height on tablet/desktop and size to their content
 on mobile. Weekly rows retain their
 compact styling. Badges use Greda's
-existing Comal colors directly: pale green (`accent`) for breakfast, moss-green
+existing Comal colors directly: pale green (`accent`) for breakfast, sage
 (`secondary`) for lunch, and clay (`muted`) for dinner.
 Clicking a row or activating it with Enter or
 Space opens the meal card through `useMealDialog` and the shared dialog host.
@@ -467,7 +470,7 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.4.1. `styles.css` imports Tailwind,
+The client pins `@darthcharles/greda` 1.4.2. `styles.css` imports Tailwind,
 Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, the
 packaged `@darthcharles/greda/themes/comal.css` theme, then `theme.css`. Do not
 also import Greda CSS in JavaScript. This layer order lets app utilities override
@@ -477,8 +480,8 @@ component styles.
 `data-color-scheme="light"` on `<html>`, so dialogs inherit it too. The dialog
 test fixture selects the same theme. Comal supplies the palette, font stacks,
 and base radii; the app loads DM Sans and Fraunces through the existing font
-import. Greda 1.4.0 refreshes Comal with clay backgrounds, sienna-brown actions,
-amber surfaces, and moss-green accents; typography, shape, and semantic roles
+import. Greda 1.4.2 supplies Comal's clay backgrounds, terracotta actions,
+pale sage tertiary surfaces, and softened sage secondary controls; typography, shape, and semantic roles
 remain the same. The optional La Viuda theme is not selected. No palette values
 are copied into the app. Greda derives surface, text,
 border, component color, and shadow tokens. `theme.css` only keeps app font
@@ -488,8 +491,8 @@ and `background`. Action-colored text and borders use `text-action` and
 
 Meal category badges use soft Comal fills and dark brown (`text-secondary`)
 text consistently in the library and meal details: `accent` for breakfast,
-`secondary` for lunch, and `muted` for dinner. Greda 1.4.1 separates the pale
-green `accent` from moss-green `secondary`, keeping breakfast and lunch distinct.
+`secondary` for lunch, and `muted` for dinner. The pale green `accent` and sage
+`secondary` remain distinct for breakfast and lunch.
 Menu heroes, including loading and empty states, use `bg-accent` directly.
 Unknown categories use cream (`background`). Badges use `mealTypeColorClassName`; the fill mapping lives in
 `features/meals/mealTypes.ts`. Badges use plain text labels without decorative

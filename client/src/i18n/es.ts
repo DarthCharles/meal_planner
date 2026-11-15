@@ -95,8 +95,6 @@ export const es: typeof en = {
       "amount": "Cada %{unit} contiene %{quantity} %{base}",
       "unavailable_amount": "desconocido",
       "estimated": "Aproximado",
-      "sources": "De dónde salen estas cantidades",
-      "source": "Fuente:",
       "edit": "Editar datos de compra",
       "set_up": "Configurar cantidades de compra",
       "save": "Guardar datos de compra",
@@ -120,8 +118,6 @@ export const es: typeof en = {
       "enter_size": "Ingresa el contenido que aparece en la etiqueta del envase.",
       "keep_measurements": "Este cambio afectaría otras medidas guardadas. Mantén la unidad de medida actual o quita la configuración antes de elegir otra.",
       "piece_amount": "Peso por pieza: %{quantity} %{base}",
-      "entered_package_source": "Tamaño del envase que ingresaste",
-      "entered_piece_source": "Peso aproximado por pieza que ingresaste",
       "unknown_piece_weight": "Aún no tenemos un peso de referencia para este ingrediente. Algunas cantidades aparecerán en gramos.",
       "choose_package": "Elige el tipo de envase"
     }

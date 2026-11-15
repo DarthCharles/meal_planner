@@ -104,8 +104,8 @@ export function AppHeader() {
                       to={destination}
                       end
                       className={({ isActive }) => buttonVariants({
-                        variant: isActive ? "secondary" : "ghost",
-                        className: "w-full justify-start",
+                        variant: isActive ? "default" : "ghost",
+                        className: "w-full justify-start hover:bg-primary-hover hover:text-primary-foreground focus-visible:bg-primary-hover focus-visible:text-primary-foreground",
                       })}
                       onClick={(event) => {
                         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -122,7 +122,7 @@ export function AppHeader() {
               <hr className="my-1 border-border" />
               <Button
                 variant="ghost"
-                className="w-full justify-start"
+                className="w-full justify-start hover:bg-primary-hover hover:text-primary-foreground focus-visible:bg-primary-hover focus-visible:text-primary-foreground"
                 onClick={() => {
                   addingMeal.current = true;
                   setActionsOpen(false);
@@ -136,9 +136,9 @@ export function AppHeader() {
                   <Button
                     key={code}
                     lang={code}
-                    variant={locale === code ? "secondary" : "ghost"}
+                    variant={locale === code ? "default" : "ghost"}
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 hover:bg-primary-hover hover:text-primary-foreground focus-visible:bg-primary-hover focus-visible:text-primary-foreground"
                     aria-pressed={locale === code}
                     onClick={() => setLocale(code)}
                   >

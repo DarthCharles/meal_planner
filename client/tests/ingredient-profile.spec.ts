@@ -41,8 +41,8 @@ test("shows known amounts and lets users edit a jar size without saving a name d
   const dialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
   const setup = dialog.getByRole("region", { name: "Shopping setup", exact: true });
   await expect(setup.getByText("Each jar contains 390 g", { exact: true })).toBeVisible();
-  await setup.getByText("Where these amounts come from", { exact: true }).click();
-  await expect(setup.getByText("Package label", { exact: true })).toBeVisible();
+  await expect(setup.getByText("Where these amounts come from", { exact: true })).toHaveCount(0);
+  await expect(setup.getByText("Package label", { exact: true })).toHaveCount(0);
   await dialog.getByLabel("Ingredient name", { exact: true }).fill("Unsaved name");
   await setup.getByRole("button", { name: "Edit shopping setup" }).click();
   await expect(dialog.getByRole("button", { name: "Save ingredient", exact: true })).toHaveCount(0);
@@ -192,7 +192,7 @@ test("retries profile loading without losing an ingredient name draft", async ({
   expect(api.ingredientSaves).toEqual([]);
 });
 
-test("keeps long amounts and sources readable and restores focus", { tag: "@responsive" }, async ({ page, api }) => {
+test("keeps shopping setup readable and restores focus", { tag: "@responsive" }, async ({ page, api }) => {
   api.ingredientProfiles[1] = { ingredient_id: 1, base_unit: "g", shopping_unit: "pieza", round_up: true,
     equivalences: [{ unit: "pieza", quantity: "148", source: `https://example.com/${"long-reference-".repeat(15)}`,
       description: "A documented example of the piece size normally purchased", approximate: true }] };
@@ -201,7 +201,6 @@ test("keeps long amounts and sources readable and restores focus", { tag: "@resp
   await open.click();
   const setup = page.getByRole("region", { name: "Shopping setup", exact: true });
   await expect(setup.getByText("Estimated", { exact: true })).toBeVisible();
-  await setup.getByText("Where these amounts come from", { exact: true }).click();
   expect(await setup.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   await setup.getByRole("button", { name: "Edit shopping setup" }).click();
   await expect(setup.getByRole("combobox", { name: "How do you buy Egg?", exact: true })).toHaveText("Individual pieces");
@@ -214,15 +213,15 @@ test("keeps long amounts and sources readable and restores focus", { tag: "@resp
 
 test.describe("Spanish shopping setup", () => {
   test.use({ locale: "es-MX" });
-  test("translates jar labels and keeps source text as entered", async ({ page, api }) => {
+  test("translates jar labels without displaying source details", async ({ page, api }) => {
     api.ingredientProfiles[1] = { ingredient_id: 1, base_unit: "g", shopping_unit: "frasco", round_up: true,
       equivalences: [{ unit: "frasco", quantity: "390", source: "My package label", description: "My usual jar", approximate: false }] };
     await page.goto("/ingredients");
     await page.getByRole("button", { name: "Editar Egg", exact: true }).click();
     const setup = page.getByRole("region", { name: "Compra en el súper", exact: true });
     await expect(setup.getByText("Cada frasco contiene 390 g", { exact: true })).toBeVisible();
-    await setup.getByText("De dónde salen estas cantidades", { exact: true }).click();
-    await expect(setup.getByText("My package label", { exact: true })).toBeVisible();
+    await expect(setup.getByText("De dónde salen estas cantidades", { exact: true })).toHaveCount(0);
+    await expect(setup.getByText("My package label", { exact: true })).toHaveCount(0);
     expect(api.requests.some(({ path, language }) => path.endsWith("/shopping_profile") && language === "es")).toBe(true);
   });
 });

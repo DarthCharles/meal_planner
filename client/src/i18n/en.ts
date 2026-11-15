@@ -93,8 +93,6 @@ export const en = {
       "amount": "Each %{unit} contains %{quantity} %{base}",
       "unavailable_amount": "unknown",
       "estimated": "Estimated",
-      "sources": "Where these amounts come from",
-      "source": "Source:",
       "edit": "Edit shopping setup",
       "set_up": "Set up shopping amounts",
       "save": "Save shopping setup",
@@ -118,8 +116,6 @@ export const en = {
       "enter_size": "Enter the contents printed on the package label.",
       "keep_measurements": "This change would affect other saved measurements. Keep the existing measurement unit, or remove the setup before choosing a new one.",
       "piece_amount": "Weight per piece: %{quantity} %{base}",
-      "entered_package_source": "Package size entered by you",
-      "entered_piece_source": "Approximate piece weight entered by you",
       "unknown_piece_weight": "We do not have a reference weight for this ingredient yet. Some quantities will appear in grams.",
       "choose_package": "Choose a package type"
     }

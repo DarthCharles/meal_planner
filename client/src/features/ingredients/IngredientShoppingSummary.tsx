@@ -3,15 +3,6 @@ import { formatLocale, unitLabel, useI18n } from "../../i18n";
 import { useIngredientShoppingProfile } from "./queries";
 import { IngredientShoppingEditor } from "./IngredientShoppingEditor";
 
-function sourceLink(source: string) {
-  try {
-    const url = new URL(source);
-    return url.protocol === "https:" || url.protocol === "http:" ? url.href : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 export function IngredientShoppingSummary({ ingredientId, ingredientName, disabled, editing, onEditingChange }: {
   ingredientId: number; ingredientName: string; disabled: boolean; editing: boolean; onEditingChange: (editing: boolean) => void;
 }) {
@@ -41,7 +32,7 @@ export function IngredientShoppingSummary({ ingredientId, ingredientName, disabl
         <p className="m-0 text-muted-foreground">{profile.round_up ? t("ingredients.shopping.whole_units") : t("ingredients.shopping.fractional_units")}</p>
         {profile.shopping_unit === "pieza" && profile.base_unit === "pieza" && !profile.equivalences.some((entry) => entry.unit === "g") &&
           <p className="m-0 text-muted-foreground">{t("ingredients.shopping.unknown_piece_weight")}</p>}
-        {!!profile.equivalences.length && <>
+        {!!profile.equivalences.length &&
           <ul aria-label={t("ingredients.shopping.amounts")} className="m-0 flex list-none flex-col gap-3 p-0">
             {profile.equivalences.map((entry) => <li key={entry.unit} className="min-w-0 break-words border-t border-border pt-3">
               <p className="m-0 font-semibold">{t(entry.unit === "pieza" && profile.base_unit === "g" ? "ingredients.shopping.piece_amount" : "ingredients.shopping.amount", {
@@ -53,23 +44,7 @@ export function IngredientShoppingSummary({ ingredientId, ingredientName, disabl
               {entry.approximate && <Badge variant="secondary" className="mt-2">{t("ingredients.shopping.estimated")}</Badge>}
             </li>)}
           </ul>
-          <details className="min-w-0 border-t border-border pt-3">
-            <summary className="cursor-pointer rounded font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{t("ingredients.shopping.sources")}</summary>
-            <ul className="mt-3 mb-0 list-none space-y-3 p-0">
-              {profile.equivalences.map((entry) => {
-                const href = sourceLink(entry.source);
-                const source = entry.source === "User-entered package size" ? t("ingredients.shopping.entered_package_source")
-                  : entry.source === "User-entered approximate piece weight" ? t("ingredients.shopping.entered_piece_source") : entry.source;
-                return <li key={entry.unit} className="min-w-0 break-words">
-                  <p className="mt-0 mb-1">{entry.description}</p>
-                  <span className="m-0 text-xs text-muted-foreground">{t("ingredients.shopping.source")} </span>
-                  {href ? <a href={href} target="_blank" rel="noopener noreferrer" className="break-all rounded text-xs text-action underline underline-offset-4">{entry.source}</a>
-                    : <span className="break-words text-xs text-muted-foreground">{source}</span>}
-                </li>;
-              })}
-            </ul>
-          </details>
-        </>}
+        }
       </div>}
       {!isPending && !error && <Button type="button" variant="outline" size="sm" className="max-w-full self-start whitespace-normal"
         disabled={disabled || isFetching} onClick={() => onEditingChange(true)}>
