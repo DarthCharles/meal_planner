@@ -4,7 +4,11 @@ const shimmer = "animate-shimmer bg-skeleton bg-size-[200%_100%] motion-reduce:a
 export function IngredientsSkeleton() {
   const { t } = useI18n();
   return (
-    <div role="status" aria-label={t("ingredients.screen.loading_ingredients_label")} aria-busy="true">
+    <div
+      role="status"
+      aria-label={t("ingredients.screen.loading_ingredients_label")}
+      aria-busy="true"
+    >
       <span className="sr-only">{t("ingredients.screen.loading_ingredients")}</span>
       <div aria-hidden="true">
         <div className={`mb-3 h-4 w-28 rounded ${shimmer}`} />

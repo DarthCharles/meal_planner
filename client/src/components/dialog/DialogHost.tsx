@@ -1,6 +1,7 @@
-import { useI18n } from "../../i18n";
 import { Button } from "@darthcharles/greda";
 import { useId, useLayoutEffect, useRef } from "react";
+
+import { useI18n } from "../../i18n";
 import type { DialogInstance } from "./useDialog";
 
 export function DialogHost({ dialog }: { dialog: DialogInstance }) {
@@ -46,17 +47,11 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
           event.currentTarget.querySelectorAll<HTMLElement>(
             "button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]",
           ),
-        ).filter(
-          (element) =>
-            element.tabIndex >= 0 && element.getClientRects().length > 0,
-        );
+        ).filter((element) => element.tabIndex >= 0 && element.getClientRects().length > 0);
         const first = controls[0];
         const last = controls[controls.length - 1];
         const active = document.activeElement;
-        if (
-          event.shiftKey &&
-          (active === first || active === titleRef.current)
-        ) {
+        if (event.shiftKey && (active === first || active === titleRef.current)) {
           event.preventDefault();
           last?.focus();
         } else if (!event.shiftKey && active === last) {
@@ -74,11 +69,7 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
         pointerStartedOutside.current = false;
       }}
       onClick={(event) => {
-        if (
-          event.target === event.currentTarget &&
-          pointerStartedOutside.current
-        )
-          close();
+        if (event.target === event.currentTarget && pointerStartedOutside.current) close();
         pointerStartedOutside.current = false;
       }}
     >
@@ -94,7 +85,11 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
               ref={titleRef}
               id={titleId}
               tabIndex={-1}
-              className={hideTitle ? "sr-only" : "mb-0 font-display text-[27px] font-semibold tracking-[-.04em] outline-none"}
+              className={
+                hideTitle
+                  ? "sr-only"
+                  : "mb-0 font-display text-[27px] font-semibold tracking-[-.04em] outline-none"
+              }
             >
               {titleText}
             </h2>

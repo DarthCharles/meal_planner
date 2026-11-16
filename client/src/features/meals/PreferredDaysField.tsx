@@ -1,6 +1,7 @@
-import { useI18n } from "../../i18n";
 import { Button } from "@darthcharles/greda";
 import { Controller, useFormContext } from "react-hook-form";
+
+import { useI18n } from "../../i18n";
 import type { MealForm } from "../../types";
 import { dayLabel, weekdays } from "./preferredDays";
 
@@ -30,7 +31,9 @@ export function PreferredDaysField() {
               >
                 {t("meals.preferred_days.select_all")}
               </Button>
-              <span aria-hidden="true" className="font-normal text-muted-foreground">|</span>
+              <span aria-hidden="true" className="font-normal text-muted-foreground">
+                |
+              </span>
               <Button
                 type="button"
                 variant="link"

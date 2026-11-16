@@ -23,7 +23,9 @@ export function menuPeriod(menu: Menu, now: Date) {
 }
 
 export function localWeekday(now: Date) {
-  return ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][now.getDay()];
+  return ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][
+    now.getDay()
+  ];
 }
 
 function calendarDate(value: string) {
@@ -39,7 +41,12 @@ export function menuDayDate(menu: Menu, weekday: string) {
 }
 
 export function formatMenuDateRange(menu: Menu, includeYear = true) {
-  const format = (value: string) => calendarDate(value)
-    .toLocaleDateString(formatLocale(), { month: "short", day: "numeric", year: includeYear ? "numeric" : undefined, timeZone: "UTC" });
+  const format = (value: string) =>
+    calendarDate(value).toLocaleDateString(formatLocale(), {
+      month: "short",
+      day: "numeric",
+      year: includeYear ? "numeric" : undefined,
+      timeZone: "UTC",
+    });
   return `${format(menu.from)} — ${format(menu.to)}`;
 }

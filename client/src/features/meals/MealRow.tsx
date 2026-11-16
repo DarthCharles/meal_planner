@@ -1,5 +1,6 @@
-import { useI18n } from "../../i18n";
 import { Button } from "@darthcharles/greda";
+
+import { useI18n } from "../../i18n";
 import type { Meal, MealTypeName } from "../../types";
 import { mealTypeLabel } from "./mealTypes";
 
@@ -27,17 +28,18 @@ export function MealRow({
       onClick={() => onOpen(meal)}
     >
       <span className="grid min-w-0 flex-1 gap-1">
-        <span className={`leading-tight text-muted-foreground uppercase ${hero ? "text-[9px] font-medium tracking-[.12em]" : "text-[10px] font-bold tracking-[.08em]"}`}>
+        <span
+          className={`leading-tight text-muted-foreground uppercase ${hero ? "text-[9px] font-medium tracking-[.12em]" : "text-[10px] font-bold tracking-[.08em]"}`}
+        >
           {mealTypeLabel(mealType)}
         </span>
-        <strong className={`break-words ${hero ? "text-[13px] leading-snug font-medium text-secondary" : "text-[13px] leading-[1.25]"}`}>
+        <strong
+          className={`break-words ${hero ? "text-[13px] leading-snug font-medium text-secondary" : "text-[13px] leading-[1.25]"}`}
+        >
           {meal.name}
         </strong>
       </span>
-      <span
-        aria-hidden="true"
-        className="shrink-0 text-[22px] leading-none text-muted-foreground"
-      >
+      <span aria-hidden="true" className="shrink-0 text-[22px] leading-none text-muted-foreground">
         ›
       </span>
     </Button>

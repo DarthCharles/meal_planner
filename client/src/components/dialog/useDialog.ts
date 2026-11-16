@@ -1,5 +1,5 @@
-import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
+import { createContext, useContext } from "react";
 
 type DialogText = string | (() => string);
 
@@ -23,7 +23,6 @@ export const DialogContext = createContext<{
 
 export function useDialog() {
   const context = useContext(DialogContext);
-  if (!context)
-    throw new Error("useDialog must be used within DialogProvider.");
+  if (!context) throw new Error("useDialog must be used within DialogProvider.");
   return context;
 }

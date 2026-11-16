@@ -31,10 +31,7 @@ export function MenuView({
           day={day}
           date={menuDayDate(menu, day.weekday)}
           onOpenMeal={onOpenMeal}
-          featured={
-            isCurrentMenu(menu, new Date()) &&
-            day.weekday.toLowerCase() === today
-          }
+          featured={isCurrentMenu(menu, new Date()) && day.weekday.toLowerCase() === today}
           key={day.id}
         />
       ))}

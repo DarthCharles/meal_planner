@@ -11,15 +11,7 @@ export function HeroBowlArt() {
       />
       <path d="M48 94c4 55 40 82 91 82s87-27 91-82H48Z" fill="#d5674e" />
       <path d="M57 93h164c0 29-37 48-82 48S57 122 57 93Z" fill="#fff9f3" />
-      <ellipse
-        cx="139"
-        cy="91"
-        rx="91"
-        ry="34"
-        fill="#e9b258"
-        stroke="#fff9f3"
-        strokeWidth="8"
-      />
+      <ellipse cx="139" cy="91" rx="91" ry="34" fill="#e9b258" stroke="#fff9f3" strokeWidth="8" />
       <path
         d="M94 87c12-14 27-15 40-5M157 82c12-11 26-9 38 2M123 105c8-5 17-5 26 0"
         fill="none"

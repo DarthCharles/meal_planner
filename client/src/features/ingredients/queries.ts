@@ -1,8 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useI18n } from "../../i18n";
+
 import { api } from "../../api";
+import { useI18n } from "../../i18n";
 import { queryKeys } from "../../queryKeys";
-import type { IngredientCatalogEntry, IngredientPayload, IngredientShoppingProfile, IngredientShoppingProfilePayload, Meal, Menu } from "../../types";
+import type {
+  IngredientCatalogEntry,
+  IngredientPayload,
+  IngredientShoppingProfile,
+  IngredientShoppingProfilePayload,
+  Meal,
+  Menu,
+} from "../../types";
 
 export function useIngredientShoppingProfile(id: number) {
   const { locale } = useI18n();
@@ -17,7 +25,10 @@ function useSyncShoppingProfile(id: number) {
   const client = useQueryClient();
   return async (profile: IngredientShoppingProfile | null) => {
     await client.cancelQueries({ queryKey: queryKeys.ingredientProfile(id) });
-    client.setQueriesData<IngredientShoppingProfile | null>({ queryKey: queryKeys.ingredientProfile(id) }, () => profile);
+    client.setQueriesData<IngredientShoppingProfile | null>(
+      { queryKey: queryKeys.ingredientProfile(id) },
+      () => profile,
+    );
     await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
   };
 }
@@ -25,14 +36,18 @@ function useSyncShoppingProfile(id: number) {
 export function useSaveIngredientShoppingProfile(id: number) {
   const sync = useSyncShoppingProfile(id);
   return useMutation({
-    mutationFn: (profile: IngredientShoppingProfilePayload) => api.saveIngredientShoppingProfile(id, profile),
+    mutationFn: (profile: IngredientShoppingProfilePayload) =>
+      api.saveIngredientShoppingProfile(id, profile),
     onSuccess: sync,
   });
 }
 
 export function useClearIngredientShoppingProfile(id: number) {
   const sync = useSyncShoppingProfile(id);
-  return useMutation({ mutationFn: () => api.clearIngredientShoppingProfile(id), onSuccess: () => sync(null) });
+  return useMutation({
+    mutationFn: () => api.clearIngredientShoppingProfile(id),
+    onSuccess: () => sync(null),
+  });
 }
 
 export function useDeleteIngredient() {
@@ -62,21 +77,31 @@ export function useSaveIngredient() {
         client.cancelQueries({ queryKey: queryKeys.mealDetails }),
         client.cancelQueries({ queryKey: queryKeys.menus }),
       ]);
-      client.setQueryData<IngredientCatalogEntry[]>(queryKeys.ingredients, (catalog) =>
-        catalog && [...catalog.filter((item) => item.id !== ingredient.id), ingredient]
-          .sort((left, right) => left.name.localeCompare(right.name)),
+      client.setQueryData<IngredientCatalogEntry[]>(
+        queryKeys.ingredients,
+        (catalog) =>
+          catalog &&
+          [...catalog.filter((item) => item.id !== ingredient.id), ingredient].sort((left, right) =>
+            left.name.localeCompare(right.name),
+          ),
       );
       const updateMeal = (meal: Meal): Meal => ({
         ...meal,
-        ingredients: meal.ingredients.map((row) => row.ingredient_id === ingredient.id
-          ? { ...row, name: ingredient.name } : row),
+        ingredients: meal.ingredients.map((row) =>
+          row.ingredient_id === ingredient.id ? { ...row, name: ingredient.name } : row,
+        ),
       });
       client.setQueryData<Meal[]>(queryKeys.meals, (meals) => meals?.map(updateMeal));
-      client.setQueriesData<Meal>({ queryKey: queryKeys.mealDetails }, (meal) => meal && updateMeal(meal));
-      client.setQueriesData<Menu[]>({ queryKey: queryKeys.menus }, (menus) => menus?.map((menu) => ({
-        ...menu,
-        days: menu.days.map((day) => ({ ...day, meals: day.meals.map(updateMeal) })),
-      })));
+      client.setQueriesData<Meal>(
+        { queryKey: queryKeys.mealDetails },
+        (meal) => meal && updateMeal(meal),
+      );
+      client.setQueriesData<Menu[]>({ queryKey: queryKeys.menus }, (menus) =>
+        menus?.map((menu) => ({
+          ...menu,
+          days: menu.days.map((day) => ({ ...day, meals: day.meals.map(updateMeal) })),
+        })),
+      );
       await client.invalidateQueries({ queryKey: queryKeys.ingredients });
     },
   });

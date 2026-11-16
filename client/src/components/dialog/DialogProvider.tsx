@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { DialogContext } from "./useDialog";
-import type { DialogInstance, DialogOptions } from "./useDialog";
+import { useCallback, useMemo, useRef, useState } from "react";
+
 import { DialogHost } from "./DialogHost";
+import type { DialogInstance, DialogOptions } from "./useDialog";
+import { DialogContext } from "./useDialog";
 
 export function DialogProvider({ children }: { children: ReactNode }) {
   const [dialog, setDialog] = useState<DialogInstance | null>(null);
@@ -11,12 +12,9 @@ export function DialogProvider({ children }: { children: ReactNode }) {
   const openDialog = useCallback((options: DialogOptions) => {
     const id = ++nextId.current;
     const focusedElement =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     // Feature callbacks can only close the instance that created them.
-    const close = () =>
-      setDialog((current) => (current?.id === id ? null : current));
+    const close = () => setDialog((current) => (current?.id === id ? null : current));
     setDialog((current) => ({
       ...options,
       id,
@@ -24,10 +22,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
       opener: current?.opener ?? focusedElement,
     }));
   }, []);
-  const actions = useMemo(
-    () => ({ openDialog, closeDialog }),
-    [openDialog, closeDialog],
-  );
+  const actions = useMemo(() => ({ openDialog, closeDialog }), [openDialog, closeDialog]);
 
   return (
     <DialogContext.Provider value={actions}>

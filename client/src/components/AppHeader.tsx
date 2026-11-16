@@ -1,21 +1,24 @@
-import { useI18n } from "../i18n";
+import {
+  Button,
+  buttonVariants,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@darthcharles/greda";
 import { Fragment, useRef, useState } from "react";
-import { Button, buttonVariants, Popover, PopoverContent, PopoverTrigger } from "@darthcharles/greda";
 import { Link, NavLink, useLocation, useNavigate } from "react-router";
+
 import { useMealDialog } from "../features/meals/useMealDialog";
 import { useGenerateMenu, useMenus } from "../features/menu/queries";
-import { Notice } from "./Notice";
+import { useI18n } from "../i18n";
 import { BowlLogo } from "./BowlLogo";
+import { Notice } from "./Notice";
 
 export function AppHeader() {
   const { t, locale, setLocale } = useI18n();
   const { openCreateMeal } = useMealDialog();
   const { isPending: loadingMenus } = useMenus();
-  const {
-    mutate: generateMenu,
-    isPending: generating,
-    error: generationError,
-  } = useGenerateMenu();
+  const { mutate: generateMenu, isPending: generating, error: generationError } = useGenerateMenu();
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsTrigger = useRef<HTMLButtonElement>(null);
   const menuLink = useRef<HTMLAnchorElement>(null);
@@ -36,9 +39,7 @@ export function AppHeader() {
           </div>
           <div>
             <p className="hidden">{t("common.weekly_table")}</p>
-            <h1 className="m-0 font-display text-[27px] font-bold tracking-[-.06em]">
-              comal
-            </h1>
+            <h1 className="m-0 font-display text-[27px] font-bold tracking-[-.06em]">comal</h1>
           </div>
         </Link>
         <div className="flex items-center gap-2">
@@ -91,24 +92,36 @@ export function AppHeader() {
               }}
             >
               <nav className="flex flex-col gap-1" aria-label={t("navigation.primary_navigation")}>
-                {([
-                  ["/", t("navigation.my_menu")],
-                  ["/meals", t("navigation.my_meals")],
-                  ["/ingredients", t("navigation.my_ingredients")],
-                  ["/saved-menus", t("navigation.saved_menus")],
-                ] as const).map(([destination, label]) => (
+                {(
+                  [
+                    ["/", t("navigation.my_menu")],
+                    ["/meals", t("navigation.my_meals")],
+                    ["/ingredients", t("navigation.my_ingredients")],
+                    ["/saved-menus", t("navigation.saved_menus")],
+                  ] as const
+                ).map(([destination, label]) => (
                   <Fragment key={destination}>
                     {destination === "/saved-menus" && <hr className="my-1 border-border" />}
                     <NavLink
                       ref={destination === "/" ? menuLink : undefined}
                       to={destination}
                       end
-                      className={({ isActive }) => buttonVariants({
-                        variant: isActive ? "default" : "ghost",
-                        className: "w-full justify-start hover:bg-primary-hover hover:text-primary-foreground focus-visible:bg-primary-hover focus-visible:text-primary-foreground",
-                      })}
+                      className={({ isActive }) =>
+                        buttonVariants({
+                          variant: isActive ? "default" : "ghost",
+                          className:
+                            "w-full justify-start hover:bg-primary-hover hover:text-primary-foreground focus-visible:bg-primary-hover focus-visible:text-primary-foreground",
+                        })
+                      }
                       onClick={(event) => {
-                        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                        if (
+                          event.button !== 0 ||
+                          event.metaKey ||
+                          event.ctrlKey ||
+                          event.shiftKey ||
+                          event.altKey
+                        )
+                          return;
                         event.preventDefault();
                         pendingDestination.current = destination;
                         setActionsOpen(false);
@@ -132,7 +145,12 @@ export function AppHeader() {
               </Button>
               <hr className="my-1 border-border" />
               <div role="group" aria-label={t("app_header.language")} className="flex gap-1">
-                {([["en", "English"], ["es", "Español"]] as const).map(([code, label]) => (
+                {(
+                  [
+                    ["en", "English"],
+                    ["es", "Español"],
+                  ] as const
+                ).map(([code, label]) => (
                   <Button
                     key={code}
                     lang={code}

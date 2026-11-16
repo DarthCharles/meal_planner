@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { api } from "../../api";
 import { queryKeys } from "../../queryKeys";
 import type { IngredientCatalogEntry, Meal, MealPayload, Menu } from "../../types";
@@ -52,16 +53,24 @@ function useSyncSavedMeal() {
     ]);
     client.setQueryData<IngredientCatalogEntry[]>(queryKeys.ingredients, (ingredients) => {
       if (!ingredients) return undefined;
-      const catalog = new Map(ingredients.map((item) => [item.id, {
-        ...item, meals: item.meals.filter((entry) => entry.id !== meal.id),
-      }]));
+      const catalog = new Map(
+        ingredients.map((item) => [
+          item.id,
+          {
+            ...item,
+            meals: item.meals.filter((entry) => entry.id !== meal.id),
+          },
+        ]),
+      );
       for (const ingredient of meal.ingredients) {
         if (ingredient.ingredient_id) {
           catalog.set(ingredient.ingredient_id, {
             id: ingredient.ingredient_id,
             name: ingredient.name,
-            meals: [...(catalog.get(ingredient.ingredient_id)?.meals ?? []), { id: meal.id, name: meal.name }]
-              .sort((left, right) => left.name.localeCompare(right.name)),
+            meals: [
+              ...(catalog.get(ingredient.ingredient_id)?.meals ?? []),
+              { id: meal.id, name: meal.name },
+            ].sort((left, right) => left.name.localeCompare(right.name)),
           });
         }
       }
@@ -100,8 +109,7 @@ export function useCreateMeal() {
 export function useUpdateMeal() {
   const syncSavedMeal = useSyncSavedMeal();
   return useMutation({
-    mutationFn: ({ id, form }: { id: number; form: MealPayload }) =>
-      api.updateMeal(id, form),
+    mutationFn: ({ id, form }: { id: number; form: MealPayload }) => api.updateMeal(id, form),
     onSuccess: syncSavedMeal,
   });
 }

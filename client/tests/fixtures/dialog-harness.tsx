@@ -1,8 +1,10 @@
+import "../../src/styles.css";
+
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+
 import { DialogProvider } from "../../src/components/dialog/DialogProvider";
 import { useDialog } from "../../src/components/dialog/useDialog";
-import "../../src/styles.css";
 
 function Draft({
   onReplace,
@@ -17,15 +19,10 @@ function Draft({
     <>
       <label>
         Draft
-        <input
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-        />
+        <input value={value} onChange={(event) => setValue(event.target.value)} />
       </label>
       {onReplace && <button onClick={onReplace}>Replace dialog</button>}
-      {onPreviousClose && (
-        <button onClick={onPreviousClose}>Invoke previous close</button>
-      )}
+      {onPreviousClose && <button onClick={onPreviousClose}>Invoke previous close</button>}
       <button onClick={closeDialog}>Close through context</button>
     </>
   );
@@ -45,9 +42,7 @@ function Harness() {
                 previousClose.current = close;
                 openDialog({
                   title: "Second dialog",
-                  content: () => (
-                    <Draft onPreviousClose={() => previousClose.current?.()} />
-                  ),
+                  content: () => <Draft onPreviousClose={() => previousClose.current?.()} />,
                 });
               }}
             />

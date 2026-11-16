@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
-import { test, expect, navigateTo } from "./fixtures/app";
+
+import { expect, navigateTo, test } from "./fixtures/app";
 
 async function openMealDialog(page: Page) {
   await page.goto("/");
@@ -16,12 +17,8 @@ test("places focus in the dialog, contains keyboard navigation, and restores foc
   page,
 }) => {
   const { dialog, trigger } = await openMealDialog(page);
-  await expect(
-    dialog.getByRole("heading", { name: "A new favorite" }),
-  ).toBeFocused();
-  await expect(
-    dialog.getByRole("button", { name: "Save meal", exact: true }),
-  ).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "A new favorite" })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Save meal", exact: true })).toBeVisible();
   const first = dialog.getByRole("button", { name: "Close", exact: true });
   const last = dialog.getByRole("button", { name: "Save meal", exact: true });
   await first.focus();
@@ -31,20 +28,14 @@ test("places focus in the dialog, contains keyboard navigation, and restores foc
   await expect(first).toBeFocused();
   for (let index = 0; index < 12; index++) {
     await page.keyboard.press("Tab");
-    expect(
-      await dialog.evaluate((element) =>
-        element.contains(document.activeElement),
-      ),
-    ).toBe(true);
+    expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
   }
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(trigger).toBeFocused();
 });
 
-test("makes the background inert and restores scroll settings after closing", async ({
-  page,
-}) => {
+test("makes the background inert and restores scroll settings after closing", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("heading", { name: "Wednesday" }).waitFor();
   await page.evaluate(() => {
@@ -56,17 +47,11 @@ test("makes the background inert and restores scroll settings after closing", as
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "A new favorite" });
   await expect(dialog).toBeVisible();
-  expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(
-    true,
-  );
+  expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(true);
   await page
     .getByRole("button", { name: "Open actions", includeHidden: true })
     .evaluate((element) => (element as HTMLElement).focus());
-  expect(
-    await dialog.evaluate((element) =>
-      element.contains(document.activeElement),
-    ),
-  ).toBe(true);
+  expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
   expect(
     await page.evaluate(() => [
       document.body.style.overflow,
@@ -88,9 +73,7 @@ test("makes the background inert and restores scroll settings after closing", as
   await expect(trigger).toBeFocused();
 });
 
-test("only dismisses on a backdrop click that starts outside the panel", async ({
-  page,
-}) => {
+test("only dismisses on a backdrop click that starts outside the panel", async ({ page }) => {
   const { dialog, trigger } = await openMealDialog(page);
   const title = dialog.getByRole("heading", { name: "A new favorite" });
   await title.click();
@@ -123,17 +106,12 @@ test("supports closing while options are loading without creating a form", async
   await trigger.click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   await expect(
-    page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Save meal", exact: true }),
+    page.getByRole("dialog").getByRole("button", { name: "Save meal", exact: true }),
   ).toBeVisible();
   expect(api.saves).toEqual([]);
 });
 
-test("a dismissed pending save cannot close the next meal dialog", async ({
-  page,
-  api,
-}) => {
+test("a dismissed pending save cannot close the next meal dialog", async ({ page, api }) => {
   let release!: () => void;
   api.saveBarrier = new Promise<void>((resolve) => {
     release = resolve;
@@ -141,17 +119,11 @@ test("a dismissed pending save cannot close the next meal dialog", async ({
   await page.goto("/");
   await page.getByRole("heading", { name: "Wednesday" }).waitFor();
   await navigateTo(page, "My meals");
-  await page
-    .getByRole("button", { name: "Edit Huevos a la mexicana", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
   const oldDialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
   await page.getByLabel("Meal name", { exact: true }).fill("First draft");
-  await oldDialog
-    .getByRole("button", { name: "Update meal", exact: true })
-    .click();
-  await expect(
-    oldDialog.getByRole("button", { name: "Saving…", exact: true }),
-  ).toBeDisabled();
+  await oldDialog.getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(oldDialog.getByRole("button", { name: "Saving…", exact: true })).toBeDisabled();
   await page.keyboard.press("Escape");
   await expect(oldDialog).toHaveCount(0);
   await page.getByRole("button", { name: "Open actions" }).click();
@@ -160,16 +132,12 @@ test("a dismissed pending save cannot close the next meal dialog", async ({
   await page.getByLabel("Meal name", { exact: true }).fill("Second draft");
   release();
   // Wait until the old mutation's cache update has reached the underlying library.
-  await expect(
-    page.getByRole("heading", { name: "First draft", includeHidden: true }),
-  ).toHaveCount(1);
-  await expect(dialog).toBeVisible();
-  await expect(
-    dialog.getByRole("button", { name: "Save meal", exact: true }),
-  ).toBeEnabled();
-  await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue(
-    "Second draft",
+  await expect(page.getByRole("heading", { name: "First draft", includeHidden: true })).toHaveCount(
+    1,
   );
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Save meal", exact: true })).toBeEnabled();
+  await expect(page.getByLabel("Meal name", { exact: true })).toHaveValue("Second draft");
 });
 
 test("replaces generic dialog content with fresh state and ignores an older close callback", async ({
@@ -182,25 +150,13 @@ test("replaces generic dialog content with fresh state and ignores an older clos
   });
   await trigger.click();
   await page.getByLabel("Draft", { exact: true }).fill("Changed draft");
-  await page
-    .getByRole("button", { name: "Replace dialog", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Replace dialog", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(1);
-  await expect(
-    page.getByRole("dialog", { name: "Second dialog" }),
-  ).toBeVisible();
-  await expect(page.getByLabel("Draft", { exact: true })).toHaveValue(
-    "Fresh draft",
-  );
-  await page
-    .getByRole("button", { name: "Invoke previous close", exact: true })
-    .click();
-  await expect(
-    page.getByRole("dialog", { name: "Second dialog" }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Close through context", exact: true })
-    .click();
+  await expect(page.getByRole("dialog", { name: "Second dialog" })).toBeVisible();
+  await expect(page.getByLabel("Draft", { exact: true })).toHaveValue("Fresh draft");
+  await page.getByRole("button", { name: "Invoke previous close", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Second dialog" })).toBeVisible();
+  await page.getByRole("button", { name: "Close through context", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(trigger).toBeFocused();
 });
@@ -210,9 +166,9 @@ test("opens header actions with the keyboard and dismisses with Escape or an out
 }) => {
   await page.goto("/");
   await page.getByRole("heading", { name: "Wednesday" }).waitFor();
-  await expect(
-    page.getByRole("navigation").getByRole("button", { name: /Add meal/ }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("navigation").getByRole("button", { name: /Add meal/ })).toHaveCount(
+    0,
+  );
   const trigger = page.getByRole("button", { name: "Open actions" });
   const addMeal = page.getByRole("button", { name: "Add a meal", exact: true });
   await trigger.focus();
@@ -220,13 +176,22 @@ test("opens header actions with the keyboard and dismisses with Escape or an out
   await expect(page.getByRole("link", { name: "My Menu", exact: true })).toBeFocused();
   const actions = page.getByRole("dialog", { name: "Actions", exact: true });
   await expect(actions.getByRole("link")).toHaveText([
-    "My Menu", "My Meals", "My Ingredients", "Saved Menus",
+    "My Menu",
+    "My Meals",
+    "My Ingredients",
+    "Saved Menus",
   ]);
   await expect(actions.getByRole("button", { name: "Add a meal", exact: true })).toBeVisible();
   await expect(actions.getByRole("separator")).toHaveCount(3);
   const languages = actions.getByRole("group", { name: "Language", exact: true });
-  await expect(languages.getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(languages.getByRole("button", { name: "Español", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await expect(languages.getByRole("button", { name: "English", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(languages.getByRole("button", { name: "Español", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
   await page.keyboard.press("Escape");
   await expect(addMeal).toHaveCount(0);
   await expect(trigger).toBeFocused();

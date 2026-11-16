@@ -1,13 +1,16 @@
 import { useSyncExternalStore } from "react";
+
 import { en } from "./en";
 import { es } from "./es";
 
 export type Locale = "en" | "es";
 type TranslationTree = { [key: string]: string | TranslationTree };
 type Keys<T> = {
-  [K in keyof T & string]: T[K] extends string ? K
-    : T[K] extends { one: string; other: string } ? K
-    : `${K}.${Keys<T[K]>}`;
+  [K in keyof T & string]: T[K] extends string
+    ? K
+    : T[K] extends { one: string; other: string }
+      ? K
+      : `${K}.${Keys<T[K]>}`;
 }[keyof T & string];
 export type TranslationKey = Keys<typeof en>;
 const catalogs = { en, es };
@@ -15,7 +18,8 @@ const catalogs = { en, es };
 function lookup(catalog: TranslationTree, key: string): string | TranslationTree | undefined {
   let value: string | TranslationTree | undefined = catalog;
   for (const part of key.split(".")) {
-    if (!value || typeof value === "string" || !Object.prototype.hasOwnProperty.call(value, part)) return;
+    if (!value || typeof value === "string" || !Object.prototype.hasOwnProperty.call(value, part))
+      return;
     value = value[part];
   }
   return value;
@@ -28,7 +32,9 @@ function initialLocale(): Locale {
   try {
     const saved = localStorage.getItem(storageKey);
     if (saved === "en" || saved === "es") return saved;
-  } catch { /* Language selection also works when storage is unavailable. */ }
+  } catch {
+    /* Language selection also works when storage is unavailable. */
+  }
   for (const language of navigator.languages ?? [navigator.language]) {
     const code = language.toLowerCase().split("-")[0];
     if (code === "en" || code === "es") return code;
@@ -38,19 +44,24 @@ function initialLocale(): Locale {
 
 let locale = initialLocale();
 export const getLocale = () => locale;
-export const formatLocale = () => locale === "es" ? "es-MX" : "en-US";
+export const formatLocale = () => (locale === "es" ? "es-MX" : "en-US");
 
 export const t: Translate = (key, values = {}) => {
-  const category = typeof values.count === "number"
-    ? new Intl.PluralRules(formatLocale()).select(values.count)
-    : undefined;
+  const category =
+    typeof values.count === "number"
+      ? new Intl.PluralRules(formatLocale()).select(values.count)
+      : undefined;
   const translated = lookup(catalogs[locale], key) ?? lookup(catalogs.en, key);
-  const plural = category && typeof translated === "object"
-    ? translated[category] ?? translated.other
-    : undefined;
-  const message = typeof translated === "string" ? translated
-    : typeof plural === "string" ? plural
-    : `translation missing: ${locale}.${key}`;
+  const plural =
+    category && typeof translated === "object"
+      ? (translated[category] ?? translated.other)
+      : undefined;
+  const message =
+    typeof translated === "string"
+      ? translated
+      : typeof plural === "string"
+        ? plural
+        : `translation missing: ${locale}.${key}`;
   return message.replace(/%\{(\w+)\}/g, (placeholder, name: string) => {
     if (!Object.prototype.hasOwnProperty.call(values, name)) return placeholder;
     const value = values[name];
@@ -70,7 +81,9 @@ export function unitLabel(code: string, count?: number) {
 function updateDocument() {
   document.documentElement.lang = locale;
   document.title = t("app.title");
-  document.querySelector('link[rel="manifest"]')?.setAttribute("href", locale === "es" ? "/manifest.es.webmanifest" : "/manifest.webmanifest");
+  document
+    .querySelector('link[rel="manifest"]')
+    ?.setAttribute("href", locale === "es" ? "/manifest.es.webmanifest" : "/manifest.webmanifest");
   document.querySelector('meta[name="description"]')?.setAttribute("content", t("app.description"));
 }
 
@@ -82,13 +95,19 @@ function applyLocale(next: Locale) {
 }
 
 export function setLocale(next: Locale) {
-  try { localStorage.setItem(storageKey, next); } catch { /* Keep the in-memory preference. */ }
+  try {
+    localStorage.setItem(storageKey, next);
+  } catch {
+    /* Keep the in-memory preference. */
+  }
   applyLocale(next);
 }
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export function useI18n() {

@@ -14,6 +14,45 @@ Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/).
 
 The client uses `VITE_API_URL` for the API base URL. The default is `http://127.0.0.1:3000`.
 
+## Linting and formatting
+
+Run these commands from `client/` when verification is requested:
+
+```bash
+npm run lint          # Check JavaScript, TypeScript, React source, and browser tests
+npm run lint:fix      # Apply available ESLint fixes
+npm run format:check  # Check formatting without changing files
+npm run format       # Format supported client files in place
+```
+
+`eslint.config.js` uses the recommended JavaScript and TypeScript rules, with
+React's rules of hooks and exhaustive dependency checks treated as errors.
+Unused TypeScript variables, parameters, and caught errors may use an `_` prefix
+when intentionally unused. Browser, Node, and service-worker globals are scoped
+to their respective files. TypeScript compilation remains the type checker;
+ESLint does not start a TypeScript project service.
+
+Import ordering uses `eslint-plugin-simple-import-sort` with its default groups:
+side-effect imports, `node:` built-ins, external packages, absolute/internal
+imports, then relative imports. Separate groups with a blank line. Within each
+group, imports and named specifiers are sorted alphabetically; side-effect
+imports retain their relative order. Type-only imports stay in the same group
+and precede value imports from the same module. `npm run lint:fix` applies this
+ordering automatically. Avoid adding competing import-sorting rules or a
+Prettier import-sorting plugin.
+
+Prettier owns formatting: two spaces, double quotes, semicolons, trailing commas,
+LF line endings, and a preferred line width of 100. `eslint-config-prettier`
+disables conflicting lint rules. Both tools exclude generated build and
+Playwright artifacts; Prettier also excludes the dependency lockfile and local
+environment files. Editors can use the committed configurations with their
+ESLint and Prettier integrations.
+
+Use `npm run format` to apply formatting and `npm run format:check` to verify it.
+These commands apply to the client; Rails retains its existing Ruby tooling.
+Follow the opt-in verification policy in `AGENTS.md`; adding these commands does
+not authorize running them during active editing.
+
 ## Languages and translation keys
 
 Comal supports English and Spanish. Choose **English** or **Español** in the

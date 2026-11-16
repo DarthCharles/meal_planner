@@ -1,7 +1,8 @@
-import { useI18n } from "../../i18n";
-import { useState } from "react";
 import { Button } from "@darthcharles/greda";
+import { useState } from "react";
+
 import { Notice } from "../../components/Notice";
+import { useI18n } from "../../i18n";
 import { useMealDialog } from "../meals/useMealDialog";
 import { formatMenuDateRange, menuPeriod } from "./menuDates";
 import { MenuView } from "./MenuView";
@@ -13,19 +14,29 @@ export function SavedMenusScreen() {
   const { openMeal } = useMealDialog();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const now = new Date();
-  const savedMenus = [...(menus ?? [])]
-    .sort((left, right) => right.from.localeCompare(left.from) || right.id - left.id);
+  const savedMenus = [...(menus ?? [])].sort(
+    (left, right) => right.from.localeCompare(left.from) || right.id - left.id,
+  );
   const selected = savedMenus.find((menu) => menu.id === selectedId) ?? savedMenus[0];
 
   return (
     <section aria-labelledby="saved-menus-title" className="pb-5 tablet:pb-8">
-      <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">{t("common.weekly_table")}</p>
-      <h2 id="saved-menus-title" className="mb-3 font-display text-[32px] font-semibold tracking-[-.04em]">{t("navigation.saved_menus")}</h2>
+      <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
+        {t("common.weekly_table")}
+      </p>
+      <h2
+        id="saved-menus-title"
+        className="mb-3 font-display text-[32px] font-semibold tracking-[-.04em]"
+      >
+        {t("navigation.saved_menus")}
+      </h2>
       <p className="mb-6 text-sm text-muted-foreground">{t("menu.saved.saved_intro")}</p>
       {error && (
         <div className="mb-5 space-y-3">
           <Notice>{error.message}</Notice>
-          <Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>{t("common.try_again")}</Button>
+          <Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>
+            {t("common.try_again")}
+          </Button>
         </div>
       )}
       {loading && <p role="status">{t("menu.saved.loading_saved")}</p>}
@@ -54,18 +65,30 @@ export function SavedMenusScreen() {
           {selected && (
             <section aria-labelledby="saved-menu-title" className="min-w-0">
               <p className="mb-2 text-sm text-muted-foreground">{menuPeriod(selected, now)}</p>
-              <h3 id="saved-menu-title" className="mb-4 font-display text-2xl font-semibold tracking-[-.04em]">{formatMenuDateRange(selected)}</h3>
+              <h3
+                id="saved-menu-title"
+                className="mb-4 font-display text-2xl font-semibold tracking-[-.04em]"
+              >
+                {formatMenuDateRange(selected)}
+              </h3>
               {!!selected.generation_notices?.length && (
                 <Notice>
                   <div>
                     <p className="m-0 font-semibold">{t("menu.notices.preference_fallback")}</p>
                     <ul className="mt-2 mb-0 pl-5">
-                      {selected.generation_notices.map((notice, index) => <li key={index}>{notice}</li>)}
+                      {selected.generation_notices.map((notice, index) => (
+                        <li key={index}>{notice}</li>
+                      ))}
                     </ul>
                   </div>
                 </Notice>
               )}
-              <MenuView menu={selected} loading={false} onOpenMeal={openMeal} startFromToday={false} />
+              <MenuView
+                menu={selected}
+                loading={false}
+                onOpenMeal={openMeal}
+                startFromToday={false}
+              />
             </section>
           )}
         </div>

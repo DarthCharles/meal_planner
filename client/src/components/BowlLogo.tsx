@@ -1,10 +1,6 @@
 export function BowlLogo() {
   return (
-    <svg
-      className="size-[31px] rotate-6"
-      viewBox="0 0 64 64"
-      aria-hidden="true"
-    >
+    <svg className="size-[31px] rotate-6" viewBox="0 0 64 64" aria-hidden="true">
       <path
         d="M22 14c-7-5 7-9 1-14M32 14c-6-5 7-9 2-14M42 14c-5-5 6-8 2-13"
         fill="none"

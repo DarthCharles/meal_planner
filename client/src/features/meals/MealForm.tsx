@@ -1,17 +1,18 @@
-import { useI18n } from "../../i18n";
 import { Button, Input, Textarea } from "@darthcharles/greda";
 import { Controller, FormProvider, useForm } from "react-hook-form";
+
+import { useI18n } from "../../i18n";
 import type {
   Meal,
   MealForm as MealFormValues,
-  MealTypeOption,
   MealPayload,
+  MealTypeOption,
   UnitOption,
 } from "../../types";
-import { useCreateMeal, useUpdateMeal } from "./queries";
-import { PreferredDaysField } from "./PreferredDaysField";
-import { mealTypeLabel } from "./mealTypes";
 import { IngredientManager } from "./IngredientManager";
+import { mealTypeLabel } from "./mealTypes";
+import { PreferredDaysField } from "./PreferredDaysField";
+import { useCreateMeal, useUpdateMeal } from "./queries";
 
 export function MealForm({
   types,
@@ -33,9 +34,7 @@ export function MealForm({
       description: initialMeal?.description ?? "",
       recipe_url: initialMeal?.recipe_url ?? "",
       meal_type_ids: initialMeal
-        ? types
-            .filter(([name]) => initialMeal.meal_types.includes(name))
-            .map(([, id]) => id)
+        ? types.filter(([name]) => initialMeal.meal_types.includes(name)).map(([, id]) => id)
         : [],
       preferred_days: initialMeal?.preferred_days ?? [],
       ingredients:
@@ -121,9 +120,7 @@ export function MealForm({
               validate: (value) => !!value.trim(),
             })}
             aria-invalid={!!errors.description}
-            aria-describedby={
-              errors.description ? "meal-form-error" : undefined
-            }
+            aria-describedby={errors.description ? "meal-form-error" : undefined}
             placeholder={t("meals.form.description_help")}
             rows={3}
           />
@@ -158,9 +155,7 @@ export function MealForm({
                       onBlur={field.onBlur}
                       aria-pressed={selected}
                       aria-invalid={!!errors.meal_type_ids}
-                      aria-describedby={
-                        errors.meal_type_ids ? "meal-form-error" : undefined
-                      }
+                      aria-describedby={errors.meal_type_ids ? "meal-form-error" : undefined}
                       onClick={() =>
                         field.onChange(
                           selected
@@ -180,11 +175,7 @@ export function MealForm({
         <PreferredDaysField />
         <IngredientManager units={units} />
         {error && (
-          <p
-            id="meal-form-error"
-            role="alert"
-            className="text-xs text-destructive"
-          >
+          <p id="meal-form-error" role="alert" className="text-xs text-destructive">
             {error}
           </p>
         )}
@@ -193,7 +184,11 @@ export function MealForm({
             {t("common.cancel")}
           </Button>
           <Button type="submit" variant="default" loading={saving}>
-            {saving ? t("common.saving") : initialMeal ? t("meals.form.update_meal") : t("meals.form.save_meal")}
+            {saving
+              ? t("common.saving")
+              : initialMeal
+                ? t("meals.form.update_meal")
+                : t("meals.form.save_meal")}
           </Button>
         </div>
       </form>

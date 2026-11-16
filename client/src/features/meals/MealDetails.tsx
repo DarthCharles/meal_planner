@@ -1,8 +1,9 @@
-import { unitLabel, formatLocale, useI18n } from "../../i18n";
 import { Badge, Button } from "@darthcharles/greda";
+
+import { formatLocale, unitLabel, useI18n } from "../../i18n";
 import type { Meal } from "../../types";
+import { mealTypeColorClassName, mealTypeLabel } from "./mealTypes";
 import { preferredDaysLabel } from "./preferredDays";
-import { mealTypeLabel, mealTypeColorClassName } from "./mealTypes";
 
 export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }) {
   const { t } = useI18n();
@@ -19,9 +20,7 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
           </Badge>
         ))}
       </div>
-      <p className="m-0 text-sm leading-relaxed text-muted-foreground">
-        {meal.description}
-      </p>
+      <p className="m-0 text-sm leading-relaxed text-muted-foreground">{meal.description}</p>
       <p className="m-0 text-sm text-muted-foreground">
         <span className="font-semibold">{t("meals.details.preferred_days_prefix")}</span>
         {preferredDaysLabel(meal.preferred_days ?? [])}
@@ -36,12 +35,13 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
                 className="border-t border-border pt-3 text-sm leading-relaxed"
               >
                 <span className="font-semibold">
-                  {new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 3 }).format(Number(ingredient.quantity))} {unitLabel(ingredient.unit)} · {ingredient.name}
+                  {new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 3 }).format(
+                    Number(ingredient.quantity),
+                  )}{" "}
+                  {unitLabel(ingredient.unit)} · {ingredient.name}
                 </span>
                 {ingredient.preparation_note && (
-                  <p className="mt-1 mb-0 text-muted-foreground">
-                    {ingredient.preparation_note}
-                  </p>
+                  <p className="mt-1 mb-0 text-muted-foreground">{ingredient.preparation_note}</p>
                 )}
               </li>
             ))}

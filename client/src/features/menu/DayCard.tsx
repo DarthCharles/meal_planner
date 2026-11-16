@@ -1,10 +1,11 @@
-import { useI18n } from "../../i18n";
 import { Card } from "@darthcharles/greda";
+
+import { useI18n } from "../../i18n";
 import type { Menu } from "../../types";
-import { dayLabel } from "../meals/preferredDays";
-import { mealTypeOrder } from "../meals/mealTypes";
-import { MealRow } from "../meals/MealRow";
 import type { Meal } from "../../types";
+import { MealRow } from "../meals/MealRow";
+import { mealTypeOrder } from "../meals/mealTypes";
+import { dayLabel } from "../meals/preferredDays";
 
 export function DayCard({
   day,
@@ -27,13 +28,16 @@ export function DayCard({
       <div className="mb-[17px] flex items-start justify-between">
         <div>
           <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-            {featured ? t("menu.day_card.today") : t("menu.day_card.day_number", { number: dayNumber })}
+            {featured
+              ? t("menu.day_card.today")
+              : t("menu.day_card.day_number", { number: dayNumber })}
           </p>
-          <h4 className="m-0 font-display text-[23px] font-semibold">
-            {dayLabel(day.weekday)}
-          </h4>
+          <h4 className="m-0 font-display text-[23px] font-semibold">{dayLabel(day.weekday)}</h4>
         </div>
-        <time dateTime={date.toISOString().slice(0, 10)} className="font-display text-[27px] font-semibold text-muted-foreground">
+        <time
+          dateTime={date.toISOString().slice(0, 10)}
+          className="font-display text-[27px] font-semibold text-muted-foreground"
+        >
           {dayNumber}
         </time>
       </div>

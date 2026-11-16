@@ -1,8 +1,8 @@
-import { formatLocale, useI18n } from "../../i18n";
 import { HeroBowlArt } from "../../components/HeroBowlArt";
+import { formatLocale, useI18n } from "../../i18n";
 import type { Meal, Menu } from "../../types";
-import { mealTypeOrder } from "../meals/mealTypes";
 import { MealRow } from "../meals/MealRow";
+import { mealTypeOrder } from "../meals/mealTypes";
 import { isCurrentMenu, localWeekday } from "./menuDates";
 
 export function MenuHero({
@@ -19,9 +19,7 @@ export function MenuHero({
   const weekday = localWeekday(now);
   const isCurrent = menu && isCurrentMenu(menu, now);
   const today = isCurrent
-    ? menu.days.find(
-        (day) => day.weekday.toLowerCase() === weekday.toLowerCase(),
-      )
+    ? menu.days.find((day) => day.weekday.toLowerCase() === weekday.toLowerCase())
     : undefined;
 
   if (!menu) {
@@ -52,9 +50,7 @@ export function MenuHero({
             className="mb-5 max-w-[350px] text-sm leading-relaxed text-muted-foreground"
             role={loading ? "status" : undefined}
           >
-            {loading
-              ? t("menu.hero.finding_menu")
-              : t("menu.hero.menu_intro")}
+            {loading ? t("menu.hero.finding_menu") : t("menu.hero.menu_intro")}
           </p>
         </div>
         <div
@@ -110,9 +106,7 @@ export function MenuHero({
         </div>
       ) : (
         <p className="mt-3 mb-0 max-w-[500px] text-sm leading-relaxed text-muted-foreground">
-          {isCurrent
-            ? t("menu.hero.fresh_week")
-            : t("menu.hero.browse_or_plan")}
+          {isCurrent ? t("menu.hero.fresh_week") : t("menu.hero.browse_or_plan")}
         </p>
       )}
     </section>

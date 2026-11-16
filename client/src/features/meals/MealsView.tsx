@@ -1,8 +1,9 @@
-import { useI18n } from "../../i18n";
 import { Badge, Button, Card, Input } from "@darthcharles/greda";
 import { useMemo, useState } from "react";
+
+import { useI18n } from "../../i18n";
 import type { Meal } from "../../types";
-import { mealTypeOrder, mealTypeLabel, mealTypeColorClassName } from "./mealTypes";
+import { mealTypeColorClassName, mealTypeLabel, mealTypeOrder } from "./mealTypes";
 
 export function MealsView({
   meals,
@@ -50,9 +51,7 @@ export function MealsView({
             className="shrink-0 rounded-full"
             onClick={() => setFilter(item)}
           >
-            {item === "all"
-              ? t("meals.screen.all_meals")
-              : mealTypeLabel(item)}
+            {item === "all" ? t("meals.screen.all_meals") : mealTypeLabel(item)}
           </Button>
         ))}
       </div>
@@ -78,9 +77,7 @@ export function MealsView({
               <h4 className="mt-[10px] mb-[6px] font-display text-lg leading-[normal] font-semibold">
                 {meal.name}
               </h4>
-              <p className="m-0 text-xs leading-[1.45] text-muted-foreground">
-                {meal.description}
-              </p>
+              <p className="m-0 text-xs leading-[1.45] text-muted-foreground">{meal.description}</p>
             </div>
             <Button
               variant="ghost"

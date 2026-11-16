@@ -1,9 +1,9 @@
-import { useI18n } from "../../i18n";
-import type { Meal } from "../../types";
 import { Notice } from "../../components/Notice";
 import { demoMealTypes, demoUnits } from "../../demoData";
-import { useMealTypes, useUnits } from "./queries";
+import { useI18n } from "../../i18n";
+import type { Meal } from "../../types";
 import { MealForm } from "./MealForm";
+import { useMealTypes, useUnits } from "./queries";
 
 type MealDialogContentProps = {
   initialMeal: Meal | null;
@@ -11,11 +11,7 @@ type MealDialogContentProps = {
   onSaved: () => void;
 };
 
-export function MealDialogContent({
-  initialMeal,
-  onClose,
-  onSaved,
-}: MealDialogContentProps) {
+export function MealDialogContent({ initialMeal, onClose, onSaved }: MealDialogContentProps) {
   const { t } = useI18n();
   const {
     data: types,

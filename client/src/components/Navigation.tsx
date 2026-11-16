@@ -1,6 +1,7 @@
-import { useI18n } from "../i18n";
 import { buttonVariants } from "@darthcharles/greda";
 import { NavLink } from "react-router";
+
+import { useI18n } from "../i18n";
 
 export function Navigation() {
   const { t } = useI18n();
@@ -35,10 +36,13 @@ export function Navigation() {
           key={label}
           to={to}
           end
-          className={({ isActive }) => buttonVariants({
-            variant: isActive ? "secondary" : "ghost",
-            className: "h-auto min-w-0 flex-1 flex-col whitespace-normal text-center gap-[3px] px-1 py-2 text-[10px] tablet:min-w-[94px] tablet:flex-initial tablet:px-[13px]",
-          })}
+          className={({ isActive }) =>
+            buttonVariants({
+              variant: isActive ? "secondary" : "ghost",
+              className:
+                "h-auto min-w-0 flex-1 flex-col whitespace-normal text-center gap-[3px] px-1 py-2 text-[10px] tablet:min-w-[94px] tablet:flex-initial tablet:px-[13px]",
+            })
+          }
         >
           <span className="text-lg leading-[17px]">{icon}</span>
           <span>{label}</span>

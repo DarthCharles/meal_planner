@@ -1,34 +1,42 @@
-import { test, expect, navigateTo } from "./fixtures/app";
+import { expect, navigateTo, test } from "./fixtures/app";
 
-test("keeps navigation in the URL and supports back and forward without reloading", { tag: "@responsive" }, async ({ page, api }) => {
-  await page.goto("/");
-  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
-  const initialMenuReads = api.reads["/menus"];
-  await navigateTo(page, "My meals");
-  await expect(page).toHaveURL("/meals");
-  await expect(page.getByPlaceholder("Search meals")).toBeVisible();
-  const initialMealReads = api.reads["/meals"];
-  await navigateTo(page, "Saved Menus");
-  await expect(page).toHaveURL("/saved-menus");
-  await expect(page.getByRole("heading", { name: "Saved Menus", exact: true })).toBeVisible();
-  await page.goBack();
-  await expect(page).toHaveURL("/meals");
-  await expect(page.getByPlaceholder("Search meals")).toBeVisible();
-  await page.goBack();
-  await expect(page).toHaveURL("/");
-  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
-  await page.goForward();
-  await expect(page).toHaveURL("/meals");
-  await expect(page.getByPlaceholder("Search meals")).toBeVisible();
-  expect(api.reads).toEqual({ "/menus": initialMenuReads, "/meals": initialMealReads });
-});
+test(
+  "keeps navigation in the URL and supports back and forward without reloading",
+  { tag: "@responsive" },
+  async ({ page, api }) => {
+    await page.goto("/");
+    await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
+    const initialMenuReads = api.reads["/menus"];
+    await navigateTo(page, "My meals");
+    await expect(page).toHaveURL("/meals");
+    await expect(page.getByPlaceholder("Search meals")).toBeVisible();
+    const initialMealReads = api.reads["/meals"];
+    await navigateTo(page, "Saved Menus");
+    await expect(page).toHaveURL("/saved-menus");
+    await expect(page.getByRole("heading", { name: "Saved Menus", exact: true })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL("/meals");
+    await expect(page.getByPlaceholder("Search meals")).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
+    await page.goForward();
+    await expect(page).toHaveURL("/meals");
+    await expect(page.getByPlaceholder("Search meals")).toBeVisible();
+    expect(api.reads).toEqual({ "/menus": initialMenuReads, "/meals": initialMealReads });
+  },
+);
 
 for (const path of ["/meals", "/saved-menus", "/ingredients"]) {
   test(`opens and reloads ${path} directly`, async ({ page, api }) => {
     await page.goto(path);
-    const screen = path === "/meals"
-      ? page.getByPlaceholder("Search meals")
-      : page.getByRole("heading", { name: path === "/ingredients" ? "My Ingredients" : "Saved Menus", exact: true });
+    const screen =
+      path === "/meals"
+        ? page.getByPlaceholder("Search meals")
+        : page.getByRole("heading", {
+            name: path === "/ingredients" ? "My Ingredients" : "Saved Menus",
+            exact: true,
+          });
     await expect(screen).toBeVisible();
     const initialMealReads = api.reads["/meals"] ?? 0;
     await page.reload();
