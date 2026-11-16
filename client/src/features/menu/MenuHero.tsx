@@ -1,4 +1,3 @@
-import { HeroBowlArt } from "../../components/HeroBowlArt";
 import { formatLocale, useI18n } from "../../i18n";
 import type { Meal, Menu } from "../../types";
 import { MealRow } from "../meals/MealRow";
@@ -26,9 +25,9 @@ export function MenuHero({
     return (
       <section
         aria-labelledby="menu-hero-title"
-        className="relative overflow-hidden rounded-[30px] bg-accent px-6 py-7 tablet:flex tablet:min-h-[260px] tablet:items-center tablet:justify-between tablet:gap-8 tablet:px-12 tablet:py-10"
+        className="rounded-[30px] surface-tertiary px-6 py-7 tablet:px-12 tablet:py-10"
       >
-        <div className="relative z-10 tablet:max-w-[400px]">
+        <div>
           <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
             {t("common.weekly_table")}
           </p>
@@ -47,17 +46,11 @@ export function MenuHero({
             )}
           </h2>
           <p
-            className="mb-5 max-w-[350px] text-sm leading-relaxed text-muted-foreground"
+            className="mb-0 max-w-[350px] text-sm leading-relaxed text-muted-foreground"
             role={loading ? "status" : undefined}
           >
             {loading ? t("menu.hero.finding_menu") : t("menu.hero.menu_intro")}
           </p>
-        </div>
-        <div
-          aria-hidden="true"
-          className="mx-auto -mb-6 h-[140px] w-[190px] shrink-0 tablet:m-0 tablet:h-[210px] tablet:w-[280px]"
-        >
-          <HeroBowlArt />
         </div>
       </section>
     );
@@ -66,7 +59,7 @@ export function MenuHero({
   return (
     <section
       aria-labelledby="menu-hero-title"
-      className="rounded-[30px] bg-accent px-5 py-5 tablet:px-9 tablet:py-6"
+      className="rounded-[30px] surface-tertiary px-5 py-5 tablet:px-9 tablet:py-6"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
@@ -87,9 +80,6 @@ export function MenuHero({
                 ? t("menu.hero.no_today")
                 : t("menu.hero.week_planned")}
           </h2>
-        </div>
-        <div aria-hidden="true" className="w-[64px] shrink-0 tablet:w-[110px]">
-          <HeroBowlArt />
         </div>
       </div>
       {today?.meals.length ? (

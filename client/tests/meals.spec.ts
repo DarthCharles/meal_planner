@@ -556,25 +556,9 @@ test("prefills custom preferences, updates nested menu details, and clears to An
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await navigateTo(page, "My meals");
   await edit.click();
-  await days.getByRole("button", { name: "Select all", exact: true }).click();
-  for (const day of [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ]) {
-    await expect(days.getByRole("button", { name: day, exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-  }
-  await expect(days.getByRole("button", { name: "Select all", exact: true })).toBeDisabled();
+  await expect(days.getByRole("button", { name: "Select all", exact: true })).toHaveCount(0);
   await days.getByRole("button", { name: "Clear all", exact: true }).click();
   await expect(days.getByRole("button", { name: "Clear all", exact: true })).toBeDisabled();
-  await expect(days.getByRole("button", { name: "Select all", exact: true })).toBeEnabled();
   for (const day of [
     "Monday",
     "Tuesday",

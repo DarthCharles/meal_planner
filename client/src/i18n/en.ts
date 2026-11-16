@@ -183,7 +183,6 @@ export const en = {
     },
     preferred_days: {
       preferred_days: "Preferred days",
-      select_all: "Select all",
       clear_all: "Clear all",
       preferred_days_help: "Prefer these days. Leave blank for any day.",
       any_day: "Any day",

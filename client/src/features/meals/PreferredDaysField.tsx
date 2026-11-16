@@ -19,33 +19,17 @@ export function PreferredDaysField() {
         >
           <div className="flex items-center justify-between gap-3">
             <span id="preferred-days-label">{t("meals.preferred_days.preferred_days")}</span>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                className="h-auto px-0 text-[11px]"
-                disabled={weekdays.every((day) => field.value.includes(day))}
-                onBlur={field.onBlur}
-                onClick={() => field.onChange([...weekdays])}
-              >
-                {t("meals.preferred_days.select_all")}
-              </Button>
-              <span aria-hidden="true" className="font-normal text-muted-foreground">
-                |
-              </span>
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                className="h-auto px-0 text-[11px]"
-                disabled={field.value.length === 0}
-                onBlur={field.onBlur}
-                onClick={() => field.onChange([])}
-              >
-                {t("meals.preferred_days.clear_all")}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="h-auto px-0 text-[11px]"
+              disabled={field.value.length === 0}
+              onBlur={field.onBlur}
+              onClick={() => field.onChange([])}
+            >
+              {t("meals.preferred_days.clear_all")}
+            </Button>
           </div>
           <p id="preferred-days-help" className="m-0 font-normal text-muted-foreground">
             {t("meals.preferred_days.preferred_days_help")}

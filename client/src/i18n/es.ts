@@ -186,7 +186,6 @@ export const es: typeof en = {
     },
     preferred_days: {
       preferred_days: "Días preferidos",
-      select_all: "Seleccionar todos",
       clear_all: "Limpiar todos",
       preferred_days_help: "Prefiere estos días. Déjalo vacío para permitir cualquier día.",
       any_day: "Cualquier día",

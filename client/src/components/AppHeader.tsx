@@ -7,12 +7,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@darthcharles/greda";
+import { Ellipsis, Plus } from "@darthcharles/greda/icons";
 import { Link, NavLink, useLocation, useNavigate } from "react-router";
 
 import { useMealDialog } from "../features/meals/useMealDialog";
 import { useGenerateMenu, useMenus } from "../features/menu/queries";
 import { useI18n } from "../i18n";
-import { BowlLogo } from "./BowlLogo";
+import { FlowerArt } from "./FlowerArt";
 import { Notice } from "./Notice";
 
 export function AppHeader() {
@@ -35,8 +36,8 @@ export function AppHeader() {
           aria-label={t("app_header.home")}
           className="flex items-center gap-[11px] rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
         >
-          <div className="grid size-[39px] -rotate-6 place-items-center rounded-[12px_12px_12px_4px] bg-primary text-primary-foreground">
-            <BowlLogo />
+          <div className="grid size-[44px] -rotate-6 place-items-center rounded-[12px_12px_12px_4px] bg-primary">
+            <FlowerArt className="h-auto w-[40px] rotate-6" />
           </div>
           <div>
             <p className="hidden">{t("common.weekly_table")}</p>
@@ -50,9 +51,11 @@ export function AppHeader() {
             disabled={loadingMenus || generating}
             onClick={() => generateMenu()}
           >
-            <span aria-hidden="true" className="text-xl leading-none font-normal">
-              {generating ? "…" : "+"}
-            </span>
+            {generating ? (
+              <Ellipsis aria-hidden="true" className="size-4 shrink-0" />
+            ) : (
+              <Plus aria-hidden="true" className="size-4 shrink-0" />
+            )}
             {generating ? t("app_header.planning") : t("app_header.plan_week")}
           </Button>
           <Popover open={actionsOpen} onOpenChange={setActionsOpen}>
@@ -110,8 +113,7 @@ export function AppHeader() {
                       className={({ isActive }) =>
                         buttonVariants({
                           variant: isActive ? "default" : "ghost",
-                          className:
-                            "w-full justify-start hover:bg-primary-hover hover:text-primary-foreground focus-visible:bg-primary-hover focus-visible:text-primary-foreground",
+                          className: "w-full justify-start",
                         })
                       }
                       onClick={(event) => {
@@ -136,7 +138,7 @@ export function AppHeader() {
               <hr className="my-1 border-border" />
               <Button
                 variant="ghost"
-                className="w-full justify-start hover:bg-primary-hover hover:text-primary-foreground focus-visible:bg-primary-hover focus-visible:text-primary-foreground"
+                className="w-full justify-start"
                 onClick={() => {
                   addingMeal.current = true;
                   setActionsOpen(false);
@@ -157,7 +159,7 @@ export function AppHeader() {
                     lang={code}
                     variant={locale === code ? "default" : "ghost"}
                     size="sm"
-                    className="flex-1 hover:bg-primary-hover hover:text-primary-foreground focus-visible:bg-primary-hover focus-visible:text-primary-foreground"
+                    className="flex-1"
                     aria-pressed={locale === code}
                     onClick={() => setLocale(code)}
                   >

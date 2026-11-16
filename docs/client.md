@@ -260,7 +260,7 @@ desktop, including while browsing the meal library. It is disabled while menus
 load or generation is pending, and shows “Planning” during generation. Failures
 appear below the header and allow retrying without discarding the saved menu.
 
-The menu screen owns the bowl hero. Before a menu exists, it explains weekly
+The menu screen owns the menu hero. Before a menu exists, it explains weekly
 planning. While menus load, the hero shows a loading message. Once a menu exists,
 the hero becomes a compact overview of today's breakfast, lunch, and dinner,
 each on a light card surface within the pale green hero, using the same ordered meal
@@ -288,13 +288,15 @@ and disables shimmer for reduced-motion preferences. Cached meals remain visible
 during background refreshes.
 
 Hero meals and weekly day cards reuse `MealRow`: a light button with a meal-time
-label, meal name, and a plain caret. The hero variant uses compact padding,
+label, meal name, and a `ChevronRight` icon. The hero variant uses compact padding,
 quiet meal-time labels, and smaller medium-weight meal names in `text-secondary`;
 cards share an equal minimum height on tablet/desktop and size to their content
 on mobile. Weekly rows retain their
-compact styling. Badges use Greda's
-existing Comal colors directly: pale green (`accent`) for breakfast, sage
-(`secondary`) for lunch, and clay (`muted`) for dinner.
+compact styling. Rows declare both `bg-card` and `hover:bg-accent` in the app's
+utilities layer so the resting fill does not override Greda's component-layer
+hover styling. Badges use Comal's surface roles: sage (`surface-tertiary`) for
+breakfast, tan (`surface-secondary`) for lunch, and cream (`surface-primary`)
+for dinner.
 Clicking a row or activating it with Enter or
 Space opens the meal card through `useMealDialog` and the shared dialog host.
 The card shows meal types, description, ingredient quantities and preparation
@@ -437,9 +439,8 @@ a fresh form. Failed saves leave the current values intact.
 
 The meal form's **Preferred days** field uses React Hook Form through
 `PreferredDaysField`. Individual weekday toggles support custom choices. A
-“Select all | Clear all” pair beside the label selects or clears all seven days
-and uses the same styling as “Add ingredient.” Each action is disabled when
-its selection state is already applied.
+“Clear all” action beside the label clears the selected days and uses the same
+styling as “Add ingredient.” It is disabled when no days are selected.
 Clearing all choices restores Any day (an empty array). Existing meals default to
 Any day, and the edit form initializes from the saved preference. Meal details
 show the saved days; saving also updates meals embedded in cached menus.
@@ -510,7 +511,17 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.4.2. `styles.css` imports Tailwind,
+The client pins `@darthcharles/greda` 1.5.0. Lucide icons and their types are
+available through `@darthcharles/greda/icons` without a separate icon dependency.
+TypeScript uses `Bundler` module resolution to honor package subpath exports,
+including Greda's icons entry point, consistently with Vite.
+Navigation uses `House`, `CalendarDays`, `Utensils`, and `Sprout`. Planning uses
+`Plus` or `Ellipsis` while pending; meal rows use `ChevronRight`, close/remove
+buttons use `X`, and notices use `Info`. Icons inherit the surrounding semantic
+text color and are hidden from assistive technology; visible labels and existing
+button accessible names identify each action. The custom flower SVG and MC
+initials remain part of the header's identity.
+`styles.css` imports Tailwind,
 Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, the
 packaged `@darthcharles/greda/themes/comal.css` theme, then `theme.css`. Do not
 also import Greda CSS in JavaScript. This layer order lets app utilities override
@@ -520,8 +531,10 @@ component styles.
 `data-color-scheme="light"` on `<html>`, so dialogs inherit it too. The dialog
 test fixture selects the same theme. Comal supplies the palette, font stacks,
 and base radii; the app loads DM Sans and Fraunces through the existing font
-import. Greda 1.4.2 supplies Comal's clay backgrounds, terracotta actions,
-pale sage tertiary surfaces, and softened sage secondary controls; typography, shape, and semantic roles
+import. Greda 1.4.3 supplies Comal's clay backgrounds, deeper terracotta actions,
+pale sage tertiary surfaces, warm neutral secondary controls, and clay interaction
+fills, with stronger text, field-border, and button hover contrast. Noninteractive
+badges retain their backgrounds on hover. Typography, shape, and semantic roles
 remain the same. The optional La Viuda theme is not selected. No palette values
 are copied into the app. Greda derives surface, text,
 border, component color, and shadow tokens. `theme.css` only keeps app font
@@ -530,20 +543,55 @@ and `background`. Action-colored text and borders use `text-action` and
 `border-action`; `text-primary` and `border-primary` use neutral category roles.
 
 Meal category badges use soft Comal fills and dark brown (`text-secondary`)
-text consistently in the library and meal details: `accent` for breakfast,
-`secondary` for lunch, and `muted` for dinner. The pale green `accent` and sage
-`secondary` remain distinct for breakfast and lunch.
-Menu heroes, including loading and empty states, use `bg-accent` directly.
-Unknown categories use cream (`background`). Badges use `mealTypeColorClassName`; the fill mapping lives in
+text consistently in the library and meal details: `surface-tertiary` (sage) for
+breakfast, `surface-secondary` (tan) for lunch, and `surface-primary` (cream) for
+dinner. Category fills use surface roles independently of control and interaction
+colors.
+Menu heroes, including loading and empty states, use Greda’s `surface-tertiary`
+utility for the pale sage supporting surface.
+Unknown categories use cream (`surface-primary`). Badges use `mealTypeColorClassName`; the fill mapping lives in
 `features/meals/mealTypes.ts`. Badges use plain text labels without decorative
 dots; the visible labels identify each category without relying on color.
 Notices use neutral `muted` surfaces; errors in forms
-use `destructive`. Today's card uses `accent` with an action-colored
-(`border-action`) border. Reuse these existing roles before introducing a new
+use `destructive`. Today's card uses the raised `bg-card` surface with an
+action-colored (`border-action`) border. Header controls and meal rows use
+Greda's variant hover colors: ghost controls use the clay `accent` interaction
+fill, while primary controls use `primary-hover`. Keyboard focus retains Greda's
+focus ring. Reuse these existing roles before introducing a new
 color, and discuss any needed palette
 extension with the user first. SVG illustrations keep fill and stroke colors
 inside their markup. Standalone PWA metadata and the public icon retain their
 static brand colors because they load independently of application CSS.
+
+The header uses `components/FlowerArt.tsx`, matching the favicon's cream flower
+with a green center. The flower has no background of its own; the header's
+terracotta (`bg-primary`) tile supplies the fill. The header preserves its
+tilted tile with asymmetric corners and counter-rotates the flower to keep it
+upright. The tile is 44px square with a 40px-wide flower mark.
+
+Menu heroes use the sage surface with headings, supporting text, and meal rows.
+Loading, loaded, and empty heroes have no decorative illustration or space
+reserved for one. The navbar flower retains its fixed SVG colors, independently
+of UI tokens.
+
+The favicon and installed app icons use just the flower on a solid terracotta
+background. `public/comal-icon.svg` is the source for the raster icons. Both locale
+manifests declare 192px and 512px PNG icons with `any maskable` purposes; the flower
+fits within the central maskable safe area. `index.html` separately declares the
+180px `apple-touch-icon.png` for iOS. Raster sources are opaque square images;
+the operating system supplies Home Screen corner masking. The service worker
+precaches these assets under `comal-shell-v3`. Existing installed icons may need
+the app to be removed and added again to display the updated artwork on iOS.
+
+To regenerate the PNG assets after editing the flower SVG, export
+`client/public/comal-icon.svg` at 180, 192, and 512 pixels square, saving as
+`apple-touch-icon.png`, `comal-icon-192.png`, and `comal-icon-512.png` respectively
+in `client/public/`. For example, with Inkscape installed on macOS, from the
+repository root:
+
+```bash
+/Applications/Inkscape.app/Contents/MacOS/inkscape client/public/comal-icon.svg --export-type=png --export-width=180 --export-height=180 --export-filename=client/public/apple-touch-icon.png
+```
 
 Greda supplies `Input`, `Textarea`, `Card`, and `Badge`. Cards retain the article
 role and existing headings. Inputs forward React Hook Form refs, native props,

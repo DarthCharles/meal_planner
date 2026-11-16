@@ -1,4 +1,5 @@
 import { buttonVariants } from "@darthcharles/greda";
+import { CalendarDays, House, Sprout, Utensils } from "@darthcharles/greda/icons";
 import { NavLink } from "react-router";
 
 import { useI18n } from "../i18n";
@@ -13,25 +14,25 @@ export function Navigation() {
       {[
         {
           label: t("navigation.my_menu_mobile"),
-          icon: "⌂",
+          icon: House,
           to: "/",
         },
         {
           label: t("navigation.saved_menus"),
-          icon: "◷",
+          icon: CalendarDays,
           to: "/saved-menus",
         },
         {
           label: t("navigation.my_meals_mobile"),
-          icon: "◒",
+          icon: Utensils,
           to: "/meals",
         },
         {
           label: t("navigation.my_ingredients"),
-          icon: "❧",
+          icon: Sprout,
           to: "/ingredients",
         },
-      ].map(({ label, icon, to }) => (
+      ].map(({ label, icon: Icon, to }) => (
         <NavLink
           key={label}
           to={to}
@@ -44,7 +45,7 @@ export function Navigation() {
             })
           }
         >
-          <span className="text-lg leading-[17px]">{icon}</span>
+          <Icon aria-hidden="true" className="size-4 shrink-0" />
           <span>{label}</span>
         </NavLink>
       ))}

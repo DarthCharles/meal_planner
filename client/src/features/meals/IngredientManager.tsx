@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@darthcharles/greda";
+import { X } from "@darthcharles/greda/icons";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { unitLabel, useI18n } from "../../i18n";
@@ -232,13 +233,13 @@ function IngredientRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="col-start-3 row-start-1 tablet:col-start-auto tablet:row-start-auto size-[25px] rounded-full text-[17px]"
+        className="col-start-3 row-start-1 tablet:col-start-auto tablet:row-start-auto size-[25px] rounded-full"
         onClick={onRemove}
         aria-label={t("meals.ingredient_manager.remove_ingredient", {
           name: name || t("meals.ingredient_manager.ingredient"),
         })}
       >
-        ×
+        <X aria-hidden="true" className="size-4" />
       </Button>
     </div>
   );

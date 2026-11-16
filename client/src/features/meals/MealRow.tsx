@@ -1,4 +1,5 @@
 import { Button } from "@darthcharles/greda";
+import { ChevronRight } from "@darthcharles/greda/icons";
 
 import { useI18n } from "../../i18n";
 import type { Meal, MealTypeName } from "../../types";
@@ -24,7 +25,7 @@ export function MealRow({
       type="button"
       variant="ghost"
       aria-label={t("meals.row.view_meal", { type: mealTypeLabel(mealType), name: meal.name })}
-      className={`flex h-auto min-h-[44px] w-full min-w-0 items-center justify-start gap-[11px] rounded-xl bg-card text-left whitespace-normal hover:bg-muted ${hero ? "px-3 py-2 tablet:min-h-[68px]" : "px-3 py-1.5"} ${className}`}
+      className={`flex h-auto min-h-[44px] w-full min-w-0 items-center justify-start gap-[11px] rounded-xl bg-card text-left whitespace-normal hover:bg-accent ${hero ? "px-3 py-2 tablet:min-h-[68px]" : "px-3 py-1.5"} ${className}`}
       onClick={() => onOpen(meal)}
     >
       <span className="grid min-w-0 flex-1 gap-1">
@@ -39,9 +40,7 @@ export function MealRow({
           {meal.name}
         </strong>
       </span>
-      <span aria-hidden="true" className="shrink-0 text-[22px] leading-none text-muted-foreground">
-        ›
-      </span>
+      <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
     </Button>
   );
 }

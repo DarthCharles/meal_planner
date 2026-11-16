@@ -1,6 +1,7 @@
 import { useId, useLayoutEffect, useRef } from "react";
 
 import { Button } from "@darthcharles/greda";
+import { X } from "@darthcharles/greda/icons";
 
 import { useI18n } from "../../i18n";
 import type { DialogInstance } from "./useDialog";
@@ -99,11 +100,11 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
             type="button"
             variant="ghost"
             size="icon"
-            className="size-[31px] shrink-0 rounded-full text-[22px]"
+            className="size-[31px] shrink-0 rounded-full"
             onClick={close}
             aria-label={t("common.close")}
           >
-            ×
+            <X aria-hidden="true" className="size-4" />
           </Button>
         </div>
         {content({ close })}

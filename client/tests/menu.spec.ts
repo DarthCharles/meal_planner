@@ -52,6 +52,31 @@ test("opens hero meal details, replaces them with editing, and restores focus", 
   expect(api.saves).toEqual([]);
 });
 
+test("hero and weekly meal rows highlight on hover", async ({ page }) => {
+  await page.goto("/");
+  const heroRow = page
+    .getByRole("region", { name: "Today’s menu" })
+    .getByRole("button", { name: "View Breakfast: Huevos a la mexicana" });
+  const weeklyRow = page
+    .getByRole("article")
+    .filter({ has: page.getByRole("heading", { name: "Monday", exact: true }) })
+    .getByRole("button", { name: "View Lunch: Calabacitas con queso" });
+
+  for (const row of [heroRow, weeklyRow]) {
+    await row.scrollIntoViewIfNeeded();
+    await page.mouse.move(0, 0);
+    const background = await row.evaluate((element) => getComputedStyle(element).backgroundColor);
+    await row.hover();
+    await expect
+      .poll(() => row.evaluate((element) => getComputedStyle(element).backgroundColor))
+      .not.toBe(background);
+    await page.mouse.move(0, 0);
+    await expect
+      .poll(() => row.evaluate((element) => getComputedStyle(element).backgroundColor))
+      .toBe(background);
+  }
+});
+
 test("opens weekly meal rows with the keyboard and handles missing recipe details", async ({
   page,
   api,

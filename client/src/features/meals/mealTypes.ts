@@ -10,12 +10,12 @@ export function mealTypeLabel(type: string): string {
 export function mealTypeColorClassName(type: string): string {
   switch (type) {
     case "breakfast":
-      return "bg-accent";
+      return "surface-tertiary";
     case "lunch":
-      return "bg-secondary";
+      return "surface-secondary";
     case "dinner":
-      return "bg-muted";
+      return "surface-primary";
     default:
-      return "bg-background";
+      return "surface-primary";
   }
 }
