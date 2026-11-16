@@ -20,7 +20,14 @@ export default tseslint.config(
     files: ["**/*.{js,mjs,cjs,ts,tsx}"],
     extends: [js.configs.recommended],
     plugins: { "simple-import-sort": simpleImportSort },
-    rules: { "simple-import-sort/imports": "error" },
+    rules: {
+      "simple-import-sort/imports": [
+        "error",
+        {
+          groups: [["^react(?:\\u0000)?$"], ["^\\u0000"], ["^node:"], ["^@?\\w"], ["^"], ["^\\."]],
+        },
+      ],
+    },
   },
   {
     files: ["**/*.{ts,tsx}"],

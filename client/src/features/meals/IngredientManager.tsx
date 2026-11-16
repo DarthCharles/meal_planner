@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Button,
   Combobox,
@@ -10,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@darthcharles/greda";
-import { useState } from "react";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { unitLabel, useI18n } from "../../i18n";

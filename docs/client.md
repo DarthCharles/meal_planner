@@ -32,8 +32,9 @@ when intentionally unused. Browser, Node, and service-worker globals are scoped
 to their respective files. TypeScript compilation remains the type checker;
 ESLint does not start a TypeScript project service.
 
-Import ordering uses `eslint-plugin-simple-import-sort` with its default groups:
-side-effect imports, `node:` built-ins, external packages, absolute/internal
+Import ordering uses `eslint-plugin-simple-import-sort` with `react` imports
+first (including type-only imports), followed by side-effect imports,
+`node:` built-ins, external packages, absolute/internal
 imports, then relative imports. Separate groups with a blank line. Within each
 group, imports and named specifiers are sorted alphabetically; side-effect
 imports retain their relative order. Type-only imports stay in the same group

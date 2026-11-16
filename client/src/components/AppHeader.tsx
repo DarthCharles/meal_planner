@@ -1,3 +1,5 @@
+import { Fragment, useRef, useState } from "react";
+
 import {
   Button,
   buttonVariants,
@@ -5,7 +7,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@darthcharles/greda";
-import { Fragment, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router";
 
 import { useMealDialog } from "../features/meals/useMealDialog";

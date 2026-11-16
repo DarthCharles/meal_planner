@@ -1,3 +1,5 @@
+import { useId, useState } from "react";
+
 import {
   Input,
   Label,
@@ -7,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@darthcharles/greda";
-import { useId, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { unitLabel, useI18n } from "../../i18n";

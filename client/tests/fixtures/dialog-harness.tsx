@@ -1,6 +1,7 @@
+import { StrictMode, useRef, useState } from "react";
+
 import "../../src/styles.css";
 
-import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { DialogProvider } from "../../src/components/dialog/DialogProvider";

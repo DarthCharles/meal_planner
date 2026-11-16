@@ -1,5 +1,6 @@
-import { Badge, Button, Card, Input } from "@darthcharles/greda";
 import { useMemo, useState } from "react";
+
+import { Badge, Button, Card, Input } from "@darthcharles/greda";
 
 import { useI18n } from "../../i18n";
 import type { Meal } from "../../types";

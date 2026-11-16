@@ -1,5 +1,6 @@
-import { Button } from "@darthcharles/greda";
 import { useId, useLayoutEffect, useRef } from "react";
+
+import { Button } from "@darthcharles/greda";
 
 import { useI18n } from "../../i18n";
 import type { DialogInstance } from "./useDialog";
