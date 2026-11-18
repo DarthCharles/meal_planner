@@ -83,15 +83,18 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     get "/menus/#{menu.id}/shopping_list", as: :json
     assert_response :ok
     assert_equal({ "menu_id" => menu.id, "people_count" => 4,
-      "items" => [{ "ingredient_id" => row.ingredient_id, "name" => "Rice", "unit" => "g", "quantity" => "200.0" }],
+      "from" => menu.from.as_json, "to" => menu.to.as_json,
+      "categories" => ShoppingCategory.catalog.as_json,
+      "items" => [{ "ingredient_id" => row.ingredient_id, "name" => "Rice", "shopping_category" => "uncategorized", "unit" => "g", "quantity" => "200.0" }],
       "meals_without_ingredients" => [], "conversion_warnings" => [] }, response.parsed_body.fetch("data"))
 
     row.update!(quantity: 150)
     meal.update!(servings: 4)
-    row.ingredient.update!(name: "White rice")
+    row.ingredient.update!(name: "White rice", shopping_category: "pantry")
     get "/menus/#{menu.id}/shopping_list", as: :json
     assert_equal "150.0", response.parsed_body.dig("data", "items", 0, "quantity")
     assert_equal "White rice", response.parsed_body.dig("data", "items", 0, "name")
+    assert_equal "pantry", response.parsed_body.dig("data", "items", 0, "shopping_category")
 
     patch "/menus/#{menu.id}", params: { people_count: 2 }, as: :json
     assert_response :ok

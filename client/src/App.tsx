@@ -6,6 +6,7 @@ import { Navigation } from "./components/Navigation";
 import { IngredientsScreen } from "./features/ingredients/IngredientsScreen";
 import { MealsScreen } from "./features/meals/MealsScreen";
 import { MenuScreen } from "./features/menu/MenuScreen";
+import { ShoppingListScreen } from "./features/menu/ShoppingListScreen";
 import { SavedMenusScreen } from "./features/menu/SavedMenusScreen";
 import { useI18n } from "./i18n";
 
@@ -29,6 +30,7 @@ function App() {
           <Route element={<PageLayout />}>
             <Route path="/meals" element={<MealsScreen />} />
             <Route path="/ingredients" element={<IngredientsScreen />} />
+            <Route path="/menus/:menuId/shopping-list" element={<ShoppingListScreen />} />
             <Route path="/saved-menus" element={<SavedMenusScreen />} />
             <Route
               path="*"

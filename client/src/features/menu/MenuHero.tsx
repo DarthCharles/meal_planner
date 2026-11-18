@@ -25,7 +25,7 @@ export function MenuHero({
     return (
       <section
         aria-labelledby="menu-hero-title"
-        className="rounded-[30px] surface-tertiary px-6 py-7 tablet:px-12 tablet:py-10"
+        className="mt-2 rounded-[30px] surface-tertiary px-6 py-7 tablet:px-12 tablet:py-10"
       >
         <div>
           <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
@@ -59,7 +59,7 @@ export function MenuHero({
   return (
     <section
       aria-labelledby="menu-hero-title"
-      className="rounded-[30px] surface-tertiary px-5 py-5 tablet:px-9 tablet:py-6"
+      className="mt-2 rounded-[30px] surface-tertiary px-5 py-5 tablet:px-9 tablet:py-6"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">

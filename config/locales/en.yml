@@ -21,6 +21,10 @@ en:
   activerecord:
     errors:
       models:
+        ingredient:
+          attributes:
+            shopping_category:
+              inclusion: "is not a valid shopping category"
         meal:
           attributes:
             preferred_days:

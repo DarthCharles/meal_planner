@@ -27,6 +27,23 @@ export const en = {
     add_meal_action: "Add a meal",
     language: "Language",
   },
+  shopping_list: {
+    title: "Shopping list",
+    back: "Back to menus",
+    loading: "Loading shopping list…",
+    loading_categories: "Loading shopping categories…",
+    refresh: "Refresh list",
+    people: { one: "For %{count} person", other: "For %{count} people" },
+    empty: "There are no ingredients in this menu yet.",
+    live: "For the full week. Quantities reflect current recipes and the saved number of people.",
+    missing: "Some meals have no ingredients. This list is incomplete:",
+    conversions: "Some quantities could not be combined. They are listed separately:",
+    equivalence_missing: "Missing conversion to %{unit}",
+    shopping_profile_missing: "Shopping quantities are not configured",
+    approximate: "Approximate quantity",
+    required: "Recipe requirement: %{quantity} %{unit}",
+    invalid: "Invalid menu.",
+  },
   common: {
     close: "Close",
     demo_mode: "Demo mode · connect the Rails API to use your own meals.",
@@ -42,6 +59,7 @@ export const en = {
   },
   ingredients: {
     form: {
+      shopping_category: "Shopping category",
       ingredient_required: "Enter an ingredient name.",
       ingredient_example: "e.g. Tomato",
       rename_ingredient_help:
@@ -251,6 +269,16 @@ export const en = {
     saved_menus: "Saved Menus",
   },
   reference: {
+    shopping_categories: {
+      produce: "Fruit & vegetables",
+      meat: "Meat",
+      deli: "Deli meats",
+      dairy_eggs: "Dairy & eggs",
+      bakery_tortillas: "Bread & tortillas",
+      pantry: "Pantry",
+      frozen: "Frozen foods",
+      uncategorized: "Uncategorized",
+    },
     meal_types: {
       breakfast: "Breakfast",
       lunch: "Lunch",

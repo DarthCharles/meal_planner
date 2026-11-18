@@ -7,6 +7,7 @@ export const queryKeys = {
   units: ["units"] as const,
   ingredients: ["ingredients"] as const,
   ingredientProfiles: ["ingredient-shopping-profile"] as const,
+  shoppingCategories: ["shopping-categories"] as const,
   shoppingLists: ["shopping-lists"] as const,
   ingredientProfile: (id: number) => ["ingredient-shopping-profile", id] as const,
 };

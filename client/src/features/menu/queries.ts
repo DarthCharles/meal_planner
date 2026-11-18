@@ -5,6 +5,16 @@ import { getLocale, useI18n } from "../../i18n";
 import { queryKeys } from "../../queryKeys";
 import type { Menu } from "../../types";
 
+export function useShoppingList(id: number) {
+  const { locale } = useI18n();
+  return useQuery({
+    queryKey: [...queryKeys.shoppingLists, id, locale],
+    queryFn: ({ signal }) => api.getShoppingList(id, signal),
+    enabled: Number.isSafeInteger(id) && id > 0,
+    staleTime: 0,
+  });
+}
+
 export function useMenus() {
   const { locale } = useI18n();
   return useQuery({
@@ -29,6 +39,7 @@ export function useGenerateMenu() {
           (item) => item.id !== menu.id && item.from.slice(0, 10) !== menu.from.slice(0, 10),
         ),
       ]);
+      await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
       await client.invalidateQueries({
         queryKey: queryKeys.menus,
         predicate: (query) => query.queryKey[1] !== locale,

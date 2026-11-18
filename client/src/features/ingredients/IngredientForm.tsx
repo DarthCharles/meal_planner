@@ -1,31 +1,64 @@
 import { useId, useState } from "react";
 
-import { Button, Input } from "@darthcharles/greda";
-import { useForm } from "react-hook-form";
+import {
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@darthcharles/greda";
+import { Controller, useForm } from "react-hook-form";
 
 import { useI18n } from "../../i18n";
-import type { IngredientCatalogEntry, IngredientPayload } from "../../types";
+import type { IngredientCatalogEntry, IngredientPayload, ShoppingCategory } from "../../types";
 import { useMealDialog } from "../meals/useMealDialog";
 import { IngredientShoppingSummary } from "./IngredientShoppingSummary";
-import { useDeleteIngredient, useSaveIngredient } from "./queries";
+import { useDeleteIngredient, useSaveIngredient, useShoppingCategories } from "./queries";
 
-export function IngredientForm({
+export function IngredientForm(props: { ingredient?: IngredientCatalogEntry; close: () => void }) {
+  const { t } = useI18n();
+  const { data: categories, isPending, error, refetch, isFetching } = useShoppingCategories();
+  if (isPending) return <p role="status">{t("shopping_list.loading_categories")}</p>;
+  if (!categories || error)
+    return (
+      <div>
+        <p role="alert">{error?.message}</p>
+        <Button disabled={isFetching} onClick={() => void refetch()}>
+          {t("common.try_again")}
+        </Button>
+      </div>
+    );
+  return <IngredientFormContent {...props} categories={categories} />;
+}
+
+function IngredientFormContent({
   ingredient,
   close,
+  categories,
 }: {
   ingredient?: IngredientCatalogEntry;
   close: () => void;
+  categories: ShoppingCategory[];
 }) {
   const { t } = useI18n();
   const { openMealById } = useMealDialog();
   const formId = useId();
+  const categoryId = useId();
+  const [categoryContainer, setCategoryContainer] = useState<HTMLDivElement | null>(null);
   const [editingShopping, setEditingShopping] = useState(false);
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<IngredientPayload>({
-    defaultValues: { name: ingredient?.name ?? "" },
+    defaultValues: {
+      name: ingredient?.name ?? "",
+      shopping_category: ingredient?.shopping_category ?? "uncategorized",
+    },
   });
   const {
     mutate: saveIngredient,
@@ -53,7 +86,10 @@ export function IngredientForm({
             if (busy || editingShopping) return;
             resetDelete();
             saveIngredient(
-              { id: ingredient?.id, values: { name: values.name.trim() } },
+              {
+                id: ingredient?.id,
+                values: { name: values.name.trim(), shopping_category: values.shopping_category },
+              },
               { onSuccess: close },
             );
           },
@@ -75,6 +111,39 @@ export function IngredientForm({
             placeholder={t("ingredients.form.ingredient_example")}
           />
         </label>
+        <div ref={setCategoryContainer} className="mb-4 grid gap-2">
+          <Label htmlFor={categoryId}>{t("ingredients.form.shopping_category")}</Label>
+          <Controller
+            name="shopping_category"
+            control={control}
+            render={({ field }) => (
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={busy || editingShopping}
+              >
+                <SelectTrigger
+                  type="button"
+                  id={categoryId}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  className="w-full"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent container={categoryContainer}>
+                  {[...categories]
+                    .sort((a, b) => a.position - b.position)
+                    .map(({ code }) => (
+                      <SelectItem key={code} value={code}>
+                        {t(`reference.shopping_categories.${code}`)}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
         {ingredient && (
           <p className="mb-4 text-sm text-muted-foreground">
             {t("ingredients.form.rename_ingredient_help")}

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
   create_table "daily_meals", id: :integer, default: nil, force: :cascade do |t|
     t.integer "day_id", null: false
     t.integer "meal_id", null: false
@@ -64,7 +64,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_140000) do
     t.string "normalized_name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "shopping_category", default: "uncategorized", null: false
     t.index ["normalized_name"], name: "index_ingredients_on_normalized_name", unique: true
+    t.check_constraint "shopping_category IN ('produce', 'meat', 'deli', 'dairy_eggs', 'bakery_tortillas', 'pantry', 'frozen', 'uncategorized')", name: "ingredients_valid_shopping_category"
   end
 
   create_table "meal_ingredients", id: :integer, default: nil, force: :cascade do |t|

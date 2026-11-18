@@ -40,7 +40,7 @@ export function menuDayDate(menu: Menu, weekday: string) {
   return date;
 }
 
-export function formatMenuDateRange(menu: Menu, includeYear = true) {
+export function formatMenuDateRange(menu: Pick<Menu, "from" | "to">, includeYear = true) {
   const format = (value: string) =>
     calendarDate(value).toLocaleDateString(formatLocale(), {
       month: "short",

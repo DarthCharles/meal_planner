@@ -33,7 +33,7 @@ class IngredientsController < ApplicationController
   private
 
   def save_ingredient(ingredient, status)
-    if ingredient.update(params.permit(:name))
+    if ingredient.update(params.permit(:name, :shopping_category))
       render json: { data: ingredient.catalog_json }, status: status
     else
       errors = ingredient.errors.to_hash.transform_keys { |key| key == :normalized_name ? :name : key }

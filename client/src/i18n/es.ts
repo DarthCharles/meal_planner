@@ -29,6 +29,23 @@ export const es: typeof en = {
     add_meal_action: "Agregar una comida",
     language: "Idioma",
   },
+  shopping_list: {
+    title: "Lista de compras",
+    back: "Volver a los menús",
+    loading: "Cargando lista de compras…",
+    loading_categories: "Cargando categorías de compra…",
+    refresh: "Actualizar lista",
+    people: { one: "Para %{count} persona", other: "Para %{count} personas" },
+    empty: "Este menú aún no tiene ingredientes.",
+    live: "Para la semana completa. Las cantidades reflejan las recetas actuales y el número de personas guardado.",
+    missing: "Algunas comidas no tienen ingredientes. Esta lista está incompleta:",
+    conversions: "Algunas cantidades no se pudieron combinar. Se muestran por separado:",
+    equivalence_missing: "Falta la conversión a %{unit}",
+    shopping_profile_missing: "No se han configurado las cantidades de compra",
+    approximate: "Cantidad aproximada",
+    required: "Cantidad para las recetas: %{quantity} %{unit}",
+    invalid: "Menú inválido.",
+  },
   common: {
     close: "Cerrar",
     demo_mode: "Modo de demostración · conecta la API de Rails para usar tus propias comidas.",
@@ -44,6 +61,7 @@ export const es: typeof en = {
   },
   ingredients: {
     form: {
+      shopping_category: "Categoría de compra",
       ingredient_required: "Escribe el nombre del ingrediente.",
       ingredient_example: "p. ej., Tomate",
       rename_ingredient_help:
@@ -254,6 +272,16 @@ export const es: typeof en = {
     saved_menus: "Menús guardados",
   },
   reference: {
+    shopping_categories: {
+      produce: "Frutas y verduras",
+      meat: "Carnes",
+      deli: "Salchichonería",
+      dairy_eggs: "Lácteos y huevos",
+      bakery_tortillas: "Panadería y tortillas",
+      pantry: "Abarrotes",
+      frozen: "Congelados",
+      uncategorized: "Sin categoría",
+    },
     meal_types: {
       breakfast: "Desayuno",
       lunch: "Comida",

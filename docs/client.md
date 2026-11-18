@@ -619,6 +619,31 @@ The theme preserves the existing layout breakpoints: `tablet:` at 641px,
 `desktop:` at 760px, and `wide:` at 901px. Layouts start with mobile utilities
 and add these variants for larger screens.
 
+## Shopping lists and categories
+
+Current menus and the selected saved menu link to `/menus/:menuId/shopping-list`.
+`ShoppingListScreen` fetches `GET /menus/:id/shopping_list` only when opened, through
+React Query. It displays the full week's calendar range, saved people count,
+category sections, localized quantities/units, recipe requirements before rounding,
+and approximation indicators. Empty categories stay hidden; ingredients sort with
+the selected locale within the API's category order. Missing recipes and conversion
+warnings remain visible, alongside loading, retry, empty, and missing-menu states.
+Lists are view-only, calculated from live recipes; there are no checkboxes, pantry
+deductions, custom categories, or combined-week lists.
+
+Ingredient dialogs load `/shopping_categories` before initializing their draft and
+provide a category selector independent of shopping quantity configuration. New
+ingredients default to `uncategorized`. Reference data is cached; category loading
+and failures offer loading/retry UI. Labels live at
+`reference.shopping_categories.<code>` in both translation catalogs, while the API
+receives stable English codes. Ingredient names remain user content.
+
+Category/name edits, shopping-profile edits, recipe saves, and menu generation
+invalidate cached shopping lists. Lists also refresh when reopened or explicitly
+refreshed, so changes to saved people counts made through the API appear there.
+Recipe cache updates preserve existing ingredient categories. The responsive list
+uses one column on phones and two on larger screens with the existing Greda theme.
+
 ## Browser tests
 
 The committed Playwright suite lives in `client/tests/`, with shared API mocks

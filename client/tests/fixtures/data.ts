@@ -1,4 +1,11 @@
-import type { Meal, MealTypeOption, Menu, UnitOption } from "../../src/types";
+import type {
+  Meal,
+  MealTypeOption,
+  Menu,
+  ShoppingCategory,
+  ShoppingList,
+  UnitOption,
+} from "../../src/types";
 
 export const meals: Meal[] = [
   {
@@ -59,4 +66,41 @@ export const menu: Menu = {
     weekday,
     meals,
   })),
+};
+
+export const shoppingCategories: ShoppingCategory[] = [
+  "produce",
+  "meat",
+  "deli",
+  "dairy_eggs",
+  "bakery_tortillas",
+  "pantry",
+  "frozen",
+  "uncategorized",
+].map((code, position) => ({ code: code as ShoppingCategory["code"], position }));
+
+export const shoppingList: ShoppingList = {
+  menu_id: menu.id,
+  from: menu.from,
+  to: menu.to,
+  people_count: 4,
+  categories: shoppingCategories,
+  items: [
+    {
+      ingredient_id: 1,
+      name: "Egg",
+      shopping_category: "dairy_eggs",
+      quantity: "12.0",
+      unit: "pieza",
+    },
+    {
+      ingredient_id: 2,
+      name: "Tomato",
+      shopping_category: "produce",
+      quantity: "300.0",
+      unit: "g",
+    },
+  ],
+  meals_without_ingredients: [],
+  conversion_warnings: [],
 };

@@ -107,7 +107,11 @@ test("creates an ingredient with validation and makes it available in a meal for
   await expect(add).toBeFocused();
   await expect(page.getByRole("listitem")).toContainText(["Egg", "Potato", "Tomato"]);
   expect(api.ingredientSaves).toEqual([
-    { method: "POST", path: "/ingredients", body: { name: "Potato" } },
+    {
+      method: "POST",
+      path: "/ingredients",
+      body: { name: "Potato", shopping_category: "uncategorized" },
+    },
   ]);
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();
@@ -128,7 +132,11 @@ test("renames ingredients in cached meals and menus", async ({ page, api }) => {
   await dialog.getByRole("button", { name: "Save ingredient" }).click();
   await expect(dialog).toHaveCount(0);
   expect(api.ingredientSaves).toEqual([
-    { method: "PUT", path: "/ingredients/1", body: { name: "Free range egg" } },
+    {
+      method: "PUT",
+      path: "/ingredients/1",
+      body: { name: "Free range egg", shopping_category: "uncategorized" },
+    },
   ]);
   const mealReads = api.reads["/meals"];
   await navigateTo(page, "My meals");

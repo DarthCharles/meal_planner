@@ -45,7 +45,7 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     @tuesday.daily_meals.create!(meal: second)
 
     result = MenuShoppingListService.new.call(menu: @menu)
-    assert_equal [{ ingredient_id: onion.id, name: "Cebolla", unit: "pieza",
+    assert_equal [{ ingredient_id: onion.id, name: "Cebolla", shopping_category: "uncategorized", unit: "pieza",
       quantity: "2", required_quantity: "1.792", approximate: true }], result[:items]
     assert_empty result[:conversion_warnings]
     profile.update!(round_up: false)
@@ -108,7 +108,7 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     Unit.find_or_create_by!(code: "pieza") { |unit| unit.name = "pieces" }
     configure_shopping(other)
     result = MenuShoppingListService.new.call(menu: @menu)
-    assert_equal [{ ingredient_id: milk.id, name: "Milk", unit: "ml", quantity: "750.0" }], result[:items]
+    assert_equal [{ ingredient_id: milk.id, name: "Milk", shopping_category: "uncategorized", unit: "ml", quantity: "750.0" }], result[:items]
     assert_empty result[:conversion_warnings]
   end
 
@@ -131,6 +131,24 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     result = MenuShoppingListService.new.call(menu: @menu)
     assert_empty result[:items]
     assert_equal [{ id: meal.id, name: meal.name }], result[:meals_without_ingredients]
+  end
+
+  test "sorts categories before names and uses live ingredient categories" do
+    meal = Meal.create!(name: "Mixed groceries", description: "Recipe")
+    ingredients = [
+      Ingredient.create!(name: "Apples", shopping_category: "frozen"),
+      Ingredient.create!(name: "Zucchini", shopping_category: "produce"),
+      Ingredient.create!(name: "Bananas", shopping_category: "produce"),
+      Ingredient.create!(name: "Unknown")
+    ]
+    ingredients.each { |ingredient| meal.meal_ingredients.create!(ingredient: ingredient, unit: @grams, quantity: 10) }
+    @monday.daily_meals.create!(meal: meal)
+    result = MenuShoppingListService.new.call(menu: @menu)
+    assert_equal ShoppingCategory.catalog, result[:categories]
+    assert_equal %w[Bananas Zucchini Apples Unknown], result[:items].map { |item| item[:name] }
+    assert_equal %w[produce produce frozen uncategorized], result[:items].map { |item| item[:shopping_category] }
+    ingredients.first.update!(shopping_category: "pantry")
+    assert_equal "pantry", MenuShoppingListService.new.call(menu: @menu)[:items][2][:shopping_category]
   end
 
   private

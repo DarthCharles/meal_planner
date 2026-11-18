@@ -67,6 +67,8 @@ function useSyncSavedMeal() {
           catalog.set(ingredient.ingredient_id, {
             id: ingredient.ingredient_id,
             name: ingredient.name,
+            shopping_category:
+              catalog.get(ingredient.ingredient_id)?.shopping_category ?? "uncategorized",
             meals: [
               ...(catalog.get(ingredient.ingredient_id)?.meals ?? []),
               { id: meal.id, name: meal.name },
@@ -94,6 +96,7 @@ function useSyncSavedMeal() {
         })),
       })),
     );
+    await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
     // A mutation response cannot reconstruct a list that has never loaded.
     if (!client.getQueryData(queryKeys.meals)) {
       await client.invalidateQueries({ queryKey: queryKeys.meals });

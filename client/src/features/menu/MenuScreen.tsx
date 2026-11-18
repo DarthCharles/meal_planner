@@ -43,6 +43,11 @@ export function MenuScreen() {
               {formatMenuDateRange(menu, false)}
             </h3>
           </div>
+          {currentMenu && (
+            <Button asChild variant="outline">
+              <Link to={`/menus/${currentMenu.id}/shopping-list`}>{t("shopping_list.title")}</Link>
+            </Button>
+          )}
         </div>
       )}
 

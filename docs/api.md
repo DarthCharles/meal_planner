@@ -43,7 +43,8 @@ required.
 | `GET` | `/units` | List available ingredient units |
 | `GET` | `/ingredients` | List the shared ingredient catalog |
 | `POST` | `/ingredients` | Create a standalone ingredient |
-| `PUT` / `PATCH` | `/ingredients/:id` | Rename a shared ingredient |
+| `PUT` / `PATCH` | `/ingredients/:id` | Update a shared ingredient name or shopping category |
+| `GET` | `/shopping_categories` | List ordered shopping category codes |
 | `DELETE` | `/ingredients/:id` | Delete an unused ingredient |
 | `GET` | `/ingredients/:ingredient_id/shopping_profile` | Show shopping units and equivalences |
 | `PUT` / `PATCH` | `/ingredients/:ingredient_id/shopping_profile` | Replace shopping configuration |
@@ -69,7 +70,7 @@ back all changes.
 ownership filtering:
 
 ```json
-{"data":[{"id":12,"name":"Egg","meals":[{"id":3,"name":"Omelette"}]},{"id":19,"name":"Potato","meals":[]}]}
+{"data":[{"id":12,"name":"Egg","shopping_category":"dairy_eggs","meals":[{"id":3,"name":"Omelette"}]},{"id":19,"name":"Potato","shopping_category":"produce","meals":[]}]}
 ```
 
 Each catalog entry includes the IDs and names of meals using that ingredient,
@@ -77,9 +78,13 @@ sorted by case-insensitive meal name and ID. Unused ingredients have `meals: []`
 The backend loads meal usage with the catalog; the client does not need to fetch
 the full meal library to display it.
 
-Standalone create and update accept a top-level `{"name":"Tomato"}` payload.
+Standalone create and update accept a top-level `{"name":"Tomato","shopping_category":"produce"}` payload.
+Either field may be omitted on update. Category defaults to `uncategorized` on
+create, including new ingredients created within recipes. Unknown, blank, or null
+category values return `422` with `{"errors":{"shopping_category":["…"]}}`
+and preserve the previous ingredient. Categories are independent of shopping profiles.
 Create returns `201`; update returns `200`. Both return
-`{"data":{"id":12,"name":"Tomato","meals":[]}}` with current meal usage.
+`{"data":{"id":12,"name":"Tomato","shopping_category":"produce","meals":[]}}` with current meal usage.
 Names are trimmed and must be nonblank and unique after lowercasing. Duplicate
 names are rejected rather than merged. Validation failures return `422` with
 `{"errors":{"name":["…"]}}`; updating a missing ingredient returns `404`
@@ -227,6 +232,18 @@ If meals are insufficient, the endpoint returns `422`:
 }
 ```
 
+## Shopping categories
+
+`GET /shopping_categories` returns fixed reference data in display order:
+
+```json
+{"data":[{"code":"produce","position":0},{"code":"meat","position":1},{"code":"deli","position":2},{"code":"dairy_eggs","position":3},{"code":"bakery_tortillas","position":4},{"code":"pantry","position":5},{"code":"frozen","position":6},{"code":"uncategorized","position":7}]}
+```
+
+Codes and positions are identical in every locale. The client translates labels
+under `reference.shopping_categories.<code>`; labels are never stored on ingredients
+or submitted in place of codes. There is no category-management endpoint.
+
 ## Shopping lists
 
 `GET /menus/:id/shopping_list` returns a view-only list computed on demand:
@@ -235,15 +252,33 @@ If meals are insufficient, the endpoint returns `422`:
 {
   "data": {
     "menu_id": 12,
+    "from": "2026-11-16T00:00:00.000Z",
+    "to": "2026-11-22T23:59:59.000Z",
     "people_count": 4,
+    "categories": [
+      {"code":"produce","position":0},
+      {"code":"meat","position":1},
+      {"code":"deli","position":2},
+      {"code":"dairy_eggs","position":3},
+      {"code":"bakery_tortillas","position":4},
+      {"code":"pantry","position":5},
+      {"code":"frozen","position":6},
+      {"code":"uncategorized","position":7}
+    ],
     "items": [
-      {"ingredient_id": 3, "name": "Huevo", "quantity": "24.0", "unit": "pieza"}
+      {"ingredient_id": 3, "name": "Huevo", "shopping_category": "dairy_eggs", "quantity": "24.0", "unit": "pieza"}
     ],
     "meals_without_ingredients": [{"id": 7, "name": "Ensalada de pollo"}],
     "conversion_warnings": []
   }
 }
 ```
+
+The response includes the full category catalog, menu boundaries, and each item's
+current `shopping_category`. Items sort by category position, then lowercase name,
+ingredient ID, and unit. Clients can re-sort names within categories using their
+locale. Empty categories need not be displayed. Category edits also affect old
+menus; a list always covers the entire selected menu, without filtering past days.
 
 Each scheduled meal contributes `quantity × people_count ÷ servings`.
 Repeated meals count once per scheduled occurrence. Kilograms are normalized
@@ -280,7 +315,7 @@ when an unconfigured ingredient has multiple incompatible units. For example:
 {"ingredient_id":12,"name":"Cebolla","units":["taza"],"target_unit":"pieza","reason":"equivalence_missing"}
 ```
 
-Items are sorted by lowercased ingredient name, ingredient ID, then unit code.
+Items are sorted by category position, lowercased ingredient name, ingredient ID, then unit code.
 Meals with no ingredient rows are listed once each, sorted by lowercased name
 then ID, while available totals are still returned. Partially entered recipes
 cannot be detected automatically. Empty menus return all three arrays empty.

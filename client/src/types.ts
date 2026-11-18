@@ -45,9 +45,54 @@ export type UnitOption = {
   name: string;
 };
 
-export type IngredientOption = { id: number; name: string };
-export type IngredientCatalogEntry = IngredientOption & { meals: { id: number; name: string }[] };
-export type IngredientPayload = { name: string };
+export type IngredientOption = {
+  id: number;
+  name: string;
+  shopping_category?: ShoppingCategoryCode;
+};
+export type IngredientCatalogEntry = IngredientOption & {
+  shopping_category: ShoppingCategoryCode;
+  meals: { id: number; name: string }[];
+};
+export type ShoppingCategoryCode =
+  | "produce"
+  | "meat"
+  | "deli"
+  | "dairy_eggs"
+  | "bakery_tortillas"
+  | "pantry"
+  | "frozen"
+  | "uncategorized";
+
+export type ShoppingCategory = { code: ShoppingCategoryCode; position: number };
+export type IngredientPayload = { name: string; shopping_category?: ShoppingCategoryCode };
+
+export type ShoppingListItem = {
+  ingredient_id: number;
+  name: string;
+  shopping_category: ShoppingCategoryCode;
+  quantity: string;
+  unit: string;
+  required_quantity?: string;
+  approximate?: boolean;
+};
+
+export type ShoppingList = {
+  menu_id: number;
+  from: string;
+  to: string;
+  people_count: number;
+  categories: ShoppingCategory[];
+  items: ShoppingListItem[];
+  meals_without_ingredients: { id: number; name: string }[];
+  conversion_warnings: {
+    ingredient_id: number;
+    name: string;
+    units: string[];
+    target_unit: string | null;
+    reason: "equivalence_missing" | "shopping_profile_missing";
+  }[];
+};
 
 export type IngredientShoppingProfile = {
   ingredient_id: number;

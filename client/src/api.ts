@@ -9,6 +9,8 @@ import type {
   MealPayload,
   MealTypeOption,
   Menu,
+  ShoppingCategory,
+  ShoppingList,
   UnitOption,
 } from "./types";
 
@@ -19,6 +21,8 @@ function errorFieldLabel(field: string) {
     case "shopping_unit":
     case "round_up":
       return t("ingredients.shopping.title");
+    case "shopping_category":
+      return t("ingredients.form.shopping_category");
     case "name":
       return t("api.field_name");
     case "description":
@@ -70,6 +74,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getShoppingCategories: (signal?: AbortSignal) =>
+    request<ShoppingCategory[]>("/shopping_categories", { signal }),
+  getShoppingList: (id: number, signal?: AbortSignal) =>
+    request<ShoppingList>(`/menus/${id}/shopping_list`, { signal }),
   getMenus: (signal?: AbortSignal, locale: Locale = getLocale()) =>
     request<Menu[]>("/menus", { signal, headers: { "Accept-Language": locale } }),
   getMeals: (signal?: AbortSignal) => request<Meal[]>("/meals", { signal }),

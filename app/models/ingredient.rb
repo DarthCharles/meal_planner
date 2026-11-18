@@ -5,6 +5,7 @@ class Ingredient < ApplicationRecord
 
   before_validation :normalize_name
 
+  validates :shopping_category, inclusion: { in: ShoppingCategory::CODES }
   validates :name, presence: true
   validates :normalized_name, presence: true, uniqueness: true
 
@@ -12,6 +13,7 @@ class Ingredient < ApplicationRecord
     {
       id: id,
       name: name,
+      shopping_category: shopping_category,
       meals: meals.sort_by { |meal| [meal.name.downcase, meal.id] }
         .map { |meal| { id: meal.id, name: meal.name } }
     }

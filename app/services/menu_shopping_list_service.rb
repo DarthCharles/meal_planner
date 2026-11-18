@@ -41,6 +41,7 @@ class MenuShoppingListService
         key = [row.ingredient_id, code]
         item = totals[key] ||= {
           ingredient_id: row.ingredient_id, name: row.ingredient.name,
+          shopping_category: row.ingredient.shopping_category,
           unit: code, quantity: Rational(0), round_up: round_up
         }
         item[:quantity] += quantity
@@ -48,7 +49,9 @@ class MenuShoppingListService
       end
     end
 
-    items = totals.values.sort_by { |item| [item[:name].downcase, item[:ingredient_id], item[:unit]] }
+    items = totals.values.sort_by do |item|
+      [ShoppingCategory::CODES.index(item[:shopping_category]), item[:name].downcase, item[:ingredient_id], item[:unit]]
+    end
     items.group_by { |item| item[:ingredient_id] }.each do |ingredient_id, entries|
       if entries.size > 1 && !warnings.key?(ingredient_id)
         warnings[ingredient_id] = {
@@ -67,7 +70,8 @@ class MenuShoppingListService
       end
     end
     {
-      menu_id: menu.id, people_count: menu.people_count, items: items,
+      menu_id: menu.id, from: menu.from, to: menu.to, people_count: menu.people_count,
+      categories: ShoppingCategory.catalog, items: items,
       meals_without_ingredients: missing.values.sort_by { |meal| [meal[:name].downcase, meal[:id]] },
       conversion_warnings: warnings.values.sort_by { |warning| [warning[:name].downcase, warning[:ingredient_id]] }
     }

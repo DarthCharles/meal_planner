@@ -12,6 +12,14 @@ import type {
   Menu,
 } from "../../types";
 
+export function useShoppingCategories() {
+  return useQuery({
+    queryKey: queryKeys.shoppingCategories,
+    queryFn: ({ signal }) => api.getShoppingCategories(signal),
+    staleTime: Infinity,
+  });
+}
+
 export function useIngredientShoppingProfile(id: number) {
   const { locale } = useI18n();
   return useQuery({
@@ -103,6 +111,7 @@ export function useSaveIngredient() {
         })),
       );
       await client.invalidateQueries({ queryKey: queryKeys.ingredients });
+      await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
     },
   });
 }

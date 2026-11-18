@@ -9,12 +9,14 @@ import type {
   Meal,
   MealPayload,
   Menu,
+  ShoppingList,
 } from "../../src/types";
-import { meals, mealTypes, menu, units } from "./data";
+import { meals, mealTypes, menu, shoppingCategories, shoppingList, units } from "./data";
 
 type SaveRequest = { method: string; path: string; body: MealPayload };
 type MockApi = {
   menus: Menu[];
+  shoppingLists: Record<number, ShoppingList>;
   localizedMenus: Partial<Record<"en" | "es", Menu[]>>;
   requests: { path: string; language: string | undefined }[];
   meals: Meal[];
@@ -49,6 +51,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
     async ({ page }, use) => {
       const api: MockApi = {
         menus: structuredClone([menu]),
+        shoppingLists: { [menu.id]: structuredClone(shoppingList) },
         localizedMenus: {},
         requests: [],
         meals: structuredClone(meals),
@@ -116,12 +119,35 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
             return void (await respond(
               api.meals.find((meal) => meal.id === Number(path.split("/").pop())),
             ));
+          if (path === "/shopping_categories") return void (await respond(shoppingCategories));
+          if (/^\/menus\/\d+\/shopping_list$/.test(path)) {
+            const id = Number(path.split("/")[2]);
+            const list = api.shoppingLists[id];
+            if (!list)
+              return void (await route.fulfill({
+                status: 404,
+                json: { errors: `Menu with id ${id} not found` },
+                headers,
+              }));
+            return void (await respond({
+              ...list,
+              items: list.items.map((item) => {
+                const ingredient = api.ingredients.find((entry) => entry.id === item.ingredient_id);
+                return {
+                  ...item,
+                  name: ingredient?.name ?? item.name,
+                  shopping_category: ingredient?.shopping_category ?? item.shopping_category,
+                };
+              }),
+            }));
+          }
           if (path === "/meal_types") return void (await respond(mealTypes));
           if (path === "/units") return void (await respond(units));
           if (path === "/ingredients")
             return void (await respond(
               api.ingredients.map((ingredient) => ({
                 ...ingredient,
+                shopping_category: ingredient.shopping_category ?? "uncategorized",
                 meals: api.meals
                   .filter((meal) =>
                     meal.ingredients.some((row) => row.ingredient_id === ingredient.id),
@@ -180,7 +206,11 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
             request.method() === "POST"
               ? Math.max(0, ...api.ingredients.map((item) => item.id)) + 1
               : Number(path.split("/").pop());
-          const ingredient = { id, name: body.name.trim() };
+          const ingredient = {
+            id,
+            name: body.name.trim(),
+            shopping_category: body.shopping_category ?? ("uncategorized" as const),
+          };
           api.ingredients = [...api.ingredients.filter((item) => item.id !== id), ingredient];
           const rename = (meal: Meal): Meal => ({
             ...meal,

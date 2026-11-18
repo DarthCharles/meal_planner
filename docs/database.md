@@ -100,6 +100,7 @@ erDiagram
     int id PK
     string name "not null"
     string normalized_name "not null, unique"
+    string shopping_category "default uncategorized, not null, constrained code"
     datetime created_at
     datetime updated_at
   }
@@ -182,3 +183,19 @@ The schema enforces required foreign keys and prevents duplicate relationships:
 - Each ingredient has at most one shopping profile. Each profile can have only
   one equivalence for a given unit. Equivalence factors must be positive at
   database level; models also reject nonfinite factors and conflicting units.
+
+## Shopping categories
+
+`ingredients.shopping_category` is a non-null string with default `uncategorized`.
+Both a database check constraint and model validation restrict it to the ordered
+codes in `ShoppingCategory`: `produce`, `meat`, `deli`, `dairy_eggs`,
+`bakery_tortillas`, `pantry`, `frozen`, `uncategorized`. Categories describe grocery
+departments and belong to shared ingredients, independently of recipes and optional
+shopping profiles. No category table or translated labels are stored.
+
+The category migration assigns the reviewed existing catalog by normalized name,
+including canned tuna/corn and packaged sauces to pantry, broccoli and Pulled pork
+BBQ Kowi to frozen, and spinach to produce. Unrecognized names remain uncategorized.
+This is a one-time backfill; future ingredients default to uncategorized and are
+classified explicitly through ingredient editing. Renaming preserves their category.
+English and Spanish display labels live in the client translation catalogs.

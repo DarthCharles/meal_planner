@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 
 import { Button } from "@darthcharles/greda";
 
@@ -72,6 +73,9 @@ export function SavedMenusScreen() {
               >
                 {formatMenuDateRange(selected)}
               </h3>
+              <Button asChild variant="outline" className="mb-4">
+                <Link to={`/menus/${selected.id}/shopping-list`}>{t("shopping_list.title")}</Link>
+              </Button>
               {!!selected.generation_notices?.length && (
                 <Notice>
                   <div>

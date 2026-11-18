@@ -7,7 +7,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :created
     ingredient = Ingredient.find_by!(normalized_name: "standalone onion")
-    assert_equal({ "id" => ingredient.id, "name" => "Standalone onion", "meals" => [] }, response.parsed_body["data"])
+    assert_equal({ "id" => ingredient.id, "name" => "Standalone onion", "shopping_category" => "uncategorized", "meals" => [] }, response.parsed_body["data"])
     assert_empty ingredient.meals
   end
 
@@ -36,7 +36,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     row = meal.meal_ingredients.create!(ingredient: ingredient, unit: unit, quantity: 150, preparation_note: "diced")
     patch "/ingredients/#{ingredient.id}", params: { name: "  Catalog cherry tomato  " }, as: :json
     assert_response :ok
-    assert_equal({ "id" => ingredient.id, "name" => "Catalog cherry tomato", "meals" => [{ "id" => meal.id, "name" => meal.name }] }, response.parsed_body["data"])
+    assert_equal({ "id" => ingredient.id, "name" => "Catalog cherry tomato", "shopping_category" => "uncategorized", "meals" => [{ "id" => meal.id, "name" => meal.name }] }, response.parsed_body["data"])
     get "/meals/#{meal.id}"
     assert_response :ok
     saved = response.parsed_body.dig("data", "ingredients", 0)
@@ -103,4 +103,31 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     assert_equal({ "errors" => "Ingredient not found" }, response.parsed_body)
   end
+  test "category reference data uses stable ordered codes in every locale" do
+    %w[en es].each do |locale|
+      get "/shopping_categories", headers: { "Accept-Language" => locale }, as: :json
+      assert_response :ok
+      assert_equal ShoppingCategory.catalog.as_json, response.parsed_body["data"]
+    end
+  end
+
+  test "creates and updates categories and rejects invalid assignments atomically" do
+    post "/ingredients", params: { name: "Frozen broccoli", shopping_category: "frozen" }, as: :json
+    assert_response :created
+    ingredient = Ingredient.find(response.parsed_body.dig("data", "id"))
+    assert_equal "frozen", response.parsed_body.dig("data", "shopping_category")
+    patch "/ingredients/#{ingredient.id}", params: { shopping_category: "produce" }, as: :json
+    assert_response :ok
+    assert_equal "produce", ingredient.reload.shopping_category
+
+    ["seafood", "Congelados", "", nil].each do |invalid|
+      patch "/ingredients/#{ingredient.id}", params: { name: "Unsaved name", shopping_category: invalid },
+        headers: { "Accept-Language" => "es" }, as: :json
+      assert_response :unprocessable_entity
+      assert_equal ["no es una categoría de compra válida"], response.parsed_body.dig("errors", "shopping_category")
+      assert_equal "Frozen broccoli", ingredient.reload.name
+      assert_equal "produce", ingredient.shopping_category
+    end
+  end
+
 end

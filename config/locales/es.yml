@@ -41,6 +41,7 @@ es:
       ingredient:
         name: "Nombre"
         normalized_name: "Nombre"
+        shopping_category: "Categoría de compra"
       meal_ingredient:
         quantity: "Cantidad"
         ingredient_id: "Ingrediente"
@@ -54,6 +55,10 @@ es:
         people_count: "Personas"
     errors:
       models:
+        ingredient:
+          attributes:
+            shopping_category:
+              inclusion: "no es una categoría de compra válida"
         meal:
           attributes:
             preferred_days:
