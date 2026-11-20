@@ -511,7 +511,7 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.5.0. Lucide icons and their types are
+The client pins `@darthcharles/greda` 1.5.1. Lucide icons and their types are
 available through `@darthcharles/greda/icons` without a separate icon dependency.
 TypeScript uses `Bundler` module resolution to honor package subpath exports,
 including Greda's icons entry point, consistently with Vite.
@@ -531,9 +531,10 @@ component styles.
 `data-color-scheme="light"` on `<html>`, so dialogs inherit it too. The dialog
 test fixture selects the same theme. Comal supplies the palette, font stacks,
 and base radii; the app loads DM Sans and Fraunces through the existing font
-import. Greda 1.4.3 supplies Comal's clay backgrounds, deeper terracotta actions,
-pale sage tertiary surfaces, warm neutral secondary controls, and clay interaction
-fills, with stronger text, field-border, and button hover contrast. Noninteractive
+import. Greda 1.5.1 supplies Comal's lighter warm ivory and tan stone neutrals,
+charcoal text, terracotta actions, pale sage tertiary surfaces, warm neutral
+secondary controls, and clay interaction fills. The neutral palette has a softer
+tan undertone and less of a brown cast in both color schemes. Noninteractive
 badges retain their backgrounds on hover. Typography, shape, and semantic roles
 remain the same. The optional La Viuda theme is not selected. No palette values
 are copied into the app. Greda derives surface, text,
