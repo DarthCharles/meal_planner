@@ -552,6 +552,9 @@ Only one preview is shown: usage and meal details replace each other, with an
 explicit Back action. `onDismiss` synchronizes user dismissal with the URL;
 programmatic replacement does not navigate. `returnFocus` preserves the original
 trigger across an editor round trip. Editor pages never render inside the dialog.
+Editor back links, headings, forms, and supporting messages use the shared
+centered page container, matching the shopping and library pages without an
+additional editor-specific width limit.
 
 `features/meals/useMealDialog.tsx` retains its existing feature entry points but
 now opens URL previews or editor routes through `useWorkspaceNavigation`.
@@ -692,7 +695,8 @@ and add these variants for larger screens.
 
 Current menus and the selected saved menu link to the dedicated
 `/menus/:menuId/shopping-list` page. Its back action returns to the originating
-current/saved menu and restores the selected saved week. The receipt occupies one
+current/saved menu and restores the selected saved week. The back link uses the
+same left arrow and minimum touch height as the meal editor. The receipt occupies one
 full-width paper surface with one header, footer, shadow, and decorative torn edge.
 Inside it, CSS Columns packs complete categories into a masonry-style layout:
 one column below 760px, two from 760px, three from 1100px. Categories flow top to
@@ -712,17 +716,23 @@ warnings remain visible, alongside loading, retry, empty, and missing-menu state
 The list uses a centered supermarket receipt with monospace text, dotted leaders,
 category separators, and a decorative torn bottom edge. Each ingredient/unit entry
 has an accessible checkbox: marking it strikes through its name and quantity,
-without changing the category order or hiding quantities. A footer shows checked
-progress. Marks are temporary component state, reset on leaving the screen, reloading,
-or switching menus. An editor round trip preserves them. Recalculation unchecks
-only removed or changed ingredient/unit/quantity entries; unchanged entries stay
-checked.
+without changing the category order or hiding quantities. A sticky line beneath
+the compact receipt header shows checked progress while scrolling.
+The receipt uses readable 14px grocery text and a 44px-wide checkbox label target,
+with ingredient names opening recipe usage separately. Checked rows remain in place.
+Marks are saved in local browser storage separately for each menu and survive
+leaving the screen and reloading. An editor round trip preserves them.
+Recalculation unchecks only removed or changed ingredient/unit/quantity entries;
+unchanged entries stay checked.
 Refreshing an unchanged list or switching language preserves marks. They are not
-sent to the API or saved in browser storage. There are no pantry deductions,
+sent to the API or synchronized between devices. Unavailable or invalid browser
+storage falls back to an in-memory checklist. There are no pantry deductions,
 custom categories, or combined-week lists.
 
-The People input stays inside the ticket header. An accessible refresh icon in
-the top-right corner submits its form and calls `PATCH /menus/:id`
+The People input and labeled refresh button stay inside an initially collapsed
+“Adjust” disclosure in the ticket header, below the week and calculated people
+count. Opening and closing the disclosure preserves unsaved values. The refresh
+button submits its form and calls `PATCH /menus/:id`
 with `people_count`. Positive safe integers are required; saving disables duplicate
 submissions and preserves failed drafts. The mutation cancels in-flight list/menu
 reads, copies only `people_count` into all cached menu languages (preserving their

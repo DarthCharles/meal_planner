@@ -12,6 +12,8 @@ test("opens a dedicated receipt page and returns to the originating menu", async
   await expect(page).toHaveURL("/menus/1/shopping-list");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const receipt = page.getByRole("region", { name: "Shopping receipt", exact: true });
+  await expect(receipt.getByRole("spinbutton", { name: "People", exact: true })).toBeHidden();
+  await receipt.getByText("Adjust", { exact: true }).click();
   await expect(receipt.getByRole("spinbutton", { name: "People", exact: true })).toHaveValue("4");
   await page.getByRole("link", { name: "Back to menus", exact: true }).click();
   await expect(page).toHaveURL("/");
@@ -204,6 +206,7 @@ test("checks entries independently, supports keyboard toggling, and resets chang
   await page.keyboard.press("Space");
   await expect(grams).not.toBeChecked();
   await cups.check();
+  await receipt.getByText("Adjust", { exact: true }).click();
   await page.getByRole("button", { name: "Refresh list", exact: true }).click();
   await expect(cups).toBeChecked();
   await page.getByRole("button", { name: "Menu" }).click();
@@ -217,6 +220,7 @@ test("checks entries independently, supports keyboard toggling, and resets chang
       .getByRole("region", { name: "Ticket de compra", exact: true })
       .getByRole("checkbox", { name: /Rice.*1/ }),
   ).toBeChecked();
+  await grams.check();
   api.shoppingLists[1].items[0].quantity = "400";
   await page.getByRole("button", { name: "Actualizar lista", exact: true }).click();
   await expect(page.getByText("400 g", { exact: true })).toBeVisible();
@@ -227,7 +231,44 @@ test("checks entries independently, supports keyboard toggling, and resets chang
   expect(api.saves).toEqual([]);
   await page.reload();
   await expect(page.getByRole("checkbox")).toHaveCount(2);
-  await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(0);
+  await expect(page.getByRole("checkbox", { name: /Rice.*1/ })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: /Rice.*400/ })).not.toBeChecked();
+});
+
+test("keeps saved checks separate for each menu and drops changed amounts after reopening", async ({
+  page,
+  api,
+}) => {
+  api.shoppingLists[2] = { ...structuredClone(api.shoppingLists[1]), menu_id: 2 };
+  await page.goto("/menus/1/shopping-list");
+  const egg = page.getByRole("checkbox", { name: /Egg/ });
+  await egg.check();
+  await page.getByRole("link", { name: "Back to menus", exact: true }).click();
+  await page.goto("/menus/2/shopping-list");
+  await expect(egg).not.toBeChecked();
+  await page.goto("/menus/1/shopping-list");
+  await expect(egg).toBeChecked();
+  api.shoppingLists[1].items.find((item) => item.name === "Egg")!.quantity = "24";
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: /Egg.*24/ })).not.toBeChecked();
+});
+
+test("allows checking groceries when saved progress is corrupt or storage is unavailable", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("comal.shopping-checks.v1.1", "invalid-json");
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.startsWith("comal.shopping-checks.")) throw new Error("Storage unavailable");
+      setItem.call(this, key, value);
+    };
+  });
+  await page.goto("/menus/1/shopping-list");
+  const egg = page.getByRole("checkbox", { name: /Egg/ });
+  await expect(egg).not.toBeChecked();
+  await egg.check();
+  await expect(egg).toBeChecked();
 });
 
 test("edits a recipe from a single preview and restores shopping progress", async ({
@@ -238,6 +279,7 @@ test("edits a recipe from a single preview and restores shopping progress", asyn
   const ticket = page.getByRole("region", { name: "Shopping receipt", exact: true });
   const checked = ticket.getByRole("checkbox", { name: /Egg/ });
   await checked.check();
+  await ticket.getByText("Adjust", { exact: true }).click();
   await ticket.getByRole("spinbutton", { name: "People", exact: true }).fill("6");
   await ticket.getByRole("button", { name: "Egg", exact: true }).click();
   await page
@@ -319,6 +361,7 @@ test("validates people, retains failed drafts, and refreshes backend quantities 
   await page.goto("/");
   await page.getByRole("link", { name: "Shopping list", exact: true }).click();
   const dialog = page.getByRole("region", { name: "Shopping receipt", exact: true });
+  await dialog.getByText("Adjust", { exact: true }).click();
   const people = dialog.getByRole("spinbutton", { name: "People", exact: true });
   const save = dialog.getByRole("button", { name: "Refresh list", exact: true });
   const receipt = dialog;
@@ -356,6 +399,7 @@ test("validates people, retains failed drafts, and refreshes backend quantities 
   ]);
   await page.getByRole("link", { name: "Back to menus", exact: true }).click();
   await page.getByRole("link", { name: "Shopping list", exact: true }).click();
+  await dialog.getByText("Adjust", { exact: true }).click();
   await expect(people).toHaveValue("6");
 });
 
@@ -364,6 +408,7 @@ test("preserves the original receipt calculation when refreshing a saved count f
   api,
 }) => {
   await page.goto("/menus/1/shopping-list");
+  await page.getByText("Adjust", { exact: true }).click();
   const people = page.getByRole("spinbutton", { name: "People", exact: true });
   await people.fill("2");
   api.readErrors["/menus/1/shopping_list"] = "Refresh unavailable";
@@ -392,6 +437,7 @@ test("saving people preserves notices in each cached language", async ({ page, a
   await expect(page.getByText("Aviso en español", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Lista de compras", exact: true }).click();
   const dialog = page.getByRole("region", { name: "Ticket de compra", exact: true });
+  await dialog.getByText("Ajustar", { exact: true }).click();
   await dialog.getByRole("spinbutton", { name: "Personas", exact: true }).fill("3");
   api.shoppingLists[1].people_count = 3;
   await dialog.getByRole("button", { name: "Actualizar lista", exact: true }).click();
@@ -415,6 +461,7 @@ test(
     const ticket = page.getByRole("region", { name: "Shopping receipt", exact: true });
     const checked = ticket.getByRole("checkbox", { name: /Egg/ });
     await checked.check();
+    await ticket.getByText("Adjust", { exact: true }).click();
     await ticket.getByRole("spinbutton", { name: "People", exact: true }).fill("6");
     expect(api.reads["/ingredients"] ?? 0).toBe(0);
     const ingredient = ticket.getByRole("button", { name: "Egg", exact: true });
@@ -495,6 +542,10 @@ test(
       expect(lastBox.x).toBeGreaterThan(firstBox.x + 100);
     }
     await first.check();
+    const progress = receipt.getByRole("status");
+    await last.scrollIntoViewIfNeeded();
+    await expect(progress).toBeInViewport();
+    await receipt.getByText("Adjust", { exact: true }).click();
     await receipt.getByRole("spinbutton", { name: "People", exact: true }).fill("6");
     await page.setViewportSize({ width: 320, height: 900 });
     await expect(receipt.getByRole("checkbox")).toHaveCount(36);

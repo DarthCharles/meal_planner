@@ -48,6 +48,7 @@ export const es: typeof en = {
     menu_missing: "Este menú ya no está disponible.",
 
     people_label: "Personas",
+    adjust: "Ajustar",
     updating: "Actualizando…",
     people_invalid: "Escribe un número entero positivo dentro del rango permitido.",
     people_saved: "Número de personas guardado.",
@@ -59,7 +60,7 @@ export const es: typeof en = {
     amount: "Cantidad",
     checked: "%{checked} de %{count} marcados",
     checklist_help:
-      "Marca los ingredientes mientras compras. Las marcas duran mientras esta lista esté abierta.",
+      "Marca los ingredientes mientras compras. Tu progreso se guarda en este dispositivo.",
     title: "Lista de compras",
     back: "Volver a los menús",
     loading: "Cargando lista de compras…",

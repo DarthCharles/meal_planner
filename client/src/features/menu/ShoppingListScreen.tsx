@@ -1,4 +1,5 @@
 import { Button } from "@darthcharles/greda";
+import { ArrowLeft } from "@darthcharles/greda/icons";
 import { Link, useLocation, useParams } from "react-router";
 
 import { useI18n } from "../../i18n";
@@ -12,8 +13,9 @@ export function ShoppingListScreen() {
   const { t } = useI18n();
   return (
     <section aria-labelledby="shopping-list-title" className="pb-8">
-      <Button asChild variant="link" className="mb-3 px-0">
+      <Button asChild variant="link" className="mb-3 min-h-11 px-0">
         <Link to={returnTo} state={{ selectedMenuId: Number(menuId) }}>
+          <ArrowLeft aria-hidden="true" className="mr-2 size-4" />
           {t("shopping_list.back")}
         </Link>
       </Button>

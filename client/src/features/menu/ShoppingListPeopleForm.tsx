@@ -88,8 +88,7 @@ export function ShoppingListPeopleForm({
     <Button
       type="submit"
       form={formId}
-      variant="ghost"
-      size="icon"
+      variant="secondary"
       disabled={isPending || refreshing}
       aria-label={isPending ? t("shopping_list.updating") : t("shopping_list.refresh")}
       title={t("shopping_list.refresh")}
@@ -98,6 +97,7 @@ export function ShoppingListPeopleForm({
         aria-hidden="true"
         className={`size-4 ${isPending || refreshing ? "motion-safe:animate-spin" : ""}`}
       />
+      {isPending ? t("shopping_list.updating") : t("shopping_list.refresh")}
     </Button>,
   );
 }

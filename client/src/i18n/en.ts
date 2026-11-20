@@ -46,6 +46,7 @@ export const en = {
     menu_missing: "This menu is no longer available.",
 
     people_label: "People",
+    adjust: "Adjust",
     updating: "Updating…",
     people_invalid: "Enter a positive whole number within the supported range.",
     people_saved: "People count saved.",
@@ -56,7 +57,7 @@ export const en = {
     ingredient: "Ingredient",
     amount: "Quantity",
     checked: "%{checked} of %{count} checked",
-    checklist_help: "Check off items as you shop. Marks last while this list is open.",
+    checklist_help: "Check off items as you shop. Progress is saved on this device.",
     title: "Shopping list",
     back: "Back to menus",
     loading: "Loading shopping list…",

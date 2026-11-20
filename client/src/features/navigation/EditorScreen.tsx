@@ -81,11 +81,7 @@ export function EditorScreen({
     window.scrollTo(0, 0);
   }, []);
   return (
-    <section
-      role="region"
-      aria-labelledby="editor-title"
-      className="mx-auto max-w-[760px] pb-8 pt-3"
-    >
+    <section role="region" aria-labelledby="editor-title" className="pb-8 pt-3">
       <Button variant="link" className="mb-3 min-h-11 px-0" onClick={finishEditor}>
         <ArrowLeft aria-hidden="true" className="mr-2 size-4" />
         {t("editor.back")}

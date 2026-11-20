@@ -163,3 +163,15 @@ mobile and a centered modal on desktop. Back retraces preview contents; Close
 returns to the originating screen. Recipe and ingredient creation/editing use
 dedicated pages, retaining the originating screen and returning to its preview
 after Save or Cancel. Do not stack previews or put the main editors in dialogs.
+Editor back links, page headings, forms, and supporting messages use the shared
+centered page container without an additional editor-specific width limit.
+
+## Shopping receipt
+
+Preserve one paper surface with monospace, dotted leaders, dashed category
+separators, and a torn bottom edge. Use one column below 760px, two from 760px,
+and three from 1100px; keep each category together. The compact header shows
+the week and people count, with serving controls inside an Adjust disclosure.
+Checked progress sticks below the header while scrolling. Grocery text is 14px,
+checkbox labels provide a 44px-wide touch target, and checked rows stay in place.
+Save checks per menu on the device, clearing checks for changed quantities.
