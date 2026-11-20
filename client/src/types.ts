@@ -31,6 +31,7 @@ export type Day = {
 
 export type Menu = {
   id: number;
+  people_count: number;
   created_at?: string;
   generation_notices: string[];
   from: string;
@@ -73,7 +74,6 @@ export type ShoppingListItem = {
   shopping_category: ShoppingCategoryCode;
   quantity: string;
   unit: string;
-  required_quantity?: string;
   approximate?: boolean;
 };
 

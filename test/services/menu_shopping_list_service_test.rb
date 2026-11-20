@@ -32,7 +32,7 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
       items.map { |item| item.values_at(:ingredient_id, :unit, :quantity) }
   end
 
-  test "combines onion grams and pieces before rounding the purchase quantity" do
+  test "combines onion requirements in grams without rounding to purchase pieces" do
     @menu.update!(people_count: 1)
     onion = Ingredient.create!(name: "Cebolla")
     piece = Unit.find_or_create_by!(code: "pieza") { |unit| unit.name = "pieces" }
@@ -45,18 +45,18 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     @tuesday.daily_meals.create!(meal: second)
 
     result = MenuShoppingListService.new.call(menu: @menu)
-    assert_equal [{ ingredient_id: onion.id, name: "Cebolla", shopping_category: "uncategorized", unit: "pieza",
-      quantity: "2", required_quantity: "1.792", approximate: true }], result[:items]
+    assert_equal [{ ingredient_id: onion.id, name: "Cebolla", shopping_category: "uncategorized", unit: "g",
+      quantity: "265.25", approximate: true }], result[:items]
     assert_empty result[:conversion_warnings]
     profile.update!(round_up: false)
     item = MenuShoppingListService.new.call(menu: @menu)[:items].first
-    assert_equal "1.792", item[:quantity]
+    assert_equal "265.25", item[:quantity]
     assert_not item.key?(:required_quantity)
   end
 
-  test "sums all recipe requirements before calculating jars" do
+  test "sums recipe requirements in grams regardless of jar size and purchase rounding" do
     @menu.update!(people_count: 1)
-    jar = Unit.find_or_create_by!(code: "frasco") { |unit| unit.name = "jars" }
+    Unit.find_or_create_by!(code: "frasco") { |unit| unit.name = "jars" }
     mayonnaise = Ingredient.create!(name: "Mayonnaise")
     configure_shopping(mayonnaise, unit: "frasco", quantity: "390", approximate: false)
     meal = Meal.create!(name: "Sandwich", description: "Recipe", servings: 2)
@@ -64,9 +64,9 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     @monday.daily_meals.create!(meal: meal)
     @tuesday.daily_meals.create!(meal: meal)
     item = MenuShoppingListService.new.call(menu: @menu)[:items].first
-    assert_equal jar.code, item[:unit]
-    assert_equal "2", item[:quantity]
-    assert_equal "1.026", item[:required_quantity]
+    assert_equal "g", item[:unit]
+    assert_equal "400.0", item[:quantity]
+    assert_not item.key?(:required_quantity)
     assert_not item.key?(:approximate)
   end
 
@@ -87,9 +87,9 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
 
     configure_shopping(onion)
     result = MenuShoppingListService.new.call(menu: @menu)
-    assert_equal %w[pieza taza], result[:items].map { |item| item[:unit] }
+    assert_equal %w[g taza], result[:items].map { |item| item[:unit] }
     assert_equal [{ ingredient_id: onion.id, name: "Onion", units: ["taza"],
-      target_unit: "pieza", reason: "equivalence_missing" }], result[:conversion_warnings]
+      target_unit: "g", reason: "equivalence_missing" }], result[:conversion_warnings]
     assert_equal "1.0", result[:items].last[:quantity]
   end
 
@@ -149,6 +149,59 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_equal %w[produce produce frozen uncategorized], result[:items].map { |item| item[:shopping_category] }
     ingredients.first.update!(shopping_category: "pantry")
     assert_equal "pantry", MenuShoppingListService.new.call(menu: @menu)[:items][2][:shopping_category]
+  end
+
+  test "keeps fractional pieces and cloves when recipes already use one common unit" do
+    @menu.update!(people_count: 1)
+    piece = Unit.find_or_create_by!(code: "pieza") { |unit| unit.name = "pieces" }
+    clove = Unit.find_or_create_by!(code: "diente") { |unit| unit.name = "cloves" }
+    avocado = Ingredient.create!(name: "Avocado")
+    garlic = Ingredient.create!(name: "Garlic")
+    configure_shopping(avocado)
+    garlic.create_shopping_profile!(base_unit: piece, shopping_unit: piece, round_up: true)
+    meal = Meal.create!(name: "Small portion", description: "Recipe")
+    meal.meal_ingredients.create!(ingredient: avocado, unit: piece, quantity: "0.5")
+    meal.meal_ingredients.create!(ingredient: garlic, unit: clove, quantity: "0.5")
+    @monday.daily_meals.create!(meal: meal)
+    result = MenuShoppingListService.new.call(menu: @menu)
+    assert_equal [["pieza", "0.5"], ["diente", "0.5"]], result[:items].map { |item| item.values_at(:unit, :quantity) }
+    assert_empty result[:conversion_warnings]
+    assert result[:items].none? { |item| item.key?(:approximate) || item.key?(:required_quantity) }
+  end
+
+  test "converts teaspoons to ingredient grams without calculating whole jars" do
+    @menu.update!(people_count: 1)
+    spoon = Unit.find_or_create_by!(code: "cucharadita") { |unit| unit.name = "teaspoons" }
+    Unit.find_or_create_by!(code: "frasco") { |unit| unit.name = "jars" }
+    mayonnaise = Ingredient.create!(name: "Mayonnaise")
+    profile = configure_shopping(mayonnaise, unit: "frasco", quantity: "425", approximate: false)
+    profile.unit_equivalences.create!(unit: spoon, quantity: "4.6", source: "Test reference", description: "Approximate spoon weight", approximate: true)
+    meal = Meal.create!(name: "Sandwich", description: "Recipe")
+    meal.meal_ingredients.create!(ingredient: mayonnaise, unit: spoon, quantity: 2)
+    @monday.daily_meals.create!(meal: meal)
+    item = MenuShoppingListService.new.call(menu: @menu)[:items].sole
+    assert_equal "g", item[:unit]
+    assert_equal "9.2", item[:quantity]
+    assert_equal true, item[:approximate]
+    assert_not item.key?(:required_quantity)
+  end
+
+  test "combines fractional containers and grams as requirements rather than purchases" do
+    @menu.update!(people_count: 2)
+    package = Unit.find_or_create_by!(code: "package") { |unit| unit.name = "packages" }
+    yogurt = Ingredient.create!(name: "Yogurt")
+    configure_shopping(yogurt, unit: "package", quantity: "150", approximate: false)
+    first = Meal.create!(name: "Yogurt bowl", description: "Recipe")
+    second = Meal.create!(name: "Overnight oats", description: "Recipe")
+    first.meal_ingredients.create!(ingredient: yogurt, unit: package, quantity: "0.5")
+    second.meal_ingredients.create!(ingredient: yogurt, unit: @grams, quantity: 75)
+    @monday.daily_meals.create!(meal: first)
+    @tuesday.daily_meals.create!(meal: second)
+    item = MenuShoppingListService.new.call(menu: @menu)[:items].sole
+    assert_equal "g", item[:unit]
+    assert_equal "300.0", item[:quantity]
+    assert_not item.key?(:required_quantity)
+    assert_not item.key?(:approximate)
   end
 
   private

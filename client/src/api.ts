@@ -21,6 +21,8 @@ function errorFieldLabel(field: string) {
     case "shopping_unit":
     case "round_up":
       return t("ingredients.shopping.title");
+    case "people_count":
+      return t("shopping_list.people_label");
     case "shopping_category":
       return t("ingredients.form.shopping_category");
     case "name":
@@ -74,6 +76,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  updateMenuPeople: (id: number, people_count: number) =>
+    request<Menu>(`/menus/${id}`, { method: "PATCH", body: JSON.stringify({ people_count }) }),
   getShoppingCategories: (signal?: AbortSignal) =>
     request<ShoppingCategory[]>("/shopping_categories", { signal }),
   getShoppingList: (id: number, signal?: AbortSignal) =>

@@ -85,11 +85,6 @@ export function IngredientShoppingSummary({
                   {unitLabel(profile.shopping_unit)}
                 </dd>
               </dl>
-              <p className="m-0 text-muted-foreground">
-                {profile.round_up
-                  ? t("ingredients.shopping.whole_units")
-                  : t("ingredients.shopping.fractional_units")}
-              </p>
               {profile.shopping_unit === "pieza" &&
                 profile.base_unit === "pieza" &&
                 !profile.equivalences.some((entry) => entry.unit === "g") && (

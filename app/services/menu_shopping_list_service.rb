@@ -1,83 +1,79 @@
 class MenuShoppingListService
   def call(menu:)
-    totals = {}
+    requirements = {}
     missing = {}
-    warnings = {}
     occurrences = DailyMeal.joins(:day).where(days: { menu_id: menu.id })
-      .includes(meal: { meal_ingredients: [:unit, { ingredient: { shopping_profile: [:base_unit, :shopping_unit, { unit_equivalences: :unit }] } }] })
+      .includes(meal: { meal_ingredients: [:unit, { ingredient: { shopping_profile: [:base_unit, { unit_equivalences: :unit }] } }] })
 
     occurrences.each do |occurrence|
       meal = occurrence.meal
       missing[meal.id] = { id: meal.id, name: meal.name } if meal.meal_ingredients.empty?
       meal.meal_ingredients.each do |row|
-        quantity = Rational(row.quantity.to_s) * menu.people_count / meal.servings
         code, multiplier = Unit.canonical(row.unit.code)
-        quantity *= multiplier
-        profile = row.ingredient.shopping_profile
-        approximate = false
-        round_up = false
-        if profile
-          target = profile.shopping_unit.code
-          source_factor = profile.factor_for(code)
-          target_factor = profile.factor_for(target)
-          target_base, target_multiplier = Unit.canonical(target)
-          if code == target_base
-            quantity /= target_multiplier
-            code = target
-            round_up = profile.round_up
-          elsif source_factor && target_factor
-            quantity = quantity * source_factor.first / target_factor.first
-            approximate = source_factor.last || target_factor.last
-            code = target
-            round_up = profile.round_up
-          else
-            warning = warnings[row.ingredient_id] ||= {
-              ingredient_id: row.ingredient_id, name: row.ingredient.name,
-              units: [], target_unit: target, reason: "equivalence_missing"
-            }
-            warning[:units] |= [code]
-          end
-        end
-        key = [row.ingredient_id, code]
-        item = totals[key] ||= {
-          ingredient_id: row.ingredient_id, name: row.ingredient.name,
-          shopping_category: row.ingredient.shopping_category,
-          unit: code, quantity: Rational(0), round_up: round_up
-        }
-        item[:quantity] += quantity
-        item[:approximate] = true if approximate
+        quantity = Rational(row.quantity.to_s) * menu.people_count / meal.servings * multiplier
+        entry = requirements[row.ingredient_id] ||= { ingredient: row.ingredient, totals: Hash.new(Rational(0)) }
+        entry[:totals][code] += quantity
       end
     end
 
-    items = totals.values.sort_by do |item|
+    items = []
+    warnings = []
+    requirements.each_value do |entry|
+      ingredient_items, warning = ingredient_requirements(entry[:ingredient], entry[:totals])
+      items.concat(ingredient_items)
+      warnings << warning if warning
+    end
+    items.sort_by! do |item|
       [ShoppingCategory::CODES.index(item[:shopping_category]), item[:name].downcase, item[:ingredient_id], item[:unit]]
-    end
-    items.group_by { |item| item[:ingredient_id] }.each do |ingredient_id, entries|
-      if entries.size > 1 && !warnings.key?(ingredient_id)
-        warnings[ingredient_id] = {
-          ingredient_id: ingredient_id, name: entries.first[:name],
-          units: entries.map { |item| item[:unit] }, target_unit: nil, reason: "shopping_profile_missing"
-        }
-      end
-    end
-    items.each do |item|
-      quantity = item[:quantity]
-      if item.delete(:round_up)
-        item[:required_quantity] = quantity_string(quantity)
-        item[:quantity] = quantity.ceil.to_s
-      else
-        item[:quantity] = quantity_string(quantity)
-      end
     end
     {
       menu_id: menu.id, from: menu.from, to: menu.to, people_count: menu.people_count,
       categories: ShoppingCategory.catalog, items: items,
       meals_without_ingredients: missing.values.sort_by { |meal| [meal[:name].downcase, meal[:id]] },
-      conversion_warnings: warnings.values.sort_by { |warning| [warning[:name].downcase, warning[:ingredient_id]] }
+      conversion_warnings: warnings.sort_by { |warning| [warning[:name].downcase, warning[:ingredient_id]] }
     }
   end
 
   private
+
+  def ingredient_requirements(ingredient, totals)
+    profile = ingredient.shopping_profile
+    combined = Hash.new(Rational(0))
+    approximate = {}
+    unresolved = []
+    # Preserve an already common weight, volume or physical count. Other measures
+    # can use a documented base-unit factor; purchase preferences never set totals.
+    convert = profile && (totals.size > 1 || !%w[g ml pieza diente].include?(totals.keys.first))
+    totals.each do |unit, quantity|
+      factor = convert ? profile.factor_for(unit) : nil
+      if factor
+        unit = profile.base_unit.code
+        quantity *= factor.first
+        approximate[unit] = true if factor.last
+      elsif convert
+        unresolved << unit
+      end
+      combined[unit] += quantity
+    end
+
+    items = combined.map do |unit, quantity|
+      item = {
+        ingredient_id: ingredient.id, name: ingredient.name,
+        shopping_category: ingredient.shopping_category, unit: unit, quantity: quantity_string(quantity)
+      }
+      item[:approximate] = true if approximate[unit]
+      item
+    end
+    warning = if combined.size > 1
+      {
+        ingredient_id: ingredient.id, name: ingredient.name,
+        units: profile ? unresolved.sort : combined.keys.sort,
+        target_unit: profile&.base_unit&.code,
+        reason: profile ? "equivalence_missing" : "shopping_profile_missing"
+      }
+    end
+    [items, warning]
+  end
 
   def quantity_string(total)
     rounded = (BigDecimal(total.numerator.to_s) / BigDecimal(total.denominator.to_s)).round(3, :half_up)

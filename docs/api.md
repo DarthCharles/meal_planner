@@ -283,8 +283,11 @@ menus; a list always covers the entire selected menu, without filtering past day
 Each scheduled meal contributes `quantity × people_count ÷ servings`.
 Repeated meals count once per scheduled occurrence. Kilograms are normalized
 to grams and liters to milliliters, including for ingredients without a shopping
-profile. Ingredient-specific equivalences convert other units to the configured
-shopping unit before grouping. Different catalog entries remain separate;
+profile. Quantities represent recipe requirements, not full packages to purchase.
+An already common weight, volume, piece, or clove unit is preserved. When units
+are mixed, ingredient-specific equivalences combine compatible quantities in the
+profile's base unit. Documented household/container measures can also be expressed
+in that base unit even when they are the only recipe unit. Different catalog entries remain separate;
 preparation notes do not affect grouping. The endpoint returns
 current ingredient names, quantities, and servings, so recipe edits affect
 historical menus' lists too. No shopping-list or purchase state is stored.
@@ -292,12 +295,12 @@ historical menus' lists too. No shopping-list or purchase state is stored.
 Aggregation uses exact rational arithmetic and rounds only final totals to
 three decimal places, halfway away from zero. Quantities are decimal strings
 (including whole values such as `"24.0"` or `"2"`); positive totals smaller than
-the display precision are shown as `"0.001"` instead of zero. A profile with
-`round_up: true` rounds the unrounded final total up to whole shopping units,
-after combining all occurrences. That item additionally returns
-`required_quantity`, the fractional requirement rounded for display. Without
-this setting, pieces and package quantities remain fractional. No pantry stock
-is subtracted.
+the display precision are shown as `"0.001"` instead of zero. The list never
+rounds up to whole pieces or containers. `shopping_unit` and `round_up` remain
+stored profile settings for compatibility but do not determine requirement totals.
+The response no longer emits `required_quantity`: `quantity` is the required
+amount itself. For example, two 4.6 g teaspoons of mayonnaise return 9.2 g,
+regardless of a configured 425 g jar. Pantry stock is not subtracted.
 
 An item includes `approximate: true` only if a conversion used an approximate
 equivalence. Its absence means no approximate conversion was used; it does not
@@ -305,14 +308,16 @@ guarantee the original recipe measurements are exact. Matching units do not
 need a weight conversion even if a profile has an approximate piece weight.
 
 If an equivalence is missing, the original quantity is retained in its canonical
-unit and is not rounded using the shopping preference. Converted and unconverted
+unit. Converted and unconverted
 quantities can therefore remain separate. `conversion_warnings` identifies the
-ingredient, source `units`, desired `target_unit`, and a stable `reason`:
+ingredient, source `units`, base `target_unit`, and a stable `reason`:
 `equivalence_missing` for a configured profile or `shopping_profile_missing`
-when an unconfigured ingredient has multiple incompatible units. For example:
+when an unconfigured ingredient has multiple incompatible units. Warnings are
+needed only when multiple entries remain; a recipe using only cloves can return
+cloves without requiring a cloves-to-head conversion. For example:
 
 ```json
-{"ingredient_id":12,"name":"Cebolla","units":["taza"],"target_unit":"pieza","reason":"equivalence_missing"}
+{"ingredient_id":12,"name":"Cebolla","units":["taza"],"target_unit":"g","reason":"equivalence_missing"}
 ```
 
 Items are sorted by category position, lowercased ingredient name, ingredient ID, then unit code.

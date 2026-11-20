@@ -621,15 +621,44 @@ and add these variants for larger screens.
 
 ## Shopping lists and categories
 
-Current menus and the selected saved menu link to `/menus/:menuId/shopping-list`.
-`ShoppingListScreen` fetches `GET /menus/:id/shopping_list` only when opened, through
+Current menus and the selected saved menu link to the dedicated
+`/menus/:menuId/shopping-list` page. Its back action returns to the originating
+current/saved menu and restores the selected saved week. The receipt occupies one
+full-width paper surface with one header, footer, shadow, and decorative torn edge.
+Inside it, CSS Columns packs complete categories into a masonry-style layout:
+one column below 760px, two from 760px, three from 1100px. Categories flow top to
+bottom and then across, retaining their API order. Each category stays together,
+without splitting long lists, repeating headings, or aligning to rigid grid rows.
+Resizing preserves the checklist and people draft. Ingredient and recipe details
+continue to use the existing dialogs above the page.
+`ShoppingListContent` fetches `GET /menus/:id/shopping_list` only when opened, through
 React Query. It displays the full week's calendar range, saved people count,
-category sections, localized quantities/units, recipe requirements before rounding,
-and approximation indicators. Empty categories stay hidden; ingredients sort with
+category sections, localized requirement quantities/units, and approximation
+indicators. The backend no longer rounds to full purchase containers or returns
+a second fractional-container requirement. The ticket displays the needed amount
+directly; profile purchase preferences remain stored for compatibility. Empty categories stay hidden; ingredients sort with
 the selected locale within the API's category order. Missing recipes and conversion
 warnings remain visible, alongside loading, retry, empty, and missing-menu states.
-Lists are view-only, calculated from live recipes; there are no checkboxes, pantry
-deductions, custom categories, or combined-week lists.
+The list uses a centered supermarket receipt with monospace text, dotted leaders,
+category separators, and a decorative torn bottom edge. Each ingredient/unit entry
+has an accessible checkbox: marking it strikes through its name and quantity,
+without changing the category order or hiding quantities. A footer shows checked
+progress. Marks are temporary component state, reset on leaving the screen,
+reloading, switching menus, or changes to the calculated
+quantities/people count.
+Refreshing an unchanged list or switching language preserves marks. They are not
+sent to the API or saved in browser storage. There are no pantry deductions,
+custom categories, or combined-week lists.
+
+The People input stays inside the ticket header. An accessible refresh icon in
+the top-right corner submits its form and calls `PATCH /menus/:id`
+with `people_count`. Positive safe integers are required; saving disables duplicate
+submissions and preserves failed drafts. The mutation cancels in-flight list/menu
+reads, copies only `people_count` into all cached menu languages (preserving their
+localized notices), and refreshes the selected list. Quantities are calculated by
+Rails. If refreshing fails after a successful save, the saved count remains in the
+input while the ticket displays its previous calculated count with a warning and
+retry action. Changing counts never rewrites recipe ingredient amounts.
 
 Ingredient dialogs load `/shopping_categories` before initializing their draft and
 provide a category selector independent of shopping quantity configuration. New
@@ -641,8 +670,8 @@ receives stable English codes. Ingredient names remain user content.
 Category/name edits, shopping-profile edits, recipe saves, and menu generation
 invalidate cached shopping lists. Lists also refresh when reopened or explicitly
 refreshed, so changes to saved people counts made through the API appear there.
-Recipe cache updates preserve existing ingredient categories. The responsive list
-uses one column on phones and two on larger screens with the existing Greda theme.
+Recipe cache updates preserve existing ingredient categories. The responsive receipt
+uses the full available page width with the existing Greda theme.
 
 ## Browser tests
 
@@ -697,3 +726,22 @@ changing behavior instead of creating temporary browser scripts.
 `.github/workflows/client-tests.yml` installs Chromium, builds the client,
 type-checks the tests, and runs the suite on pushes and pull requests. It uploads
 the HTML report (including failure attachments) as a GitHub Actions artifact.
+
+### Recipe lookup from the receipt
+
+Ingredient names in the ticket open a small usage modal containing only the meals
+in that menu that use the ingredient. `IngredientMenuMeals` uses the existing menu
+query and matches `ingredient_id` in its scheduled recipes. Repeated occurrences
+of a meal appear once; meals in other menus or only in the library are excluded.
+This view contains no ingredient form or shopping configuration.
+
+Selecting a meal reuses `useMealDialog` and its existing detail/edit modal. The
+`preserveParent` option keeps the usage list behind it. Closing returns to the
+previous layer and restores focus. The ticket page, unsaved people input, checked
+entries, and scroll position remain mounted. Checkboxes remain separate controls,
+so opening the usage list does not check the ingredient.
+
+The generic dialog API adds `pushDialog` for this flow. Existing `openDialog`
+continues to replace dialogs. Only the top instance can close itself; closing a
+pushed layer pops it without remounting its parent. The root host owns the page
+scroll lock, and every host handles its own native dialog focus and dismissal.

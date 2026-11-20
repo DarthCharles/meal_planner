@@ -17,6 +17,9 @@ type SaveRequest = { method: string; path: string; body: MealPayload };
 type MockApi = {
   menus: Menu[];
   shoppingLists: Record<number, ShoppingList>;
+  menuSaves: { id: number; people_count: number }[];
+  menuSaveError: string | null;
+  menuSaveBarrier?: Promise<void>;
   localizedMenus: Partial<Record<"en" | "es", Menu[]>>;
   requests: { path: string; language: string | undefined }[];
   meals: Meal[];
@@ -53,6 +56,8 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         menus: structuredClone([menu]),
         shoppingLists: { [menu.id]: structuredClone(shoppingList) },
         localizedMenus: {},
+        menuSaves: [],
+        menuSaveError: null,
         requests: [],
         meals: structuredClone(meals),
         ingredients: [
@@ -86,7 +91,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         const path = new URL(request.url()).pathname;
         const headers = {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+          "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
         };
         if (request.method() === "OPTIONS") {
@@ -155,6 +160,21 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
                   .map(({ id, name }) => ({ id, name })),
               })),
             ));
+        }
+        if (/^\/menus\/\d+$/.test(path) && request.method() === "PATCH") {
+          const id = Number(path.split("/")[2]);
+          const { people_count } = request.postDataJSON() as { people_count: number };
+          api.menuSaves.push({ id, people_count });
+          await api.menuSaveBarrier;
+          if (api.menuSaveError) return void (await fail(api.menuSaveError));
+          const menu = api.menus.find((item) => item.id === id);
+          if (!menu) return void (await fail("Menu not found"));
+          menu.people_count = people_count;
+          for (const menus of Object.values(api.localizedMenus)) {
+            const localized = menus?.find((item) => item.id === id);
+            if (localized) localized.people_count = people_count;
+          }
+          return void (await respond(menu));
         }
         if (path === "/menus/generate" && request.method() === "POST") {
           api.generationRequests++;

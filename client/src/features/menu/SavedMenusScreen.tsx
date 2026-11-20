@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import { Button } from "@darthcharles/greda";
 
@@ -14,7 +14,10 @@ export function SavedMenusScreen() {
   const { t } = useI18n();
   const { data: menus, isPending: loading, error, refetch, isFetching } = useMenus();
   const { openMeal } = useMealDialog();
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const location = useLocation();
+  const [selectedId, setSelectedId] = useState<number | null>(
+    location.state?.selectedMenuId ?? null,
+  );
   const now = new Date();
   const savedMenus = [...(menus ?? [])].sort(
     (left, right) => right.from.localeCompare(left.from) || right.id - left.id,
@@ -74,7 +77,9 @@ export function SavedMenusScreen() {
                 {formatMenuDateRange(selected)}
               </h3>
               <Button asChild variant="outline" className="mb-4">
-                <Link to={`/menus/${selected.id}/shopping-list`}>{t("shopping_list.title")}</Link>
+                <Link to={`/menus/${selected.id}/shopping-list`} state={{ from: "/saved-menus" }}>
+                  {t("shopping_list.title")}
+                </Link>
               </Button>
               {!!selected.generation_notices?.length && (
                 <Notice>

@@ -32,6 +32,7 @@ export const demoMeals: Meal[] = [
 
 export const demoMenu: Menu = {
   id: 1,
+  people_count: 1,
   generation_notices: [],
   from: "2025-03-03T00:00:00.000Z",
   to: "2025-03-09T23:59:59.000Z",

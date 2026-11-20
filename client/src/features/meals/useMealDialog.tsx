@@ -7,23 +7,24 @@ import { MealDetails } from "./MealDetails";
 import { MealDetailsContent } from "./MealDetailsContent";
 import { MealDialogContent } from "./MealDialogContent";
 
-export function useMealDialog() {
+export function useMealDialog({ preserveParent = false } = {}) {
   const { t } = useI18n();
-  const { openDialog } = useDialog();
+  const { openDialog, pushDialog } = useDialog();
+  const showDialog = preserveParent ? pushDialog : openDialog;
   const openCreateMeal = useCallback(
     () =>
-      openDialog({
+      showDialog({
         title: () => t("meals.dialog.new_favorite"),
         eyebrow: () => t("meals.dialog.add_to_library"),
         content: ({ close }) => (
           <MealDialogContent initialMeal={null} onClose={close} onSaved={close} />
         ),
       }),
-    [openDialog, t],
+    [showDialog, t],
   );
   const openEditMeal = useCallback(
     (meal: Meal) =>
-      openDialog({
+      showDialog({
         title: () => t("meals.details.edit_meal"),
         hideTitle: true,
         eyebrow: () => t("meals.dialog.update_library"),
@@ -31,25 +32,25 @@ export function useMealDialog() {
           <MealDialogContent initialMeal={meal} onClose={close} onSaved={close} />
         ),
       }),
-    [openDialog, t],
+    [showDialog, t],
   );
   const openMeal = useCallback(
     (meal: Meal) =>
-      openDialog({
+      showDialog({
         title: meal.name,
         eyebrow: () => t("meals.dialog.on_table"),
         content: () => <MealDetails meal={meal} onEdit={() => openEditMeal(meal)} />,
       }),
-    [openDialog, openEditMeal, t],
+    [showDialog, openEditMeal, t],
   );
   const openMealById = useCallback(
     (id: number, name: string) =>
-      openDialog({
+      showDialog({
         title: name,
         eyebrow: () => t("meals.dialog.in_library"),
         content: () => <MealDetailsContent id={id} onEdit={openEditMeal} />,
       }),
-    [openDialog, openEditMeal, t],
+    [showDialog, openEditMeal, t],
   );
   return { openCreateMeal, openEditMeal, openMeal, openMealById };
 }

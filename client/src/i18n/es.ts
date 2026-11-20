@@ -30,6 +30,24 @@ export const es: typeof en = {
     language: "Idioma",
   },
   shopping_list: {
+    menu_meals_title: "Comidas con %{name}",
+    menu_meals_help: "Comidas de este menú que usan este ingrediente.",
+    unused_in_menu: "Ninguna comida de este menú usa este ingrediente.",
+    menu_missing: "Este menú ya no está disponible.",
+
+    people_label: "Personas",
+    updating: "Actualizando…",
+    people_invalid: "Escribe un número entero positivo dentro del rango permitido.",
+    people_saved: "Número de personas guardado.",
+    previous_calculation:
+      "El ticket muestra el cálculo anterior. Actualiza la lista para ver las nuevas cantidades.",
+
+    receipt: "Ticket de compra",
+    ingredient: "Ingrediente",
+    amount: "Cantidad",
+    checked: "%{checked} de %{count} marcados",
+    checklist_help:
+      "Marca los ingredientes mientras compras. Las marcas duran mientras esta lista esté abierta.",
     title: "Lista de compras",
     back: "Volver a los menús",
     loading: "Cargando lista de compras…",
@@ -43,7 +61,6 @@ export const es: typeof en = {
     equivalence_missing: "Falta la conversión a %{unit}",
     shopping_profile_missing: "No se han configurado las cantidades de compra",
     approximate: "Cantidad aproximada",
-    required: "Cantidad para las recetas: %{quantity} %{unit}",
     invalid: "Menú inválido.",
   },
   common: {
@@ -108,8 +125,6 @@ export const es: typeof en = {
       not_configured: "Sin configurar",
       not_configured_help: "Aún no hay cantidades de compra para este ingrediente.",
       buy_by: "Comprar por",
-      whole_units: "Las cantidades de compra se redondean a unidades completas.",
-      fractional_units: "Las cantidades de compra pueden incluir fracciones.",
       amounts: "Cantidades conocidas",
       amount: "Cada %{unit} contiene %{quantity} %{base}",
       unavailable_amount: "desconocido",

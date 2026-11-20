@@ -58,6 +58,7 @@ export const units: UnitOption[] = [
 ];
 export const menu: Menu = {
   id: 1,
+  people_count: 4,
   generation_notices: [],
   from: "2026-10-19T12:00:00Z",
   to: "2026-10-25T12:00:00Z",

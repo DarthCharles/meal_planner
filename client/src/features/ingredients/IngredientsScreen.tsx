@@ -2,12 +2,12 @@ import { useState } from "react";
 
 import { Button, Input } from "@darthcharles/greda";
 
-import { useDialog } from "../../components/dialog/useDialog";
 import { Notice } from "../../components/Notice";
 import { formatLocale, useI18n } from "../../i18n";
-import type { IngredientCatalogEntry } from "../../types";
 import { useIngredients } from "../meals/queries";
 import { IngredientForm } from "./IngredientForm";
+import { useDialog } from "../../components/dialog/useDialog";
+import type { IngredientCatalogEntry } from "../../types";
 import { IngredientsSkeleton } from "./IngredientsSkeleton";
 
 export function IngredientsScreen() {

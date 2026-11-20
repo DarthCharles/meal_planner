@@ -28,6 +28,23 @@ export const en = {
     language: "Language",
   },
   shopping_list: {
+    menu_meals_title: "Meals with %{name}",
+    menu_meals_help: "Meals in this menu that use this ingredient.",
+    unused_in_menu: "No meals in this menu use this ingredient.",
+    menu_missing: "This menu is no longer available.",
+
+    people_label: "People",
+    updating: "Updating…",
+    people_invalid: "Enter a positive whole number within the supported range.",
+    people_saved: "People count saved.",
+    previous_calculation:
+      "The ticket shows the previous calculation. Refresh the list to see the updated quantities.",
+
+    receipt: "Shopping receipt",
+    ingredient: "Ingredient",
+    amount: "Quantity",
+    checked: "%{checked} of %{count} checked",
+    checklist_help: "Check off items as you shop. Marks last while this list is open.",
     title: "Shopping list",
     back: "Back to menus",
     loading: "Loading shopping list…",
@@ -41,7 +58,6 @@ export const en = {
     equivalence_missing: "Missing conversion to %{unit}",
     shopping_profile_missing: "Shopping quantities are not configured",
     approximate: "Approximate quantity",
-    required: "Recipe requirement: %{quantity} %{unit}",
     invalid: "Invalid menu.",
   },
   common: {
@@ -106,8 +122,6 @@ export const en = {
       not_configured: "Not set up yet",
       not_configured_help: "Shopping amounts have not been set up for this ingredient.",
       buy_by: "Buy by",
-      whole_units: "Shopping amounts are rounded up to whole units.",
-      fractional_units: "Shopping quantities can include fractions.",
       amounts: "Known amounts",
       amount: "Each %{unit} contains %{quantity} %{base}",
       unavailable_amount: "unknown",

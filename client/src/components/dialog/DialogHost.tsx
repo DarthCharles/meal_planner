@@ -6,7 +6,13 @@ import { X } from "@darthcharles/greda/icons";
 import { useI18n } from "../../i18n";
 import type { DialogInstance } from "./useDialog";
 
-export function DialogHost({ dialog }: { dialog: DialogInstance }) {
+export function DialogHost({
+  dialog,
+  lockScroll = true,
+}: {
+  dialog: DialogInstance;
+  lockScroll?: boolean;
+}) {
   const { t } = useI18n();
   const elementRef = useRef<HTMLDialogElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -20,18 +26,22 @@ export function DialogHost({ dialog }: { dialog: DialogInstance }) {
     const element = elementRef.current!;
     const bodyOverflow = document.body.style.overflow;
     const rootOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
+    if (lockScroll) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    }
     element.showModal();
     // A stable title also works while feature content is still loading.
     titleRef.current?.focus({ preventScroll: true });
     return () => {
       element.close();
-      document.body.style.overflow = bodyOverflow;
-      document.documentElement.style.overflow = rootOverflow;
+      if (lockScroll) {
+        document.body.style.overflow = bodyOverflow;
+        document.documentElement.style.overflow = rootOverflow;
+      }
       if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
-  }, [opener]);
+  }, [opener, lockScroll]);
 
   return (
     <dialog

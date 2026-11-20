@@ -18,6 +18,7 @@ export type DialogInstance = DialogOptions & {
 
 export const DialogContext = createContext<{
   openDialog: (options: DialogOptions) => void;
+  pushDialog: (options: DialogOptions) => void;
   closeDialog: () => void;
 } | null>(null);
 

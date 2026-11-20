@@ -45,7 +45,9 @@ export function MenuScreen() {
           </div>
           {currentMenu && (
             <Button asChild variant="outline">
-              <Link to={`/menus/${currentMenu.id}/shopping-list`}>{t("shopping_list.title")}</Link>
+              <Link to={`/menus/${currentMenu.id}/shopping-list`} state={{ from: "/" }}>
+                {t("shopping_list.title")}
+              </Link>
             </Button>
           )}
         </div>

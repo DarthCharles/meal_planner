@@ -28,7 +28,7 @@ class IngredientShoppingProfilesControllerTest < ActionDispatch::IntegrationTest
 
     get "/ingredients", as: :json
     entry = response.parsed_body["data"].find { |row| row["id"] == @ingredient.id }
-    assert_equal %w[id meals name], entry.keys.sort
+    assert_equal %w[id meals name shopping_category], entry.keys.sort
   end
 
   test "replaces a profile atomically and preserves recipes" do
@@ -49,10 +49,10 @@ class IngredientShoppingProfilesControllerTest < ActionDispatch::IntegrationTest
     day.daily_meals.create!(meal: meal)
     get "/menus/#{menu.id}/shopping_list", as: :json
     assert_response :ok
-    assert_equal "pieza", response.parsed_body.dig("data", "items", 0, "unit")
-    assert_equal "1", response.parsed_body.dig("data", "items", 0, "quantity")
-    assert_equal "0.401", response.parsed_body.dig("data", "items", 0, "required_quantity")
-    assert_equal true, response.parsed_body.dig("data", "items", 0, "approximate")
+    assert_equal "g", response.parsed_body.dig("data", "items", 0, "unit")
+    assert_equal "80.25", response.parsed_body.dig("data", "items", 0, "quantity")
+    assert_not response.parsed_body.dig("data", "items", 0).key?("required_quantity")
+    assert_not response.parsed_body.dig("data", "items", 0).key?("approximate")
 
     invalid = custom_profile.deep_dup
     invalid[:equivalences][0][:quantity] = 0
@@ -113,7 +113,7 @@ class IngredientShoppingProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Ingrediente no encontrado", response.parsed_body["errors"]
   end
 
-  test "shopping lists use the ingredient's configured bag or can rather than a fixed jar" do
+  test "shopping requirements ignore configured bag and can purchase sizes" do
     meal = Meal.create!(name: "Packaged oats", description: "Recipe")
     meal.meal_ingredients.create!(ingredient: @ingredient, unit: Unit.find_by!(code: "g"), quantity: 600)
     menu = Menu.create!(from: Time.utc(2026, 11, 16), to: Time.utc(2026, 11, 22))
@@ -124,9 +124,9 @@ class IngredientShoppingProfilesControllerTest < ActionDispatch::IntegrationTest
       assert_response :ok
       get "/menus/#{menu.id}/shopping_list", as: :json
       assert_response :ok
-      assert_equal unit, response.parsed_body.dig("data", "items", 0, "unit")
-      assert_equal "2", response.parsed_body.dig("data", "items", 0, "quantity")
-      assert_equal "1.2", response.parsed_body.dig("data", "items", 0, "required_quantity")
+      assert_equal "g", response.parsed_body.dig("data", "items", 0, "unit")
+      assert_equal "600.0", response.parsed_body.dig("data", "items", 0, "quantity")
+      assert_not response.parsed_body.dig("data", "items", 0).key?("required_quantity")
     end
   end
 

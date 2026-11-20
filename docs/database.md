@@ -134,8 +134,9 @@ erDiagram
   to `1`, including records predating the fields. Changing either count does
   not rewrite ingredient quantities.
 - Shopping lists are calculated from live recipes for each scheduled occurrence
-  using `quantity × people_count ÷ servings`, converted to compatible shopping
-  units and grouped by ingredient. There are no shopping-list or checked-item records. Regeneration
+  using `quantity × people_count ÷ servings`, grouped by ingredient and compatible
+  requirement units. Mixed units use ingredient-specific base-unit equivalences.
+  The list does not round to whole purchase units or deduct pantry stock. There are no shopping-list or checked-item records. Regeneration
   replaces a week's menu ID, preserving its people count unless overridden.
 - `Day` belongs to a `Menu` and a `Weekday`.
 - `Day` has many `Meal` records through `DailyMeal`.
@@ -155,7 +156,8 @@ erDiagram
 - `MealIngredient` stores the quantity, unit, preparation note, and display order.
 - Units are selected from the structured `Unit` catalog instead of free text.
 - An optional `IngredientShoppingProfile` selects the base and shopping units
-  and whether to round the final purchase quantity up to whole units. Each
+  and retains a whole-purchase rounding preference for compatibility. These purchase
+  settings do not change shopping-list requirement quantities. Each
   `IngredientUnitEquivalence` expresses one unit in base units and records its
   source, description, and approximation flag. The base can be grams,
   milliliters, or pieces. Profiles and equivalences belong to the shared
