@@ -77,6 +77,27 @@ npm run build
 
 Generated client files in `node_modules/`, `dist/`, and TypeScript build metadata are ignored by Git.
 
+## Git hooks
+
+Enable the tracked hooks once per clone, from the repository root:
+
+```bash
+git config --local core.hooksPath .githooks
+```
+
+When a commit includes staged files under `client/`, the pre-commit hook runs
+ESLint with `--fix --max-warnings=0` on staged JavaScript and TypeScript files,
+then Prettier with `--write --ignore-unknown` on staged client files. Both tools
+use the client's existing configuration and ignore rules. Deleted files are
+skipped. Install client dependencies first. Other commits skip these tools.
+
+Stage or stash unstaged changes in files included in the commit; the hook stops
+if any remain so fixes do not mix with unfinished work. Unrelated unstaged files
+are left alone. ESLint errors or warnings and Prettier errors block the commit.
+If either tool applies fixes, review and stage them, then commit again.
+The hook never stages changes automatically. The full verification
+requirements in `AGENTS.md` still apply before committing.
+
 ## Tests
 
 Run the Rails test suite with the pinned Ruby version:

@@ -1,7 +1,7 @@
 import { Button } from "@darthcharles/greda";
 
-import { Notice } from "../../components/Notice";
 import { CollectionHeader } from "../../components/CollectionHeader";
+import { Notice } from "../../components/Notice";
 import { demoMeals } from "../../demoData";
 import { useI18n } from "../../i18n";
 import { MealsSkeleton } from "./MealsSkeleton";

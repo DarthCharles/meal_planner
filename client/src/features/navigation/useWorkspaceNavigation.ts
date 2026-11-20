@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
-import { useLocation, useNavigate } from "react-router";
 import type { Location } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 export function isEditorPath(pathname: string) {
   return /^\/(meals|ingredients)\/(new|[1-9]\d*\/edit)$/.test(pathname);

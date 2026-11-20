@@ -8,12 +8,12 @@ import { Navigation } from "./components/Navigation";
 import { IngredientsScreen } from "./features/ingredients/IngredientsScreen";
 import { MealsScreen } from "./features/meals/MealsScreen";
 import { MenuScreen } from "./features/menu/MenuScreen";
-import { ShoppingListScreen } from "./features/menu/ShoppingListScreen";
 import { SavedMenusScreen } from "./features/menu/SavedMenusScreen";
-import { useI18n } from "./i18n";
+import { ShoppingListScreen } from "./features/menu/ShoppingListScreen";
 import { EditorScreen } from "./features/navigation/EditorScreen";
 import { PreviewController } from "./features/navigation/PreviewController";
 import { editorBackground } from "./features/navigation/useWorkspaceNavigation";
+import { useI18n } from "./i18n";
 
 function PageLayout() {
   return (

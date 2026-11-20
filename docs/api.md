@@ -19,7 +19,7 @@ Clients translate reference display labels using those stable values. For exampl
 Spanish blank-name validation returns:
 
 ```json
-{"errors":{"name":["no puede estar en blanco"]}}
+{ "errors": { "name": ["no puede estar en blanco"] } }
 ```
 
 `generation_notices` remains an array of strings, rendered in the request language
@@ -32,23 +32,23 @@ required.
 
 ## Meals
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/meals` | List meals |
-| `GET` | `/meals/:id` | Show one meal |
-| `POST` | `/meals` | Create a meal |
-| `PUT` | `/meals/:id` | Update a meal |
-| `PATCH` | `/meals/:id` | Update a meal |
-| `DELETE` | `/meals/:id` | Delete a meal |
-| `GET` | `/units` | List available ingredient units |
-| `GET` | `/ingredients` | List the shared ingredient catalog |
-| `POST` | `/ingredients` | Create a standalone ingredient |
-| `PUT` / `PATCH` | `/ingredients/:id` | Update a shared ingredient name or shopping category |
-| `GET` | `/shopping_categories` | List ordered shopping category codes |
-| `DELETE` | `/ingredients/:id` | Delete an unused ingredient |
-| `GET` | `/ingredients/:ingredient_id/shopping_profile` | Show shopping units and equivalences |
-| `PUT` / `PATCH` | `/ingredients/:ingredient_id/shopping_profile` | Replace shopping configuration |
-| `DELETE` | `/ingredients/:ingredient_id/shopping_profile` | Clear shopping configuration |
+| Method          | Endpoint                                       | Purpose                                              |
+| --------------- | ---------------------------------------------- | ---------------------------------------------------- |
+| `GET`           | `/meals`                                       | List meals                                           |
+| `GET`           | `/meals/:id`                                   | Show one meal                                        |
+| `POST`          | `/meals`                                       | Create a meal                                        |
+| `PUT`           | `/meals/:id`                                   | Update a meal                                        |
+| `PATCH`         | `/meals/:id`                                   | Update a meal                                        |
+| `DELETE`        | `/meals/:id`                                   | Delete a meal                                        |
+| `GET`           | `/units`                                       | List available ingredient units                      |
+| `GET`           | `/ingredients`                                 | List the shared ingredient catalog                   |
+| `POST`          | `/ingredients`                                 | Create a standalone ingredient                       |
+| `PUT` / `PATCH` | `/ingredients/:id`                             | Update a shared ingredient name or shopping category |
+| `GET`           | `/shopping_categories`                         | List ordered shopping category codes                 |
+| `DELETE`        | `/ingredients/:id`                             | Delete an unused ingredient                          |
+| `GET`           | `/ingredients/:ingredient_id/shopping_profile` | Show shopping units and equivalences                 |
+| `PUT` / `PATCH` | `/ingredients/:ingredient_id/shopping_profile` | Replace shopping configuration                       |
+| `DELETE`        | `/ingredients/:ingredient_id/shopping_profile` | Clear shopping configuration                         |
 
 Meal create and update requests may include an `ingredients` array. Each item
 uses exactly one of `ingredient_id` (an existing catalog ID) or `name` (a new
@@ -70,7 +70,17 @@ back all changes.
 ownership filtering:
 
 ```json
-{"data":[{"id":12,"name":"Egg","shopping_category":"dairy_eggs","meals":[{"id":3,"name":"Omelette"}]},{"id":19,"name":"Potato","shopping_category":"produce","meals":[]}]}
+{
+  "data": [
+    {
+      "id": 12,
+      "name": "Egg",
+      "shopping_category": "dairy_eggs",
+      "meals": [{ "id": 3, "name": "Omelette" }]
+    },
+    { "id": 19, "name": "Potato", "shopping_category": "produce", "meals": [] }
+  ]
+}
 ```
 
 Each catalog entry includes the IDs and names of meals using that ingredient,
@@ -104,8 +114,8 @@ For example, a meal can select an existing ingredient and create another:
 ```json
 {
   "ingredients": [
-    {"ingredient_id":12,"quantity":"2","unit":"pieza"},
-    {"name":"Onion","quantity":"100","unit":"g","preparation_note":"diced"}
+    { "ingredient_id": 12, "quantity": "2", "unit": "pieza" },
+    { "name": "Onion", "quantity": "100", "unit": "g", "preparation_note": "diced" }
   ]
 }
 ```
@@ -164,13 +174,13 @@ apply to every meal time associated with the meal and affect future generation.
 
 ## Menus
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/menus` | List menus |
-| `GET` | `/menus/:id` | Show one menu |
-| `POST` | `/menus/generate` | Generate the next weekly menu |
-| `PUT` / `PATCH` | `/menus/:id` | Update the menu's people count |
-| `GET` | `/menus/:id/shopping_list` | Calculate the menu's shopping list |
+| Method          | Endpoint                   | Purpose                            |
+| --------------- | -------------------------- | ---------------------------------- |
+| `GET`           | `/menus`                   | List menus                         |
+| `GET`           | `/menus/:id`               | Show one menu                      |
+| `POST`          | `/menus/generate`          | Generate the next weekly menu      |
+| `PUT` / `PATCH` | `/menus/:id`               | Update the menu's people count     |
+| `GET`           | `/menus/:id/shopping_list` | Calculate the menu's shopping list |
 
 Every menu response includes the positive integer `people_count`. Existing
 menus default to `1`. Generation optionally accepts `{"people_count":4}`.
@@ -185,7 +195,7 @@ or an integer string such as `"4"`, at most `9223372036854775807`.
 Invalid values return `422`, for example:
 
 ```json
-{"errors":{"people_count":["must be a positive whole number"]}}
+{ "errors": { "people_count": ["must be a positive whole number"] } }
 ```
 
 Invalid updates and generation requests preserve existing data. Missing menus
@@ -237,7 +247,18 @@ If meals are insufficient, the endpoint returns `422`:
 `GET /shopping_categories` returns fixed reference data in display order:
 
 ```json
-{"data":[{"code":"produce","position":0},{"code":"meat","position":1},{"code":"deli","position":2},{"code":"dairy_eggs","position":3},{"code":"bakery_tortillas","position":4},{"code":"pantry","position":5},{"code":"frozen","position":6},{"code":"uncategorized","position":7}]}
+{
+  "data": [
+    { "code": "produce", "position": 0 },
+    { "code": "meat", "position": 1 },
+    { "code": "deli", "position": 2 },
+    { "code": "dairy_eggs", "position": 3 },
+    { "code": "bakery_tortillas", "position": 4 },
+    { "code": "pantry", "position": 5 },
+    { "code": "frozen", "position": 6 },
+    { "code": "uncategorized", "position": 7 }
+  ]
+}
 ```
 
 Codes and positions are identical in every locale. The client translates labels
@@ -256,19 +277,25 @@ or submitted in place of codes. There is no category-management endpoint.
     "to": "2026-11-22T23:59:59.000Z",
     "people_count": 4,
     "categories": [
-      {"code":"produce","position":0},
-      {"code":"meat","position":1},
-      {"code":"deli","position":2},
-      {"code":"dairy_eggs","position":3},
-      {"code":"bakery_tortillas","position":4},
-      {"code":"pantry","position":5},
-      {"code":"frozen","position":6},
-      {"code":"uncategorized","position":7}
+      { "code": "produce", "position": 0 },
+      { "code": "meat", "position": 1 },
+      { "code": "deli", "position": 2 },
+      { "code": "dairy_eggs", "position": 3 },
+      { "code": "bakery_tortillas", "position": 4 },
+      { "code": "pantry", "position": 5 },
+      { "code": "frozen", "position": 6 },
+      { "code": "uncategorized", "position": 7 }
     ],
     "items": [
-      {"ingredient_id": 3, "name": "Huevo", "shopping_category": "dairy_eggs", "quantity": "24.0", "unit": "pieza"}
+      {
+        "ingredient_id": 3,
+        "name": "Huevo",
+        "shopping_category": "dairy_eggs",
+        "quantity": "24.0",
+        "unit": "pieza"
+      }
     ],
-    "meals_without_ingredients": [{"id": 7, "name": "Ensalada de pollo"}],
+    "meals_without_ingredients": [{ "id": 7, "name": "Ensalada de pollo" }],
     "conversion_warnings": []
   }
 }
@@ -324,7 +351,13 @@ needed only when multiple entries remain; a recipe using only cloves can return
 cloves without requiring a cloves-to-head conversion. For example:
 
 ```json
-{"ingredient_id":12,"name":"Cebolla","units":["taza"],"target_unit":"g","reason":"equivalence_missing"}
+{
+  "ingredient_id": 12,
+  "name": "Cebolla",
+  "units": ["taza"],
+  "target_unit": "g",
+  "reason": "equivalence_missing"
+}
 ```
 
 Items are sorted by category position, lowercased ingredient name, ingredient ID, then unit code.
@@ -349,13 +382,15 @@ equivalences. Both return `200` with the saved configuration in `data`:
   "base_unit": "g",
   "shopping_unit": "pieza",
   "round_up": true,
-  "equivalences": [{
-    "unit": "pieza",
-    "quantity": "148",
-    "source": "https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/nutrition-information-raw-vegetables",
-    "description": "One medium raw onion; edible portion. Whole purchase sizes vary.",
-    "approximate": true
-  }]
+  "equivalences": [
+    {
+      "unit": "pieza",
+      "quantity": "148",
+      "source": "https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/nutrition-information-raw-vegetables",
+      "description": "One medium raw onion; edible portion. Whole purchase sizes vary.",
+      "approximate": true
+    }
+  ]
 }
 ```
 
@@ -416,7 +451,11 @@ Returns selection pairs such as:
 
 ```json
 {
-  "data": [["breakfast", 1], ["lunch", 2], ["dinner", 3]]
+  "data": [
+    ["breakfast", 1],
+    ["lunch", 2],
+    ["dinner", 3]
+  ]
 }
 ```
 

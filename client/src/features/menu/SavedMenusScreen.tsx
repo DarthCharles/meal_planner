@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router";
 
 import { Button } from "@darthcharles/greda";
+import { Link, useLocation } from "react-router";
 
 import { Notice } from "../../components/Notice";
 import { useI18n } from "../../i18n";

@@ -2,12 +2,12 @@ import { useState } from "react";
 
 import { Button, Input } from "@darthcharles/greda";
 
-import { Notice } from "../../components/Notice";
 import { CollectionHeader } from "../../components/CollectionHeader";
+import { Notice } from "../../components/Notice";
 import { formatLocale, useI18n } from "../../i18n";
+import type { IngredientCatalogEntry } from "../../types";
 import { useIngredients } from "../meals/queries";
 import { useWorkspaceNavigation } from "../navigation/useWorkspaceNavigation";
-import type { IngredientCatalogEntry } from "../../types";
 import { IngredientsSkeleton } from "./IngredientsSkeleton";
 
 export function IngredientsScreen() {

@@ -9,11 +9,11 @@ import type {
   MealTypeOption,
   UnitOption,
 } from "../../types";
+import { useEditorDraft } from "../navigation/EditorDraftContext";
 import { IngredientManager } from "./IngredientManager";
 import { mealTypeLabel } from "./mealTypes";
 import { PreferredDaysField } from "./PreferredDaysField";
 import { useCreateMeal, useUpdateMeal } from "./queries";
-import { useEditorDraft } from "../navigation/EditorDraftContext";
 
 export function MealForm({
   types,

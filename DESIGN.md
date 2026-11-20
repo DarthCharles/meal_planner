@@ -122,6 +122,7 @@ components:
 # Design System: Comal
 
 <!-- impeccable:design-map -->
+
 Name: Comal
 Colors: primary: terracotta hsl(18 68% 31%); secondary: warm-tan hsl(32 26% 88%); tertiary: garden-sage hsl(90 20.40816% 80.78431%); neutral: warm-cream hsl(32 32% 94%) (+9 more in the sidecar)
 Fonts: Fraunces (display, headline, day-title); DM Sans (body, label, eyebrow); ui-monospace (receipt)
@@ -129,30 +130,31 @@ Spacing: unit 0.25rem, gap-2 0.5rem, gap-3 0.75rem, gap-4 1rem, gap-6 1.5rem, ga
 Radius: sm 0.375rem, md 0.75rem, lg 0.75rem, meal-card 17px, day-card 20px, dialog 24px, hero 30px, full 9999px
 North Star: "The Everyday Kitchen"
 Rules:
+
 - The Semantic Role Rule. Background, text, and border roles are independent:
 - The Labeled Category Rule. Breakfast uses sage, lunch uses tan, and dinner
 - The Today Border Rule. Today's day card uses the action-colored border while
-Elevation:
+  Elevation:
 - Subtle: 0 1px 2px hsl(var(--base-black) / 0.08)
 - Raised: 0 8px 24px hsl(var(--base-black) / 0.12)
 - Dialog: 0 24px 70px hsl(var(--base-black) / 0.24)
-Don't:
+  Don't:
 - Don't copy this palette into a second application theme or add UI colors without discussion.
 - Don't confuse neutral primary text/borders with action-colored emphasis.
 - Don't change category badge fills on hover or rely on category color alone.
 - Don't add decorative textures to convey the cazuela reference; use color and typography.
 - Don't add a decorative illustration to the existing menu hero during refinement.
 - Don't replace Greda behavior with consumer overrides before investigating the library.
-Do:
+  Do:
 - Do import Greda primitives directly and use its Comal semantic roles.
 - Do preserve the mobile-first layout and allow translated labels and names to wrap.
 - Do retain labeled categories, visible keyboard focus, and explicit field errors.
 - Do use Fraunces for headings and DM Sans for general text and controls.
 - Do preserve readable supporting text and field boundaries in both color schemes.
 - Do keep the receipt's monospace and torn-paper treatment within shopping lists.
-Map: client/src/styles.css
-Map: client/src/theme.css
-Full: .impeccable/design-full.md (read a section when you need its detail)
+  Map: client/src/styles.css
+  Map: client/src/theme.css
+  Full: .impeccable/design-full.md (read a section when you need its detail)
 
 ## Previews and editing
 

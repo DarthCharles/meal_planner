@@ -3,9 +3,9 @@ import { useEffect, useRef } from "react";
 import { Button } from "@darthcharles/greda";
 
 import { formatLocale, useI18n } from "../../i18n";
+import { dayLabel } from "../meals/preferredDays";
 import { useWorkspaceNavigation } from "../navigation/useWorkspaceNavigation";
 import { useMenus } from "./queries";
-import { dayLabel } from "../meals/preferredDays";
 
 export function IngredientMenuMeals({
   menuId,

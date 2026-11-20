@@ -16,6 +16,13 @@ The client uses `VITE_API_URL` for the API base URL. The default is `http://127.
 
 ## Linting and formatting
 
+The tracked pre-commit hook applies ESLint fixes to staged client JavaScript and
+TypeScript files, then formats staged client files with Prettier. Enable it once per clone with
+`git config --local core.hooksPath .githooks` from the repository root.
+Stage or stash unstaged changes in those files first. If either tool applies fixes, review
+and stage them before retrying the commit; errors or ESLint warnings block
+the commit. See [Git hooks](development.md#git-hooks) for details.
+
 Run these commands from `client/` when verification is requested:
 
 ```bash

@@ -31,15 +31,15 @@ Each stage should be independently reviewable. Use the latest patch of each Rail
 series, address deprecations, and review `app:update` output before adopting it.
 Keep Ruby upgrades separate from Rails upgrades.
 
-| Stage | Work | Verification gate |
-| --- | --- | --- |
-| 1. Baseline | Run current Rails tests. Add backend CI and missing API characterization tests. | Green backend baseline; existing defects recorded separately. |
-| 2. Rails 6.0 to 6.1 | Patch 6.0 first, then upgrade to 6.1 on Ruby 3.0. Review configuration and framework defaults. Resolve or remove unused Spring dependencies. | Full Rails suite, Zeitwerk check, route comparison, application boot. |
-| 3. Rails 7.0 to 7.1 | Upgrade one minor release at a time. Resolve deprecations and required configuration changes. | Repeat backend gates after each minor upgrade. |
-| 4. Ruby bridge | On Rails 7.1, move to the latest Ruby 3.3 patch and compatible Bundler. Refresh native dependencies and supported lockfile platforms. | Full suite; macOS and Linux dependency installation. Compatibility must be proven during execution. |
-| 5. Rails 7.2 to 8.1 | Upgrade through 7.2, 8.0, and 8.1. Resolve Rack/Puma dependencies and upgrade sqlite3 to a compatible 2.x release. | Backend gates at each minor version; isolated SQLite migration and seed checks. |
-| 6. Ruby 3.4 | Upgrade Ruby separately after Rails 8.1 is stable. Update runtime pins, CI, setup docs, and AGENTS.md requirements. | Full suite, fresh setup, production-mode boot, development launcher smoke test. |
-| 7. Generated API contracts | Start a separate migration of request/response contracts, OpenAPI generation, and generated React API code. | Separate design and implementation review. |
+| Stage                      | Work                                                                                                                                         | Verification gate                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 1. Baseline                | Run current Rails tests. Add backend CI and missing API characterization tests.                                                              | Green backend baseline; existing defects recorded separately.                                       |
+| 2. Rails 6.0 to 6.1        | Patch 6.0 first, then upgrade to 6.1 on Ruby 3.0. Review configuration and framework defaults. Resolve or remove unused Spring dependencies. | Full Rails suite, Zeitwerk check, route comparison, application boot.                               |
+| 3. Rails 7.0 to 7.1        | Upgrade one minor release at a time. Resolve deprecations and required configuration changes.                                                | Repeat backend gates after each minor upgrade.                                                      |
+| 4. Ruby bridge             | On Rails 7.1, move to the latest Ruby 3.3 patch and compatible Bundler. Refresh native dependencies and supported lockfile platforms.        | Full suite; macOS and Linux dependency installation. Compatibility must be proven during execution. |
+| 5. Rails 7.2 to 8.1        | Upgrade through 7.2, 8.0, and 8.1. Resolve Rack/Puma dependencies and upgrade sqlite3 to a compatible 2.x release.                           | Backend gates at each minor version; isolated SQLite migration and seed checks.                     |
+| 6. Ruby 3.4                | Upgrade Ruby separately after Rails 8.1 is stable. Update runtime pins, CI, setup docs, and AGENTS.md requirements.                          | Full suite, fresh setup, production-mode boot, development launcher smoke test.                     |
+| 7. Generated API contracts | Start a separate migration of request/response contracts, OpenAPI generation, and generated React API code.                                  | Separate design and implementation review.                                                          |
 
 Framework defaults should advance deliberately at each Rails milestone, with
 behavior changes verified before enabling them.
@@ -95,17 +95,17 @@ nullability, nested ordering, UTC timestamps, writes, reference data, validation
 missing reads, and CORS. A separate Rails GitHub Actions workflow now runs the
 suite and Zeitwerk check, with eager loading enabled in CI.
 
-| Rails | Ruby | Local checkpoint |
-| --- | --- | --- |
-| 6.0.6.1 | 3.0.0 | 23 tests, 94 assertions; Zeitwerk passed. |
-| 6.1.7.10 | 3.0.0 | 23 tests, 94 assertions; Zeitwerk passed. |
-| 7.0.10 | 3.0.0 | 23 tests, 94 assertions; Zeitwerk passed. |
-| 7.1.6 | 3.0.0 | 23 tests, 96 assertions; Zeitwerk passed. |
-| 7.1.6 | 3.3.13 | 23 tests, 96 assertions; Zeitwerk passed. |
-| 7.2.4 | 3.3.13 | 23 tests, 96 assertions; Zeitwerk passed. |
-| 8.0.5.1 | 3.3.13 | 23 tests, 96 assertions; Zeitwerk passed. |
-| 8.1.4 | 3.3.13 | 23 tests, 96 assertions; Zeitwerk passed. |
-| 8.1.4 | 3.4.12 | 23 tests, 96 assertions with CI eager loading; Zeitwerk passed. |
+| Rails    | Ruby   | Local checkpoint                                                |
+| -------- | ------ | --------------------------------------------------------------- |
+| 6.0.6.1  | 3.0.0  | 23 tests, 94 assertions; Zeitwerk passed.                       |
+| 6.1.7.10 | 3.0.0  | 23 tests, 94 assertions; Zeitwerk passed.                       |
+| 7.0.10   | 3.0.0  | 23 tests, 94 assertions; Zeitwerk passed.                       |
+| 7.1.6    | 3.0.0  | 23 tests, 96 assertions; Zeitwerk passed.                       |
+| 7.1.6    | 3.3.13 | 23 tests, 96 assertions; Zeitwerk passed.                       |
+| 7.2.4    | 3.3.13 | 23 tests, 96 assertions; Zeitwerk passed.                       |
+| 8.0.5.1  | 3.3.13 | 23 tests, 96 assertions; Zeitwerk passed.                       |
+| 8.1.4    | 3.3.13 | 23 tests, 96 assertions; Zeitwerk passed.                       |
+| 8.1.4    | 3.4.12 | 23 tests, 96 assertions with CI eager loading; Zeitwerk passed. |
 
 Native dependencies were refreshed for the newer Rubies, including Puma,
 Bootsnap, nio4r, and the SQLite driver. An io-console constraint was needed only

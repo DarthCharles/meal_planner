@@ -26,7 +26,10 @@ test(
       const body = getComputedStyle(document.body);
       return { background: body.backgroundColor, text: body.color, font: body.fontFamily };
     });
-    await testInfo.attach("palette", { body: JSON.stringify(styles), contentType: "application/json" });
+    await testInfo.attach("palette", {
+      body: JSON.stringify(styles),
+      contentType: "application/json",
+    });
 
     api.readErrors["/menus"] = "Connection details";
     await page.reload();
@@ -52,8 +55,12 @@ test(
     await page.getByRole("button", { name: "Menu", exact: true }).click();
     await page.getByRole("button", { name: "Español", exact: true }).click();
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog", { name: "Menú de navegación", exact: true })).toBeHidden();
-    await expect(page.getByRole("button", { name: "Agregar una receta", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Menú de navegación", exact: true }),
+    ).toBeHidden();
+    await expect(
+      page.getByRole("button", { name: "Agregar una receta", exact: true }),
+    ).toBeVisible();
     await captureEntry(page, testInfo, "home-empty-spanish");
   },
 );
