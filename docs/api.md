@@ -283,29 +283,36 @@ menus; a list always covers the entire selected menu, without filtering past day
 Each scheduled meal contributes `quantity × people_count ÷ servings`.
 Repeated meals count once per scheduled occurrence. Kilograms are normalized
 to grams and liters to milliliters, including for ingredients without a shopping
-profile. Quantities represent recipe requirements, not full packages to purchase.
-An already common weight, volume, piece, or clove unit is preserved. When units
-are mixed, ingredient-specific equivalences combine compatible quantities in the
-profile's base unit. Documented household/container measures can also be expressed
-in that base unit even when they are the only recipe unit. Different catalog entries remain separate;
-preparation notes do not affect grouping. The endpoint returns
-current ingredient names, quantities, and servings, so recipe edits affect
-historical menus' lists too. No shopping-list or purchase state is stored.
+profile. Ingredient-specific factors first combine compatible quantities in the
+profile's base unit. Different catalog entries remain separate; preparation notes
+do not affect grouping. Recipe edits affect historical menus' lists too.
 
-Aggregation uses exact rational arithmetic and rounds only final totals to
-three decimal places, halfway away from zero. Quantities are decimal strings
-(including whole values such as `"24.0"` or `"2"`); positive totals smaller than
-the display precision are shown as `"0.001"` instead of zero. The list never
-rounds up to whole pieces or containers. `shopping_unit` and `round_up` remain
-stored profile settings for compatibility but do not determine requirement totals.
-The response no longer emits `required_quantity`: `quantity` is the required
-amount itself. For example, two 4.6 g teaspoons of mayonnaise return 9.2 g,
-regardless of a configured 425 g jar. Pantry stock is not subtracted.
+After summing the entire menu, the endpoint selects a display unit:
+
+- Below one configured piece/container, return the required base-unit quantity.
+- At or above one configured piece/container, express the total in that unit and
+  round up to a whole count. For a 425 g mayonnaise jar: 9 g stays 9 g, 425 g
+  becomes 1 jar, 500 g becomes 2 jars, and 850 g becomes 2 jars.
+- A 148 g onion reference displays 74 g as grams and 360.52 g as 3 pieces.
+- Metric shopping units remain in canonical grams/milliliters, without whole-count
+  rounding. Without usable factors, preserve the available recipe units.
+- If some measures cannot be combined, leave the separate quantities in their
+  available/base units and report a warning; do not round a partial total into
+  containers while other requirements are unresolved.
+
+Aggregation and the threshold comparison use exact rational arithmetic. Base-unit
+quantities are decimal strings rounded only for display to three places, halfway
+away from zero; positive totals below display precision stay visible as `"0.001"`.
+Whole-count rounding happens only after the exact total reaches the configured
+unit's threshold, regardless of the legacy `round_up` flag. `required_quantity`
+is not returned. No pantry stock is subtracted and no purchase state is stored.
 
 An item includes `approximate: true` only if a conversion used an approximate
 equivalence. Its absence means no approximate conversion was used; it does not
-guarantee the original recipe measurements are exact. Matching units do not
-need a weight conversion even if a profile has an approximate piece weight.
+guarantee the original recipe measurements are exact. Approximation can come from
+converting recipe measures to the base unit or displaying the total as pieces.
+A recipe already expressed entirely in the displayed count does not inherit an
+approximation flag from an otherwise unused piece-weight reference.
 
 If an equivalence is missing, the original quantity is retained in its canonical
 unit. Converted and unconverted

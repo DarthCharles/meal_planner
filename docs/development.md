@@ -154,8 +154,10 @@ factor with a documented reference or household measurement. Equivalences are
 stored directly in the database; there is no YAML template catalog or automatic
 matching by ingredient name. Stored recipe quantities remain unchanged, and
 menu calculation makes no external API calls. Shopping-list output represents
-recipe requirements, using equivalences to combine compatible measures; it does
-not round up to the configured shopping unit or use the saved `round_up` setting. Do not generalize a product
+recipe requirements, using equivalences to combine compatible measures. It keeps
+base quantities below one configured shopping unit; after reaching one
+piece/container, it displays a whole count rounded up. This threshold rule does
+not use the legacy `round_up` setting. Do not generalize a product
 package size to every brand or treat edible-portion vegetable weights as
 guaranteed whole purchase weights. See `docs/api.md` for the request and warning
 contracts, including stable unit codes and their English display labels.

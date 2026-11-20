@@ -634,9 +634,10 @@ continue to use the existing dialogs above the page.
 `ShoppingListContent` fetches `GET /menus/:id/shopping_list` only when opened, through
 React Query. It displays the full week's calendar range, saved people count,
 category sections, localized requirement quantities/units, and approximation
-indicators. The backend no longer rounds to full purchase containers or returns
-a second fractional-container requirement. The ticket displays the needed amount
-directly; profile purchase preferences remain stored for compatibility. Empty categories stay hidden; ingredients sort with
+indicators. The API shows base quantities below one configured piece/container;
+once that threshold is reached, it switches to the configured unit and rounds up.
+The ticket displays that single amount/unit pair without an extra fractional-container
+requirement line. Metric totals are not rounded to whole purchase counts. Empty categories stay hidden; ingredients sort with
 the selected locale within the API's category order. Missing recipes and conversion
 warnings remain visible, alongside loading, retry, empty, and missing-menu states.
 The list uses a centered supermarket receipt with monospace text, dotted leaders,

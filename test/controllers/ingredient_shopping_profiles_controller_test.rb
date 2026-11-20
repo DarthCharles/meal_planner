@@ -113,7 +113,7 @@ class IngredientShoppingProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Ingrediente no encontrado", response.parsed_body["errors"]
   end
 
-  test "shopping requirements ignore configured bag and can purchase sizes" do
+  test "shopping lists switch to configured bags and cans after reaching one container" do
     meal = Meal.create!(name: "Packaged oats", description: "Recipe")
     meal.meal_ingredients.create!(ingredient: @ingredient, unit: Unit.find_by!(code: "g"), quantity: 600)
     menu = Menu.create!(from: Time.utc(2026, 11, 16), to: Time.utc(2026, 11, 22))
@@ -124,8 +124,8 @@ class IngredientShoppingProfilesControllerTest < ActionDispatch::IntegrationTest
       assert_response :ok
       get "/menus/#{menu.id}/shopping_list", as: :json
       assert_response :ok
-      assert_equal "g", response.parsed_body.dig("data", "items", 0, "unit")
-      assert_equal "600.0", response.parsed_body.dig("data", "items", 0, "quantity")
+      assert_equal unit, response.parsed_body.dig("data", "items", 0, "unit")
+      assert_equal "2", response.parsed_body.dig("data", "items", 0, "quantity")
       assert_not response.parsed_body.dig("data", "items", 0).key?("required_quantity")
     end
   end

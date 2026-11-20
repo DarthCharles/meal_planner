@@ -3,7 +3,7 @@ class MenuShoppingListService
     requirements = {}
     missing = {}
     occurrences = DailyMeal.joins(:day).where(days: { menu_id: menu.id })
-      .includes(meal: { meal_ingredients: [:unit, { ingredient: { shopping_profile: [:base_unit, { unit_equivalences: :unit }] } }] })
+      .includes(meal: { meal_ingredients: [:unit, { ingredient: { shopping_profile: [:base_unit, :shopping_unit, { unit_equivalences: :unit }] } }] })
 
     occurrences.each do |occurrence|
       meal = occurrence.meal
@@ -41,27 +41,39 @@ class MenuShoppingListService
     combined = Hash.new(Rational(0))
     approximate = {}
     unresolved = []
-    # Preserve an already common weight, volume or physical count. Other measures
-    # can use a documented base-unit factor; purchase preferences never set totals.
-    convert = profile && (totals.size > 1 || !%w[g ml pieza diente].include?(totals.keys.first))
+    # Aggregate exact requirements in the ingredient's base unit before choosing
+    # whether a complete configured piece/container has been reached.
     totals.each do |unit, quantity|
-      factor = convert ? profile.factor_for(unit) : nil
+      factor = profile&.factor_for(unit)
       if factor
         unit = profile.base_unit.code
         quantity *= factor.first
         approximate[unit] = true if factor.last
-      elsif convert
+      elsif profile
         unresolved << unit
       end
       combined[unit] += quantity
     end
 
     items = combined.map do |unit, quantity|
+      estimated = approximate[unit]
+      display_quantity = quantity_string(quantity)
+      if profile && combined.size == 1 && unit == profile.base_unit.code
+        target = profile.shopping_unit.code
+        factor = profile.factor_for(target)
+        if !%w[g kg ml l].include?(target) && factor && quantity >= factor.first
+          display_quantity = (quantity / factor.first).ceil.to_s
+          unit = target
+          # A recipe already expressed in the displayed count needs no estimated
+          # weight conversion; the base-unit factors cancel in that case.
+          estimated = totals.keys == [target] ? false : estimated || factor.last
+        end
+      end
       item = {
         ingredient_id: ingredient.id, name: ingredient.name,
-        shopping_category: ingredient.shopping_category, unit: unit, quantity: quantity_string(quantity)
+        shopping_category: ingredient.shopping_category, unit: unit, quantity: display_quantity
       }
-      item[:approximate] = true if approximate[unit]
+      item[:approximate] = true if estimated
       item
     end
     warning = if combined.size > 1
