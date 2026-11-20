@@ -184,9 +184,9 @@ palette names; their values come from Greda rather than the metaphor.
 
 ### Neutral
 
-- **Warm Cream**: page background, dinner badges, and inverse text on actions.
+- **Warm Cream**: page background, inverse text on dinner badges and actions.
 - **Raised Cream**: menu heroes, cards, popovers, dialogs, search inputs, and receipt paper.
-- **Dark Brown**: main text. Secondary and muted brown roles express hierarchy.
+- **Dark Brown**: main text and dinner badge backgrounds. Secondary and muted brown roles express hierarchy.
 - **Field Border**: field outlines, card borders, and separators.
 - **Destructive**: validation errors and destructive actions.
 
@@ -210,7 +210,9 @@ Greda's primary background is Terracotta, while primary text and borders are
 neutral. Use action text/border roles for Terracotta emphasis.
 
 **The Labeled Category Rule.** Breakfast uses sage, lunch uses tan, and dinner
-uses cream; all retain visible labels and secondary brown text. Category fills
+uses dark brown with cream text; breakfast and lunch use secondary brown text.
+All retain visible labels. Dinner uses scheme-aware `bg-foreground` and
+`text-background` roles, reversing in dark mode. Category fills
 do not change on hover and do not substitute for selected-control styling.
 
 ## Typography

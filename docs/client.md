@@ -295,7 +295,8 @@ during background refreshes.
 Hero meals and weekly day cards reuse `MealRow`, with a meal-time label, meal
 name, and a `ChevronRight` icon. The hero uses transparent buttons, compact
 category badges, and larger Fraunces meal names. Sage is confined to the breakfast
-badge; lunch uses tan and dinner uses cream, matching the library categories.
+badge; lunch uses tan and dinner uses dark brown with cream text, matching the
+library categories.
 The heading uses 32px type on mobile and 36px on tablet, with the local date below
 it. Header and meal text share an inset. Meals stack with horizontal separators
 below 901px, then form three equal columns with vertical separators. At 1100px,
@@ -573,15 +574,17 @@ sizes/weight, the existing large radius, and a loading gradient using `muted`
 and `background`. Action-colored text and borders use `text-action` and
 `border-action`; `text-primary` and `border-primary` use neutral category roles.
 
-Meal category badges use soft Comal fills and dark brown (`text-secondary`)
-text consistently in the library and meal details: `surface-tertiary` (sage) for
-breakfast, `surface-secondary` (tan) for lunch, and `surface-primary` (cream) for
-dinner. Category fills use surface roles independently of control and interaction
-colors.
+Meal category badges share their fill and text mapping across the menu hero,
+library, and meal details. Breakfast uses `surface-tertiary` (sage) and lunch
+uses `surface-secondary` (tan), both with `text-secondary` text. Dinner uses
+`bg-foreground` (dark brown) with `text-background` (cream) to distinguish it
+clearly from lunch. These existing theme roles reverse in dark mode. Category
+colors remain independent of control and interaction colors.
 Menu heroes, including loading, empty, and no-current-week states, use Greda’s
 raised cream `bg-card` surface. Category badges carry the sage accent instead
 of the whole hero.
-Unknown categories use cream (`surface-primary`). Badges use `mealTypeColorClassName`; the fill mapping lives in
+Unknown categories use cream (`surface-primary`) with `text-secondary` text.
+Badges use `mealTypeColorClassName`; the fill and text mapping lives in
 `features/meals/mealTypes.ts`. Badges use plain text labels without decorative
 dots; the visible labels identify each category without relying on color.
 Notices use neutral `muted` surfaces; errors in forms

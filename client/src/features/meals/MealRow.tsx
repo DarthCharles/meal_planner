@@ -30,7 +30,7 @@ export function MealRow({
     >
       <span className={`grid min-w-0 flex-1 ${hero ? "gap-2" : "gap-1"}`}>
         <span
-          className={`leading-tight uppercase ${hero ? `${mealTypeColorClassName(mealType)} w-fit max-w-full rounded-[5px] px-1.5 py-1 text-[11px] font-medium tracking-[.08em] text-secondary` : "text-[11px] font-bold tracking-[.08em] text-muted-foreground"}`}
+          className={`leading-tight uppercase ${hero ? `${mealTypeColorClassName(mealType)} w-fit max-w-full rounded-[5px] px-1.5 py-1 text-[11px] font-medium tracking-[.08em]` : "text-[11px] font-bold tracking-[.08em] text-muted-foreground"}`}
         >
           {mealTypeLabel(mealType)}
         </span>

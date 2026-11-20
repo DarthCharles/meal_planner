@@ -15,7 +15,7 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
             <Badge
               key={type}
               variant="secondary"
-              className={`border-0 text-secondary uppercase ${mealTypeColorClassName(type)}`}
+              className={`border-0 uppercase ${mealTypeColorClassName(type)}`}
             >
               {mealTypeLabel(type)}
             </Badge>

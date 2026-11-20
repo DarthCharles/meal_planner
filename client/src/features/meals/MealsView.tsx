@@ -68,7 +68,7 @@ export function MealsView({
                 {meal.meal_types.map((type) => (
                   <Badge
                     variant="secondary"
-                    className={`rounded-[5px] border-0 px-[6px] py-1 text-[9px] font-bold text-secondary uppercase ${mealTypeColorClassName(type)}`}
+                    className={`rounded-[5px] border-0 px-[6px] py-1 text-[9px] font-bold uppercase ${mealTypeColorClassName(type)}`}
                     key={type}
                   >
                     {mealTypeLabel(type)}
