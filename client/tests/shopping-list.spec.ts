@@ -193,7 +193,7 @@ test("checks entries independently, supports keyboard toggling, and resets chang
     { ingredient_id: 30, name: "Rice", shopping_category: "pantry", quantity: "1", unit: "taza" },
   ];
   await page.goto("/menus/1/shopping-list");
-  const receipt = page.getByRole("region", { name: "Shopping receipt", exact: true });
+  const receipt = page.getByRole("region", { name: /^(Shopping receipt|Ticket de compra)$/ });
   const grams = receipt.getByRole("checkbox", { name: /Rice.*200/ });
   const cups = receipt.getByRole("checkbox", { name: /Rice.*1/ });
   await grams.check();

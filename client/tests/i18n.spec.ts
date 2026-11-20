@@ -212,7 +212,7 @@ for (const scenario of [
     titleEs: "Un nuevo favorito",
     field: "Meal name",
     fieldEs: "Nombre de la comida",
-    eyebrowEs: "Agrega a tu colección",
+    submitEs: "Guardar comida",
   },
   {
     name: "edit meal",
@@ -223,7 +223,7 @@ for (const scenario of [
     titleEs: "Editar comida",
     field: "Meal name",
     fieldEs: "Nombre de la comida",
-    eyebrowEs: "Actualiza tu colección",
+    submitEs: "Actualizar comida",
   },
   {
     name: "new ingredient",
@@ -270,8 +270,10 @@ for (const scenario of [
       "Unsaved draft",
     );
     await expect(translatedDialog.getByLabel(scenario.fieldEs, { exact: true })).toBeFocused();
-    if ("eyebrowEs" in scenario) {
-      await expect(translatedDialog.getByText(scenario.eyebrowEs!, { exact: true })).toBeVisible();
+    if ("submitEs" in scenario) {
+      await expect(
+        translatedDialog.getByRole("button", { name: scenario.submitEs!, exact: true }),
+      ).toBeVisible();
     }
     await cancelEditor(page);
     await expect(page.getByRole("dialog")).toHaveCount(0);

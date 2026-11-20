@@ -1,3 +1,5 @@
+import { Button } from "@darthcharles/greda";
+
 import { Notice } from "../../components/Notice";
 import { demoMealTypes, demoUnits } from "../../demoData";
 import { useI18n } from "../../i18n";
@@ -34,9 +36,14 @@ export function MealDialogContent({ initialMeal, onClose, onSaved }: MealDialogC
     <>
       {optionsError && <Notice>{optionsError}</Notice>}
       {loading ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          {t("meals.dialog.loading_options")}
-        </p>
+        <>
+          <p role="status" className="text-sm text-muted-foreground">
+            {t("meals.dialog.loading_options")}
+          </p>
+          <Button variant="ghost" className="mt-4" onClick={onClose}>
+            {t("common.cancel")}
+          </Button>
+        </>
       ) : (
         <MealForm
           types={types ?? demoMealTypes}

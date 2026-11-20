@@ -43,12 +43,14 @@ test(
     await expect(create).toBeVisible();
     await captureEntry(page, testInfo, "home-empty");
     await create.click();
-    const dialog = page.getByRole("dialog", { name: "A new favorite" });
-    await dialog.getByLabel("Meal name", { exact: true }).fill("Vegetable soup");
-    await dialog.getByLabel("Description", { exact: true }).fill("An easy dinner.");
-    await dialog.getByRole("button", { name: "Dinner", exact: true }).click();
-    await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
-    await expect(dialog).toHaveCount(0);
+    await expect(page).toHaveURL("/meals/new");
+    const editor = page.getByRole("region", { name: "A new favorite", exact: true });
+    await editor.getByLabel("Meal name", { exact: true }).fill("Vegetable soup");
+    await editor.getByLabel("Description", { exact: true }).fill("An easy dinner.");
+    await editor.getByRole("button", { name: "Dinner", exact: true }).click();
+    await editor.getByRole("button", { name: "Save meal", exact: true }).click();
+    await expect(page).toHaveURL("/");
+    await expect(editor).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Add a recipe", exact: true })).toBeVisible();
     expect(api.saves).toHaveLength(1);
 

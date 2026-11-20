@@ -147,7 +147,8 @@ editor visit. Save and Cancel return to the origin, reopening its preview when
 applicable. Scroll position and connected trigger focus are restored. Direct
 editor visits return to the corresponding library. Reloading does not preserve
 unsaved inputs or checklist marks. Editors load the existing API resources and
-reference data before initializing their form; failures offer retry instead of
+reference data before initializing their form. Meal creation keeps Cancel available
+while its reference options load; failures offer retry instead of
 creating an empty edit draft. Unsaved drafts prompt before navigation or browser
 Back and register a before-unload warning. Successful saves bypass that prompt.
 
