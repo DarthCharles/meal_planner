@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import { expect, navigateTo, test } from "./fixtures/app";
+import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
 
 async function openLibrary(page: Page) {
   await page.goto("/");
@@ -12,7 +12,7 @@ async function openLibrary(page: Page) {
 async function addMeal(page: Page) {
   await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
-  return page.getByRole("dialog", { name: "A new favorite" });
+  return page.getByRole("region", { name: "A new favorite" });
 }
 
 async function selectUnit(page: Page, code: string, index = 0) {
@@ -26,7 +26,7 @@ async function fillMeal(page: Page) {
     .getByRole("textbox", { name: "Description", exact: true })
     .fill("Potato tacos with salsa.");
   await page.getByPlaceholder("https://...").fill("https://example.com/tacos");
-  await page.getByRole("dialog").getByRole("button", { name: "Lunch", exact: true }).click();
+  await editorScreen(page).getByRole("button", { name: "Lunch", exact: true }).click();
 }
 
 test(
@@ -245,7 +245,7 @@ test(
   async ({ page, api }) => {
     await openLibrary(page);
     await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
-    const dialog = page.getByRole("dialog");
+    const dialog = editorScreen(page);
     const unit = dialog.getByRole("combobox", { name: "Unit", exact: true });
     await expect(unit).toHaveText("pieces");
     await unit.focus();
@@ -280,7 +280,7 @@ test("requires explicit selection when replacing an ingredient and closes sugges
 }) => {
   await openLibrary(page);
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
-  const dialog = page.getByRole("dialog");
+  const dialog = editorScreen(page);
   const ingredient = dialog.getByRole("combobox", { name: "Ingredient name" });
   await ingredient.fill("Tom");
   await expect(dialog.getByRole("option", { name: "Tomato", exact: true })).toBeVisible();
@@ -313,7 +313,7 @@ test("keeps created ingredients as drafts until save and reuses the saved catalo
   // StrictMode may abort and restart the initial request; reopening must reuse it.
   const initialReads = api.reads["/ingredients"];
   expect(api.ingredients.some((item) => item.name === "Potato")).toBe(false);
-  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await cancelEditor(page);
   expect(api.saves).toEqual([]);
   dialog = await addMeal(page);
   await expect(dialog.getByLabel("Meal name", { exact: true })).toHaveValue("");
@@ -367,7 +367,7 @@ test("waits for edit options, prefills the meal, and saves ingredient removal", 
   api.readBarriers["/units"] = optionsBarrier;
   await openLibrary(page);
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
+  const dialog = page.getByRole("region", { name: "Edit meal", exact: true });
   await expect(dialog.getByRole("heading", { name: "Edit meal", exact: true })).toBeVisible();
   await expect(dialog.getByText("Loading meal options…")).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Update meal", exact: true })).toHaveCount(0);
@@ -491,7 +491,7 @@ test("preserves ingredient values after removing a middle row", async ({ page, a
 test("validates deselecting all meal times and submits numeric type IDs", async ({ page, api }) => {
   await openLibrary(page);
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
-  const dialog = page.getByRole("dialog");
+  const dialog = editorScreen(page);
   const breakfast = dialog.getByRole("button", {
     name: "Breakfast",
     exact: true,
@@ -541,7 +541,7 @@ test("prefills custom preferences, updates nested menu details, and clears to An
   await openLibrary(page);
   const edit = page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true });
   await edit.click();
-  const dialog = page.getByRole("dialog");
+  const dialog = editorScreen(page);
   const days = dialog.getByRole("group", { name: "Preferred days" });
   await expect(days.getByRole("button", { name: "Monday", exact: true })).toHaveAttribute(
     "aria-pressed",
@@ -562,9 +562,9 @@ test("prefills custom preferences, updates nested menu details, and clears to An
     .first()
     .click();
   await expect(
-    dialog.getByText("Preferred days: Tuesday, Thursday", { exact: true }),
+    page.getByRole("dialog").getByText("Preferred days: Tuesday, Thursday", { exact: true }),
   ).toBeVisible();
-  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   await navigateTo(page, "My meals");
   await edit.click();
   await expect(days.getByRole("button", { name: "Select all", exact: true })).toHaveCount(0);

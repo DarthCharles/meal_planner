@@ -1,12 +1,11 @@
 import type { ReactNode } from "react";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Button, Checkbox } from "@darthcharles/greda";
 
 import { formatLocale, unitLabel, useI18n } from "../../i18n";
 import type { ShoppingList } from "../../types";
-import { useDialog } from "../../components/dialog/useDialog";
-import { IngredientMenuMeals } from "./IngredientMenuMeals";
+import { useWorkspaceNavigation } from "../navigation/useWorkspaceNavigation";
 import { formatMenuDateRange } from "./menuDates";
 
 export function ShoppingReceipt({
@@ -19,12 +18,22 @@ export function ShoppingReceipt({
   updateAction: ReactNode;
 }) {
   const { t } = useI18n();
-  const { pushDialog } = useDialog();
+  const { preview } = useWorkspaceNavigation();
   const [checked, setChecked] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const current = new Set(
+      list.items.map((item) => `${item.ingredient_id}-${item.unit}-${item.quantity}`),
+    );
+    setChecked((previous) =>
+      previous.size && [...previous].some((key) => !current.has(key))
+        ? new Set([...previous].filter((key) => current.has(key)))
+        : previous,
+    );
+  }, [list.items]);
   const collator = new Intl.Collator(formatLocale(), { sensitivity: "base" });
   const number = new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 3 });
   const checkedCount = list.items.filter((item) =>
-    checked.has(`${item.ingredient_id}-${item.unit}`),
+    checked.has(`${item.ingredient_id}-${item.unit}-${item.quantity}`),
   ).length;
 
   const groups = [...list.categories]
@@ -77,7 +86,7 @@ export function ShoppingReceipt({
             </div>
             <ul className="m-0 list-none p-0">
               {items.map((item) => {
-                const key = `${item.ingredient_id}-${item.unit}`;
+                const key = `${item.ingredient_id}-${item.unit}-${item.quantity}`;
                 const isChecked = checked.has(key);
                 const quantity = `${number.format(Number(item.quantity))} ${unitLabel(item.unit, Number(item.quantity))}`;
                 return (
@@ -105,16 +114,7 @@ export function ShoppingReceipt({
                             variant="link"
                             className={`h-auto min-w-0 whitespace-normal break-words px-0 py-0 text-left font-mono text-xs font-normal text-inherit tablet:text-sm ${isChecked ? "line-through" : ""}`}
                             onClick={() =>
-                              pushDialog({
-                                title: () =>
-                                  t("shopping_list.menu_meals_title", { name: item.name }),
-                                content: () => (
-                                  <IngredientMenuMeals
-                                    menuId={list.menu_id}
-                                    ingredientId={item.ingredient_id}
-                                  />
-                                ),
-                              })
+                              preview({ ingredient: item.ingredient_id, name: item.name })
                             }
                           >
                             {item.name}

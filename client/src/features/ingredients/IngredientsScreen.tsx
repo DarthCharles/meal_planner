@@ -6,8 +6,7 @@ import { Notice } from "../../components/Notice";
 import { CollectionHeader } from "../../components/CollectionHeader";
 import { formatLocale, useI18n } from "../../i18n";
 import { useIngredients } from "../meals/queries";
-import { IngredientForm } from "./IngredientForm";
-import { useDialog } from "../../components/dialog/useDialog";
+import { useWorkspaceNavigation } from "../navigation/useWorkspaceNavigation";
 import type { IngredientCatalogEntry } from "../../types";
 import { IngredientsSkeleton } from "./IngredientsSkeleton";
 
@@ -15,15 +14,9 @@ export function IngredientsScreen() {
   const { t } = useI18n();
   const { data: ingredients, isPending: loading, error, refetch, isFetching } = useIngredients();
   const [search, setSearch] = useState("");
-  const { openDialog } = useDialog();
+  const { openEditor, preview } = useWorkspaceNavigation();
   const openForm = (ingredient?: IngredientCatalogEntry) =>
-    openDialog({
-      title: () =>
-        ingredient
-          ? t("ingredients.form.edit_ingredient")
-          : t("ingredients.form.add_ingredient_title"),
-      content: ({ close }) => <IngredientForm ingredient={ingredient} close={close} />,
-    });
+    openEditor(ingredient ? `/ingredients/${ingredient.id}/edit` : "/ingredients/new");
   const filtered = [...(ingredients ?? [])]
     .filter((ingredient) => ingredient.name.toLowerCase().includes(search.trim().toLowerCase()))
     .sort((left, right) => left.name.localeCompare(right.name, formatLocale()));
@@ -93,7 +86,7 @@ export function IngredientsScreen() {
                     variant="link"
                     size="sm"
                     className="mt-2 h-auto max-w-full whitespace-normal break-words px-0 py-1 text-left"
-                    onClick={() => openForm(ingredient)}
+                    onClick={() => preview({ ingredient: ingredient.id, name: ingredient.name })}
                   >
                     {ingredient.meals.length
                       ? t("ingredients.usage", { count: ingredient.meals.length })

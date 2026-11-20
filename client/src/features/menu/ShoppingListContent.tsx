@@ -34,16 +34,7 @@ export function ShoppingListContent({ menuId }: { menuId: number }) {
             refreshing={isFetching}
           >
             {(controls, updateAction) => (
-              <ShoppingReceipt
-                key={JSON.stringify([
-                  list.menu_id,
-                  list.people_count,
-                  list.items.map((item) => [item.ingredient_id, item.unit, item.quantity]).sort(),
-                ])}
-                list={list}
-                controls={controls}
-                updateAction={updateAction}
-              />
+              <ShoppingReceipt list={list} controls={controls} updateAction={updateAction} />
             )}
           </ShoppingListPeopleForm>
           {!!list.meals_without_ingredients.length && (

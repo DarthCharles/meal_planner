@@ -9,9 +9,11 @@ import { mealTypeColorClassName, mealTypeLabel, mealTypeOrder } from "./mealType
 export function MealsView({
   meals,
   onEdit,
+  onOpen,
 }: {
   meals: Meal[];
   onEdit: (meal: Meal) => void;
+  onOpen: (meal: Meal) => void;
 }) {
   const { t } = useI18n();
   const [filter, setFilter] = useState("all");
@@ -71,7 +73,13 @@ export function MealsView({
                 ))}
               </div>
               <h4 className="mt-[10px] mb-[6px] font-display text-lg leading-[normal] font-semibold">
-                {meal.name}
+                <Button
+                  variant="link"
+                  className="h-auto max-w-full whitespace-normal break-words px-0 py-1 text-left font-display text-lg text-foreground"
+                  onClick={() => onOpen(meal)}
+                >
+                  {meal.name}
+                </Button>
               </h4>
               <p className="m-0 text-xs leading-[1.45] text-muted-foreground">{meal.description}</p>
             </div>

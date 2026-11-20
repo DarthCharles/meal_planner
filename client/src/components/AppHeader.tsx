@@ -89,7 +89,7 @@ export function AppHeader() {
                 } else if (addingMeal.current) {
                   event.preventDefault();
                   addingMeal.current = false;
-                  // Open after the popover closes so the dialog restores focus to Menu.
+                  // Close the popover before entering the editor; retain Menu as the return target.
                   actionsTrigger.current?.focus();
                   openCreateMeal();
                 }

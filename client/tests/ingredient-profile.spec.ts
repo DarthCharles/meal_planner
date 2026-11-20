@@ -1,4 +1,4 @@
-import { expect, test } from "./fixtures/app";
+import { cancelEditor, expect, test } from "./fixtures/app";
 
 test("loads shopping setup only for a saved ingredient and shows unknown setup honestly", async ({
   page,
@@ -17,7 +17,7 @@ test("loads shopping setup only for a saved ingredient and shows unknown setup h
   await page.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
   await expect(page.getByRole("region", { name: "Shopping setup", exact: true })).toHaveCount(0);
   expect(Object.keys(api.reads).some((path) => path.endsWith("/shopping_profile"))).toBe(false);
-  await page.keyboard.press("Escape");
+  await cancelEditor(page);
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
   const setup = page.getByRole("region", { name: "Shopping setup", exact: true });
   await expect(setup.getByText("Not set up yet", { exact: true })).toBeVisible();
@@ -82,7 +82,7 @@ test("shows known amounts and lets users edit a jar size without saving a name d
   };
   await page.goto("/ingredients");
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
+  const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   const setup = dialog.getByRole("region", { name: "Shopping setup", exact: true });
   await expect(setup.getByText("Each jar contains 390 g", { exact: true })).toBeVisible();
   await expect(setup.getByText("Where these amounts come from", { exact: true })).toHaveCount(0);
@@ -102,7 +102,7 @@ test("shows known amounts and lets users edit a jar size without saving a name d
     description: "The jar normally purchased",
     approximate: false,
   });
-  await page.keyboard.press("Escape");
+  await cancelEditor(page);
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
   await expect(setup.getByText("Each jar contains 450 g", { exact: true })).toBeVisible();
 });
@@ -342,7 +342,7 @@ test(
       true,
     );
     await setup.getByRole("button", { name: "Cancel", exact: true }).click();
-    await page.keyboard.press("Escape");
+    await cancelEditor(page);
     await expect(open).toBeFocused();
   },
 );

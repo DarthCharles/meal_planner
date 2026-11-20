@@ -1,51 +1,23 @@
-import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { useDialog } from "../../components/dialog/useDialog";
-import { useI18n } from "../../i18n";
+import { queryKeys } from "../../queryKeys";
 import type { Meal } from "../../types";
-import { MealDetails } from "./MealDetails";
-import { MealDetailsContent } from "./MealDetailsContent";
-import { MealDialogContent } from "./MealDialogContent";
+import { useWorkspaceNavigation } from "../navigation/useWorkspaceNavigation";
 
-export function useMealDialog({ preserveParent = false } = {}) {
-  const { t } = useI18n();
-  const { openDialog, pushDialog } = useDialog();
-  const showDialog = preserveParent ? pushDialog : openDialog;
-  const openCreateMeal = useCallback(
-    () =>
-      showDialog({
-        title: () => t("meals.dialog.new_favorite"),
-        content: ({ close }) => (
-          <MealDialogContent initialMeal={null} onClose={close} onSaved={close} />
-        ),
-      }),
-    [showDialog, t],
-  );
-  const openEditMeal = useCallback(
-    (meal: Meal) =>
-      showDialog({
-        title: () => t("meals.details.edit_meal"),
-        content: ({ close }) => (
-          <MealDialogContent initialMeal={meal} onClose={close} onSaved={close} />
-        ),
-      }),
-    [showDialog, t],
-  );
-  const openMeal = useCallback(
-    (meal: Meal) =>
-      showDialog({
-        title: meal.name,
-        content: () => <MealDetails meal={meal} onEdit={() => openEditMeal(meal)} />,
-      }),
-    [showDialog, openEditMeal, t],
-  );
-  const openMealById = useCallback(
-    (id: number, name: string) =>
-      showDialog({
-        title: name,
-        content: () => <MealDetailsContent id={id} onEdit={openEditMeal} />,
-      }),
-    [showDialog, openEditMeal, t],
-  );
-  return { openCreateMeal, openEditMeal, openMeal, openMealById };
+export function useMealDialog() {
+  const { openEditor, preview } = useWorkspaceNavigation();
+  const client = useQueryClient();
+  const remember = (meal: Meal) => client.setQueryData(queryKeys.meal(meal.id), meal);
+  return {
+    openCreateMeal: () => openEditor("/meals/new"),
+    openEditMeal: (meal: Meal) => {
+      remember(meal);
+      openEditor(`/meals/${meal.id}/edit`);
+    },
+    openMeal: (meal: Meal) => {
+      remember(meal);
+      preview({ meal: meal.id, name: meal.name });
+    },
+    openMealById: (id: number, name: string) => preview({ meal: id, name }),
+  };
 }

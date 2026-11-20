@@ -1,4 +1,4 @@
-import { expect, navigateTo, test } from "./fixtures/app";
+import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
 
 test("returns to the menu through the Comal logo and name", async ({ page }) => {
   await page.goto("/");
@@ -41,12 +41,13 @@ test("opens hero meal details, replaces them with editing, and restores focus", 
   expect(Object.keys(api.reads)).toEqual(["/menus"]);
   await dialog.getByRole("button", { name: "Edit meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  const editor = page.getByRole("dialog", { name: "Edit meal", exact: true });
+  const editor = page.getByRole("region", { name: "Edit meal", exact: true });
   await expect(editor.getByLabel("Meal name", { exact: true })).toHaveValue("Huevos a la mexicana");
   await expect(editor.getByRole("textbox", { name: "Description", exact: true })).toHaveValue(
     "Eggs with tomato, onion, and chile.",
   );
-  await editor.getByRole("button", { name: "Close", exact: true }).click();
+  await cancelEditor(page);
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(editor).toHaveCount(0);
   await expect(row).toBeFocused();
   expect(api.saves).toEqual([]);
@@ -323,7 +324,10 @@ test("keeps the current menu when generation fails and allows retrying", async (
   expect(api.generationRequests).toBe(2);
 });
 
-test("recovers the menu after a load failure without showing example meals", async ({ page, api }) => {
+test("recovers the menu after a load failure without showing example meals", async ({
+  page,
+  api,
+}) => {
   api.readErrors["/menus"] = "Internal connection details";
   await page.goto("/");
   await expect(page.getByText("We couldn’t load your menu. Please try again.")).toBeVisible();
@@ -356,11 +360,11 @@ test("keeps reference query failures inside the modal", async ({ page, api }) =>
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
-  const dialog = page.getByRole("dialog");
+  const dialog = editorScreen(page);
   await expect(
     dialog.getByText("We couldn’t load your saved data. Showing examples for now."),
   ).toBeVisible();
-  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await cancelEditor(page);
   await expect(page.getByRole("heading", { name: "Thursday" })).toBeVisible();
   await navigateTo(page, "My meals");
   await expect(page.getByRole("heading", { name: "Breakfast from the API" })).toBeVisible();
@@ -377,10 +381,10 @@ test("loads each resource only when its screen or form needs it", async ({ page,
   await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   await expect(
-    page.getByRole("dialog").getByRole("button", { name: "Breakfast", exact: true }),
+    editorScreen(page).getByRole("button", { name: "Breakfast", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("dialog").getByRole("button", { name: "Save meal", exact: true }),
+    editorScreen(page).getByRole("button", { name: "Save meal", exact: true }),
   ).toBeEnabled();
   expect(Object.keys(api.reads).sort()).toEqual([
     "/ingredients",
@@ -396,7 +400,7 @@ test("creating a meal from the menu does not eagerly load the library", async ({
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
   await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
-  const dialog = page.getByRole("dialog");
+  const dialog = editorScreen(page);
   await page.getByLabel("Meal name", { exact: true }).fill("New breakfast");
   await page
     .getByRole("textbox", { name: "Description", exact: true })

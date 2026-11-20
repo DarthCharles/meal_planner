@@ -58,11 +58,13 @@ export function useClearIngredientShoppingProfile(id: number) {
   });
 }
 
-export function useDeleteIngredient() {
+export function useDeleteIngredient(onDeleted?: () => void) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: api.deleteIngredient,
     onSuccess: async (_, id) => {
+      // Leave a live editor before removing the catalog entry that supplies its draft.
+      onDeleted?.();
       await client.cancelQueries({ queryKey: queryKeys.ingredients });
       await client.cancelQueries({ queryKey: queryKeys.ingredientProfile(id) });
       client.removeQueries({ queryKey: queryKeys.ingredientProfile(id) });

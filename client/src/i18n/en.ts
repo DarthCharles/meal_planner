@@ -1,4 +1,16 @@
 export const en = {
+  preview: {
+    meal: "Meal details",
+    back_to_meals: "Back to meals",
+  },
+  editor: {
+    back: "Back",
+    loading: "Loading editor…",
+    missing: "This item is no longer available.",
+    recipe_scope: "Changes update this saved recipe wherever it is used.",
+    ingredient_scope: "Changes apply wherever this ingredient is used.",
+    discard: "Discard your unsaved changes?",
+  },
   api: {
     generic_error: "Something went wrong.",
     field_name: "name",
@@ -243,7 +255,8 @@ export const en = {
     hero: {
       add_first_recipe: "Add your first recipe",
       add_recipe: "Add a recipe",
-      recipe_help: "Save the meals you love to cook. Comal uses your recipes to build weekly menus and shopping lists.",
+      recipe_help:
+        "Save the meals you love to cook. Comal uses your recipes to build weekly menus and shopping lists.",
       next_menu: "Your next menu",
       finding_menu: "Finding your menu…",
       menu_intro:

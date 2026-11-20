@@ -19,6 +19,10 @@ export function DialogHost({
   const pointerStartedOutside = useRef(false);
   const titleId = useId();
   const { title, hideTitle, eyebrow, content, close, opener } = dialog;
+  const dismiss = () => {
+    close();
+    dialog.onDismiss?.();
+  };
   const titleText = typeof title === "function" ? title() : title;
   const eyebrowText = typeof eyebrow === "function" ? eyebrow() : eyebrow;
 
@@ -51,7 +55,7 @@ export function DialogHost({
       className="fixed inset-0 m-0 h-full w-full max-h-none max-w-none items-end justify-items-center overflow-hidden border-0 bg-transparent p-[15px] text-foreground open:grid desktop:items-center backdrop:bg-overlay"
       onCancel={(event) => {
         event.preventDefault();
-        close();
+        dismiss();
       }}
       onKeyDown={(event) => {
         if (event.key !== "Tab") return;
@@ -81,7 +85,7 @@ export function DialogHost({
         pointerStartedOutside.current = false;
       }}
       onClick={(event) => {
-        if (event.target === event.currentTarget && pointerStartedOutside.current) close();
+        if (event.target === event.currentTarget && pointerStartedOutside.current) dismiss();
         pointerStartedOutside.current = false;
       }}
     >
@@ -110,8 +114,8 @@ export function DialogHost({
             type="button"
             variant="ghost"
             size="icon"
-            className="size-[31px] shrink-0 rounded-full"
-            onClick={close}
+            className="size-11 shrink-0 rounded-full"
+            onClick={dismiss}
             aria-label={t("common.close")}
           >
             <X aria-hidden="true" className="size-4" />

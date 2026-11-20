@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import { expect, test } from "./fixtures/app";
+import { cancelEditor, expect, test } from "./fixtures/app";
 
 async function chooseLanguage(page: Page, language: "English" | "Español") {
   await page.getByRole("button", { name: /^(Menu|Menú)$/ }).click();
@@ -21,7 +21,9 @@ test(
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
     await expect(page.getByRole("button", { name: "Menú", exact: true })).toHaveText("Menú");
     await page.getByRole("button", { name: "Menú", exact: true }).click();
-    await expect(page.getByRole("dialog", { name: "Menú de navegación", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Menú de navegación", exact: true }),
+    ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("button", { name: "Menú", exact: true })).toBeFocused();
     await expect(page).toHaveURL("/meals");
@@ -89,7 +91,7 @@ test.describe("Spanish browser preference", () => {
   }) => {
     await page.goto("/meals");
     await page.getByRole("button", { name: "+ Agregar comida", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Un nuevo favorito" });
+    const dialog = page.getByRole("region", { name: "Un nuevo favorito" });
     await dialog.getByRole("button", { name: "Guardar comida", exact: true }).click();
     await expect(dialog.getByRole("alert")).toHaveText(
       "Agrega un nombre, una descripción y al menos un horario de comida.",
@@ -132,7 +134,7 @@ test.describe("Spanish browser preference", () => {
     await expect(page.getByText("2 de 2 ingredientes", { exact: true })).toBeVisible();
     await expect(page.getByText("Se usa en 1 comida", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "+ Agregar ingrediente", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Agregar ingrediente" });
+    const dialog = page.getByRole("region", { name: "Agregar ingrediente" });
     await dialog.getByLabel("Nombre del ingrediente").fill("Tomato");
     await dialog.getByRole("button", { name: "Guardar ingrediente" }).click();
     await expect(dialog.getByRole("alert")).toHaveText("nombre: ya está en uso");
@@ -244,13 +246,13 @@ for (const scenario of [
     fieldEs: "Nombre del ingrediente",
   },
 ]) {
-  test(`updates the open ${scenario.name} dialog language while preserving its draft and focus`, async ({
+  test(`updates the open ${scenario.name} editor language while preserving its draft and focus`, async ({
     page,
     api,
   }) => {
     await page.goto(scenario.path);
     await page.getByRole("button", { name: scenario.action, exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: scenario.title, exact: true });
+    const dialog = page.getByRole("region", { name: scenario.title, exact: true });
     await dialog.getByLabel(scenario.field, { exact: true }).fill("Unsaved draft");
     await page.evaluate(() => {
       localStorage.setItem("comal.locale", "es");
@@ -262,7 +264,7 @@ for (const scenario of [
         }),
       );
     });
-    const translatedDialog = page.getByRole("dialog", { name: scenario.titleEs, exact: true });
+    const translatedDialog = page.getByRole("region", { name: scenario.titleEs, exact: true });
     await expect(translatedDialog).toBeVisible();
     await expect(translatedDialog.getByLabel(scenario.fieldEs, { exact: true })).toHaveValue(
       "Unsaved draft",
@@ -271,7 +273,7 @@ for (const scenario of [
     if ("eyebrowEs" in scenario) {
       await expect(translatedDialog.getByText(scenario.eyebrowEs!, { exact: true })).toBeVisible();
     }
-    await page.keyboard.press("Escape");
+    await cancelEditor(page);
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("button", { name: scenario.actionEs, exact: true })).toBeFocused();
     expect(api.saves).toEqual([]);

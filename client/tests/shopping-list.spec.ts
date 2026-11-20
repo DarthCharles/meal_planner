@@ -1,4 +1,4 @@
-import { expect, navigateTo, test } from "./fixtures/app";
+import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
 
 test("opens a dedicated receipt page and returns to the originating menu", async ({
   page,
@@ -119,7 +119,7 @@ test("edits category codes and refreshes the list after returning", async ({ pag
   await expect(page.getByRole("region", { name: "Dairy & eggs", exact: true })).toBeVisible();
   await navigateTo(page, "My Ingredients");
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
+  const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   await dialog.getByRole("combobox", { name: "Shopping category", exact: true }).click();
   await dialog.getByRole("option", { name: "Frozen foods", exact: true }).click();
   await dialog.getByRole("button", { name: "Save ingredient", exact: true }).click();
@@ -151,7 +151,7 @@ test("translates category headings and editing labels without changing codes or 
   await expect(page.getByText("Tomato", { exact: true })).toBeVisible();
   await page.goto("/ingredients");
   await page.getByRole("button", { name: "Editar Egg", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Editar ingrediente", exact: true });
+  const dialog = page.getByRole("region", { name: "Editar ingrediente", exact: true });
   await dialog.getByRole("combobox", { name: "Categoría de compra", exact: true }).click();
   await dialog.getByRole("option", { name: "Carnes", exact: true }).click();
   await dialog.getByRole("button", { name: "Guardar ingrediente", exact: true }).click();
@@ -171,7 +171,7 @@ test("waits for category reference data and retries without exposing an editable
   await page.goto("/ingredients");
   expect(api.reads["/shopping_categories"] ?? 0).toBe(0);
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
+  const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   await expect(dialog.getByRole("status")).toHaveText("Loading shopping categories…");
   await expect(dialog.getByRole("textbox", { name: "Ingredient name" })).toHaveCount(0);
   release();
@@ -220,12 +220,96 @@ test("checks entries independently, supports keyboard toggling, and resets chang
   api.shoppingLists[1].items[0].quantity = "400";
   await page.getByRole("button", { name: "Actualizar lista", exact: true }).click();
   await expect(page.getByText("400 g", { exact: true })).toBeVisible();
-  await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(0);
+  await expect(grams).toHaveCount(0);
+  await expect(page.getByRole("checkbox", { name: /Rice.*400/ })).not.toBeChecked();
+  await expect(cups).toBeChecked();
   expect(api.ingredientSaves).toEqual([]);
   expect(api.saves).toEqual([]);
   await page.reload();
   await expect(page.getByRole("checkbox")).toHaveCount(2);
   await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(0);
+});
+
+test("edits a recipe from a single preview and restores shopping progress", async ({
+  page,
+  api,
+}) => {
+  await page.goto("/menus/1/shopping-list");
+  const ticket = page.getByRole("region", { name: "Shopping receipt", exact: true });
+  const checked = ticket.getByRole("checkbox", { name: /Egg/ });
+  await checked.check();
+  await ticket.getByRole("spinbutton", { name: "People", exact: true }).fill("6");
+  await ticket.getByRole("button", { name: "Egg", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Huevos a la mexicana", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await page.getByRole("dialog").getByRole("button", { name: "Edit meal", exact: true }).click();
+  await expect(page).toHaveURL("/meals/1/edit");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await editorScreen(page).getByLabel("Meal name", { exact: true }).fill("Updated breakfast");
+  await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
+  const detail = page.getByRole("dialog", { name: "Updated breakfast", exact: true });
+  await expect(detail).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await detail.getByRole("button", { name: "Back to meals", exact: true }).click();
+  await expect(
+    page.getByRole("dialog").getByRole("button", { name: "Updated breakfast", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
+  await expect(checked).toBeChecked();
+  await expect(ticket.getByRole("spinbutton", { name: "People", exact: true })).toHaveValue("6");
+  expect(api.saves[0].path).toBe("/meals/1");
+  expect(api.menuSaves).toEqual([]);
+});
+
+test("opens the ingredient editor directly from shopping and returns after save or cancel", async ({
+  page,
+  api,
+}) => {
+  await page.goto("/menus/1/shopping-list");
+  const ticket = page.getByRole("region", { name: "Shopping receipt", exact: true });
+  await ticket.getByRole("checkbox", { name: /Egg/ }).check();
+  await ticket.getByRole("button", { name: "Egg", exact: true }).click();
+  const usage = page.getByRole("dialog");
+  await usage.getByRole("button", { name: "Edit ingredient", exact: true }).click();
+  await expect(page).toHaveURL("/ingredients/1/edit");
+  await expect(editorScreen(page).getByLabel("Ingredient name", { exact: true })).toHaveValue(
+    "Egg",
+  );
+  await cancelEditor(page);
+  await expect(page.getByRole("dialog", { name: "Meals with Egg", exact: true })).toBeVisible();
+  await usage.getByRole("button", { name: "Edit ingredient", exact: true }).click();
+  await editorScreen(page).getByLabel("Ingredient name", { exact: true }).fill("Free range egg");
+  await editorScreen(page).getByRole("button", { name: "Save ingredient", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Meals with Free range egg", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
+  await expect(ticket.getByRole("checkbox", { name: /Free range egg/ })).toBeChecked();
+  expect(api.ingredientSaves[0].path).toBe("/ingredients/1");
+});
+
+test("browser Back and Forward retrace usage, meal preview, and editor", async ({ page }) => {
+  await page.goto("/menus/1/shopping-list");
+  await page.getByRole("button", { name: "Egg", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Huevos a la mexicana", exact: true })
+    .click();
+  await page.getByRole("dialog").getByRole("button", { name: "Edit meal", exact: true }).click();
+  await expect(editorScreen(page)).toBeVisible();
+  await page.goBack();
+  await expect(
+    page.getByRole("dialog", { name: "Huevos a la mexicana", exact: true }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("dialog", { name: "Meals with Egg", exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.goForward();
+  await expect(page.getByRole("dialog", { name: "Meals with Egg", exact: true })).toBeVisible();
 });
 
 test("validates people, retains failed drafts, and refreshes backend quantities after saving", async ({
@@ -336,7 +420,7 @@ test(
     const ingredient = ticket.getByRole("button", { name: "Egg", exact: true });
     await ingredient.click();
     const recipes = page.getByRole("dialog", { name: "Meals with Egg", exact: true });
-    const recipe = recipes.getByRole("button", { name: "Huevos a la mexicana", exact: true });
+    const recipe = recipes.getByRole("button", { name: /^Huevos a la mexicana/ });
     await expect(recipe).toBeVisible();
     expect(api.reads["/meals"] ?? 0).toBe(0);
     expect(api.reads["/meals/1"] ?? 0).toBe(0);
@@ -347,7 +431,8 @@ test(
     ).toBeVisible();
     await expect(detail.getByText(/2 pieces · Egg/)).toBeVisible();
     await expect(detail.getByRole("button", { name: "Edit meal", exact: true })).toBeVisible();
-    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(1);
+    await detail.getByRole("button", { name: "Back to meals", exact: true }).click();
     await expect(recipe).toBeFocused();
     await recipes.getByRole("button", { name: "Close", exact: true }).click();
     await expect(ingredient).toBeFocused();

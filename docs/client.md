@@ -121,12 +121,28 @@ language behavior still need separate verification.
 
 The header's Comal logo and name link back to the index (the menu screen).
 
-React Router's declarative mode provides browser routes: `/` for My Menu,
-`/meals` for My Meals, `/ingredients` for My Ingredients, and `/saved-menus` for Saved Menus. Header and bottom
-navigation use real links with an active-page indication. URLs support direct
-visits, reloads, opening in another tab, and browser back/forward navigation.
-Unknown paths show a page-not-found screen with a link home. Meal dialogs,
-library search/filters, and the selected saved week remain local UI state.
+React Router's data router provides `/`, `/meals`, `/ingredients`,
+`/saved-menus`, and `/menus/:menuId/shopping-list`. Creation and editing have
+standalone routes: `/meals/new`, `/meals/:id/edit`, `/ingredients/new`, and
+`/ingredients/:id/edit`. Header and bottom navigation use real links with an
+active-page indication. Unknown paths show a page-not-found screen.
+
+Quick previews use the originating page's search parameters (`ingredient`,
+`ingredientName`, `meal`, and `previewName`). Browser Back/Forward retraces the
+preview steps; Close dismisses the entire preview. Direct preview links and
+editor URLs also work. Search/filter inputs and the selected saved week remain
+local UI state.
+
+An editor opened inside the app retains its originating location in router state.
+`App.tsx` keeps that screen mounted but hidden, so library filters, saved-week
+selection, checklist progress, and an unfinished people-count input survive the
+editor visit. Save and Cancel return to the origin, reopening its preview when
+applicable. Scroll position and connected trigger focus are restored. Direct
+editor visits return to the corresponding library. Reloading does not preserve
+unsaved inputs or checklist marks. Editors load the existing API resources and
+reference data before initializing their form; failures offer retry instead of
+creating an empty edit draft. Unsaved drafts prompt before navigation or browser
+Back and register a before-unload warning. Successful saves bypass that prompt.
 
 `App.tsx` supplies the shared header, content area, and navigation. Non-index
 routes use a nested `PageLayout` with a consistent 12px top inset; My Meals,
@@ -186,14 +202,14 @@ It also shows empty catalog, no search results, and request errors with retry;
 cached ingredients remain visible if a refresh
 fails. It does not use demo data. Each ingredient card shows its meal usage
 count from the backend catalog response, or an unused message. Cards use larger
-serif ingredient names and link-style (`link`) usage buttons that open the
-ingredient edit dialog, including for unused ingredients. The screen does
-not fetch `/meals` to determine usage. The ingredient edit modal lists the meals
-using it; each meal name opens its details in the shared dialog, fetching only
-that meal via `GET /meals/:id`, with loading, retry, and the existing Edit meal
-action. Closing restores focus to the ingredient button that opened the dialog.
+serif ingredient names and link-style (`link`) usage buttons that open a quick
+preview, including for unused ingredients. The preview lists meals using the
+ingredient without fetching `/meals`. Selecting a meal shows its details in the
+same dialog, fetching only `GET /meals/:id`; Back returns to usage. Edit ingredient
+opens the dedicated ingredient editor directly. Closing returns focus to the
+original usage button when it remains mounted.
 
-“Add ingredient” and each row's “Edit” action open the shared dialog with a
+“Add ingredient” and each row's “Edit” action open dedicated pages with a
 React Hook Form name field. Blank names are blocked locally; duplicate names
 and other API errors keep the form open with the draft intact. Saving uses
 `POST /ingredients` or `PUT /ingredients/:id`; cancel creates no changes.
@@ -202,17 +218,17 @@ menus. Ingredient saves refresh the catalog. Meal saves also synchronize usage
 references in the catalog cache, including removed ingredients and renamed meals.
 The meal form still supports creating ingredients when saving a meal.
 
-Existing ingredient dialogs also show a Shopping setup section, loaded lazily
+Existing ingredient editors also show a Shopping setup section, loaded lazily
 from `GET /ingredients/:id/shopping_profile`. The profile query is keyed by
 ingredient ID and locale, refreshes on reopening, and is not fetched while
 browsing the catalog or creating an ingredient. Loading, retry, unconfigured,
 and cached refresh-error states are explicit. A missing profile is shown as
 unconfigured; piece weights and package sizes are never invented.
 
-The shopping section appears below the meals that use the ingredient.
+The shopping section appears below the ingredient name and category fields.
 The summary uses familiar buying units (including translated jar/piece labels),
 known amounts, whole-unit purchasing behavior, and Estimated badges. Sources and
-descriptions remain stored with the equivalences but are not displayed in the modal.
+descriptions remain stored with the equivalences but are not displayed in the editor.
 Raw database IDs and conversion factors are not presented as setup requirements.
 
 Editing shopping setup asks one main question: how the ingredient is bought.
@@ -244,10 +260,10 @@ are updated across locales and cached shopping lists are invalidated. Existing
 extra measurements are preserved when their base unit stays the same. A change
 that would invalidate additional saved measurements is blocked with explanatory
 feedback instead of silently deleting them. Failed saves preserve the draft.
-While editing shopping setup, the name form, usage links, and ingredient footer
+While editing shopping setup, the name form and ingredient footer
 are hidden, leaving only the active workflow. The name draft is retained.
 Creating an ingredient remains a name-only action; shopping setup becomes
-available when editing its saved catalog entry. The dialog shell is unchanged.
+available when editing its saved catalog entry. Shopping setup stays inline within the ingredient editor.
 
 `IngredientShoppingEditor` owns loading, form submission, mutations, and errors.
 `IngredientShoppingFields` renders the fields using React Hook Form context.
@@ -255,12 +271,11 @@ available when editing its saved catalog entry. The dialog shell is unchanged.
 validation, and unit selection rules. API calls and cache updates remain in
 `queries.ts`.
 
-The edit dialog shows a Delete ingredient action only for unused ingredients.
+The ingredient editor shows a Delete ingredient action only for unused ingredients.
 It calls `DELETE /ingredients/:id`
 and removes the ingredient from the shared catalog cache after success. While
-deletion is pending, saving and repeated deletion are disabled. Success closes
-the dialog; failures keep it open with the draft and API error. Used ingredients
-and the create dialog have no Delete button;
+deletion is pending, saving and repeated deletion are disabled. Success returns to the origin; failures keep the editor open with the draft and API error. Used ingredients
+and the creation page have no Delete button;
 the backend also rejects deletion if an ingredient becomes used after loading.
 
 The single “Plan my week” action has a plus icon and sits beside Menu in the header on mobile and
@@ -320,11 +335,11 @@ Space opens the meal card through `useMealDialog` and the shared dialog host.
 The card shows meal types, description, ingredient quantities and preparation
 notes, and an optional recipe link. Missing ingredients have an explicit empty
 message. Details use the meal already embedded in the menu and make no additional
-API requests. An “Edit meal” action below the details replaces them with the existing edit
-form, prefilled with that meal. Closing either dialog restores focus to the row
-that opened the details.
-Meal dialogs lead with their title, without an eyebrow. The edit dialog shows
-“Edit meal” as both its visible heading and accessible name. Details group meal
+API requests while their cache is fresh. An “Edit meal” action opens the dedicated
+editor, prefilled with that meal. Saving or cancelling returns to the preview;
+closing the preview restores focus to the original row.
+Meal previews lead with their title, without an eyebrow. The editor shows
+“Edit meal” as its heading and accessible region name. Details group meal
 types, description, and preferred days together, followed by ingredients and a
 separate wrapping footer for the recipe link and Edit meal action.
 
@@ -385,7 +400,7 @@ Query ownership follows the feature that consumes the data:
 - `AppHeader` mounts `useMenus` and `useGenerateMenu` for its planning action.
 - `MenuScreen` mounts `useMenus`, sharing the header's cached query.
 - `MealsScreen` mounts `useMeals` when the library is opened.
-- `MealDialogContent` mounts `useMealTypes` and `useUnits` only while the modal is open.
+- `MealDialogContent` mounts `useMealTypes` and `useUnits` only while the editor is open.
   It waits for both queries before mounting `MealForm`, so an edit draft starts
   with the correct meal type IDs. `MealForm` owns create/update mutations and
   unsaved input state.
@@ -434,8 +449,8 @@ use tight spacing; section dividers and larger gaps separate those groups.
 
 Ingredient units use Greda's `Select` through RHF `Controller`, with codes from
 `GET /units`. The trigger shows the saved unit when editing, supports keyboard
-selection, and exposes validation errors. Its popup renders inside the native
-dialog; Escape dismisses the unit list and restores focus to the trigger.
+selection, and exposes validation errors. Its popup renders inside the field
+container; Escape dismisses the unit list and restores focus to the trigger.
 
 Ingredient names use Greda's `Combobox` through RHF `Controller`. Opening the
 form fetches and caches `GET /ingredients`; filtering happens locally. Users
@@ -449,9 +464,9 @@ and errors stay inside the form; a failed catalog request has a retry action.
 
 Typing alone does not commit a selection. The form blocks saving until the user
 selects or creates an option, including when replacing a previously selected
-ingredient. The combobox popup portals inside the native dialog. Arrow keys and
+ingredient. The combobox popup portals inside its ingredient field container. Arrow keys and
 Enter select options without submitting the meal; Escape dismisses suggestions
-before dismissing the dialog.
+without leaving the editor.
 
 `FormProvider` shares the draft with `IngredientManager`, which uses
 `useFormContext` and `useFieldArray`. Rows use React Hook Form's generated IDs
@@ -461,14 +476,14 @@ included in the submitted ingredients. Ingredient names occupy the first row
 beside a 44px remove target. Quantity and unit appear below; preparation notes
 follow them. At form-container widths of at least 26rem, the note shares the
 quantity/unit row; narrower forms put it on its own row. This uses the available
-modal content width rather than the viewport width. Ingredient and preferred-day
+editor content width rather than the viewport width. Ingredient and preferred-day
 headers allow their actions to wrap for narrow screens and translated labels.
 
 Validation requires a nonblank name and description and at least one meal time.
 Named ingredient rows need a quantity of at least 0.001 and a unit; unnamed rows
 are excluded from the payload. The form disables native validation so these
 rules display consistently through RHF, marking invalid controls and linking
-them to an alert summary. Cancel/close unmounts the draft; reopening initializes
+them to an alert summary. Cancel confirms any unsaved changes and unmounts the draft; reopening initializes
 a fresh form. Failed saves leave the current values intact.
 
 ## Day preferences
@@ -524,16 +539,21 @@ for save completion so older asynchronous work cannot close a newer dialog.
 `closeDialog` explicitly closes whichever dialog is currently active. Replacement
 keeps the original trigger as the focus restoration target.
 
-`features/meals/useMealDialog.tsx` supplies `openCreateMeal` and `openEditMeal`.
-Header popover and meal-screen actions call this hook directly. The feature's
-`MealDialogContent` owns reference queries and renders the RHF form; the shared
-host has no meal-specific logic. Content inherits providers around the dialog
-host, so shared dependencies such as React Query must wrap `DialogProvider`.
+`PreviewController` synchronizes the active URL preview with the shared host.
+Only one preview is shown: usage and meal details replace each other, with an
+explicit Back action. `onDismiss` synchronizes user dismissal with the URL;
+programmatic replacement does not navigate. `returnFocus` preserves the original
+trigger across an editor round trip. Editor pages never render inside the dialog.
 
-Dismissal remains available during saves. Closing does not cancel an in-flight
-mutation; its cache updates still complete, while a subsequently opened dialog
-stays independent. `tests/dialog.spec.ts` covers keyboard/focus behavior,
-background inertness, scroll locking, backdrop dismissal, pending requests, and
+`features/meals/useMealDialog.tsx` retains its existing feature entry points but
+now opens URL previews or editor routes through `useWorkspaceNavigation`.
+`MealDialogContent` remains the reference-data/form loader on the editor page.
+`EditorDraftContext` tracks dirty recipe, ingredient, and shopping-setup drafts;
+the data router's blocker protects navigation. Form and mutation logic stays in
+the feature components and query hooks. Navigating away does not cancel a pending
+mutation's cache updates, and callbacks from an unmounted form cannot leave a
+subsequently opened editor. `tests/dialog.spec.ts` covers preview focus, backdrop
+dismissal, editor loading/cancellation, dirty Back navigation, pending saves, and
 generic content replacement using the isolated `dialog-harness` fixture.
 
 ## Styling with Tailwind
@@ -643,9 +663,9 @@ variants and default to `type="button"`; form save actions explicitly use
 `type="submit"`. Navigation, filters, meal-time toggles, and ingredient actions
 also render Greda buttons directly, with layout classes where needed.
 
-The native dialog/provider remains in place. Greda's ingredient combobox and
-unit select portal inside that dialog to participate in the modal top layer.
-Use the same portal placement for other overlay controls inside native dialogs.
+The native dialog/provider remains in place for quick previews. Ingredient
+comboboxes and unit selects remain inside their feature containers on editor
+pages. Controls used in native dialogs must portal inside the modal top layer.
 
 Components use Tailwind utilities directly in JSX for responsive layout and
 app-specific states. Meal type order and labels live in
@@ -670,8 +690,8 @@ Inside it, CSS Columns packs complete categories into a masonry-style layout:
 one column below 760px, two from 760px, three from 1100px. Categories flow top to
 bottom and then across, retaining their API order. Each category stays together,
 without splitting long lists, repeating headings, or aligning to rigid grid rows.
-Resizing preserves the checklist and people draft. Ingredient and recipe details
-continue to use the existing dialogs above the page.
+Resizing preserves the checklist and people draft. Ingredient usage and recipe details
+use the single quick preview above the page.
 `ShoppingListContent` fetches `GET /menus/:id/shopping_list` only when opened, through
 React Query. It displays the full week's calendar range, saved people count,
 category sections, localized requirement quantities/units, and approximation
@@ -685,9 +705,10 @@ The list uses a centered supermarket receipt with monospace text, dotted leaders
 category separators, and a decorative torn bottom edge. Each ingredient/unit entry
 has an accessible checkbox: marking it strikes through its name and quantity,
 without changing the category order or hiding quantities. A footer shows checked
-progress. Marks are temporary component state, reset on leaving the screen,
-reloading, switching menus, or changes to the calculated
-quantities/people count.
+progress. Marks are temporary component state, reset on leaving the screen, reloading,
+or switching menus. An editor round trip preserves them. Recalculation unchecks
+only removed or changed ingredient/unit/quantity entries; unchanged entries stay
+checked.
 Refreshing an unchanged list or switching language preserves marks. They are not
 sent to the API or saved in browser storage. There are no pantry deductions,
 custom categories, or combined-week lists.
@@ -702,7 +723,7 @@ Rails. If refreshing fails after a successful save, the saved count remains in t
 input while the ticket displays its previous calculated count with a warning and
 retry action. Changing counts never rewrites recipe ingredient amounts.
 
-Ingredient dialogs load `/shopping_categories` before initializing their draft and
+Ingredient editors load `/shopping_categories` before initializing their draft and
 provide a category selector independent of shopping quantity configuration. New
 ingredients default to `uncategorized`. Reference data is cached; category loading
 and failures offer loading/retry UI. Labels live at
@@ -777,13 +798,18 @@ query and matches `ingredient_id` in its scheduled recipes. Repeated occurrences
 of a meal appear once; meals in other menus or only in the library are excluded.
 This view contains no ingredient form or shopping configuration.
 
-Selecting a meal reuses `useMealDialog` and its existing detail/edit modal. The
-`preserveParent` option keeps the usage list behind it. Closing returns to the
-previous layer and restores focus. The ticket page, unsaved people input, checked
-entries, and scroll position remain mounted. Checkboxes remain separate controls,
-so opening the usage list does not check the ingredient.
+Selecting a meal changes the contents of the single shared preview. Scheduled
+days are shown alongside each distinct meal. Back returns to usage and focuses
+the selected meal; Close dismisses the whole preview. The host is a bottom sheet
+on mobile and a centered modal on desktop.
 
-The generic dialog API adds `pushDialog` for this flow. Existing `openDialog`
-continues to replace dialogs. Only the top instance can close itself; closing a
-pushed layer pops it without remounting its parent. The root host owns the page
-scroll lock, and every host handles its own native dialog focus and dismissal.
+Edit ingredient leads directly to `/ingredients/:id/edit`; Edit meal leads to
+`/meals/:id/edit`. The ticket, unfinished people input, checked entries, and
+scroll position survive both editor round trips. Checkboxes remain separate
+controls, so opening usage does not check an ingredient. Catalog usage links use
+the same single-preview pattern, with all meals using the ingredient rather than
+only the selected week's meals.
+
+The existing header Menu popover and floating mobile bottom navigation retain
+their original styling. The Menu popover contains navigation, creation, and
+language controls. Planning remains beside Menu.

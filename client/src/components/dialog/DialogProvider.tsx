@@ -23,7 +23,8 @@ export function DialogProvider({ children }: { children: ReactNode }) {
         ...options,
         id,
         close,
-        opener: push ? focusedElement : (current[0]?.opener ?? focusedElement),
+        opener:
+          options.returnFocus ?? (push ? focusedElement : (current[0]?.opener ?? focusedElement)),
       };
       return push ? [...current, instance] : [instance];
     });

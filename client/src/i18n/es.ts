@@ -1,6 +1,18 @@
 import type { en } from "./en";
 
 export const es: typeof en = {
+  preview: {
+    meal: "Detalles de la comida",
+    back_to_meals: "Volver a las comidas",
+  },
+  editor: {
+    back: "Volver",
+    loading: "Cargando editor…",
+    missing: "Este elemento ya no está disponible.",
+    recipe_scope: "Los cambios actualizan esta receta guardada donde se utilice.",
+    ingredient_scope: "Los cambios se aplican donde se utilice este ingrediente.",
+    discard: "¿Descartar los cambios sin guardar?",
+  },
   api: {
     generic_error: "Algo salió mal.",
     field_name: "nombre",
@@ -247,7 +259,8 @@ export const es: typeof en = {
     hero: {
       add_first_recipe: "Agrega tu primera receta",
       add_recipe: "Agregar una receta",
-      recipe_help: "Guarda las comidas que te gusta preparar. Comal usa tus recetas para crear menús semanales y listas de compras.",
+      recipe_help:
+        "Guarda las comidas que te gusta preparar. Comal usa tus recetas para crear menús semanales y listas de compras.",
       next_menu: "Tu próximo menú",
       finding_menu: "Buscando tu menú…",
       menu_intro:

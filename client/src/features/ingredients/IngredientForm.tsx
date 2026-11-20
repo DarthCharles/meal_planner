@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import {
   Button,
@@ -14,11 +14,15 @@ import { Controller, useForm } from "react-hook-form";
 
 import { useI18n } from "../../i18n";
 import type { IngredientCatalogEntry, IngredientPayload, ShoppingCategory } from "../../types";
-import { useMealDialog } from "../meals/useMealDialog";
+import { useEditorDraft } from "../navigation/EditorDraftContext";
 import { IngredientShoppingSummary } from "./IngredientShoppingSummary";
 import { useDeleteIngredient, useSaveIngredient, useShoppingCategories } from "./queries";
 
-export function IngredientForm(props: { ingredient?: IngredientCatalogEntry; close: () => void }) {
+export function IngredientForm(props: {
+  ingredient?: IngredientCatalogEntry;
+  close: () => void;
+  onSaved?: () => void;
+}) {
   const { t } = useI18n();
   const { data: categories, isPending, error, refetch, isFetching } = useShoppingCategories();
   if (isPending) return <p role="status">{t("shopping_list.loading_categories")}</p>;
@@ -37,15 +41,23 @@ export function IngredientForm(props: { ingredient?: IngredientCatalogEntry; clo
 function IngredientFormContent({
   ingredient,
   close,
+  onSaved = close,
   categories,
 }: {
   ingredient?: IngredientCatalogEntry;
   close: () => void;
+  onSaved?: () => void;
   categories: ShoppingCategory[];
 }) {
   const { t } = useI18n();
-  const { openMealById } = useMealDialog();
   const formId = useId();
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const categoryId = useId();
   const [categoryContainer, setCategoryContainer] = useState<HTMLDivElement | null>(null);
   const [editingShopping, setEditingShopping] = useState(false);
@@ -53,13 +65,14 @@ function IngredientFormContent({
     register,
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<IngredientPayload>({
     defaultValues: {
       name: ingredient?.name ?? "",
       shopping_category: ingredient?.shopping_category ?? "uncategorized",
     },
   });
+  useEditorDraft(isDirty);
   const {
     mutate: saveIngredient,
     isPending: saving,
@@ -71,7 +84,9 @@ function IngredientFormContent({
     isPending: deleting,
     error: deleteError,
     reset: resetDelete,
-  } = useDeleteIngredient();
+  } = useDeleteIngredient(() => {
+    if (mounted.current) onSaved();
+  });
   const busy = saving || deleting;
   const fieldError = errors.name?.message ?? saveError?.message;
   const message = deleteError?.message ?? fieldError;
@@ -90,7 +105,7 @@ function IngredientFormContent({
                 id: ingredient?.id,
                 values: { name: values.name.trim(), shopping_category: values.shopping_category },
               },
-              { onSuccess: close },
+              { onSuccess: onSaved },
             );
           },
           () => {
@@ -150,33 +165,6 @@ function IngredientFormContent({
           </p>
         )}
       </form>
-      {ingredient && !editingShopping && (
-        <section aria-label={t("ingredients.form.meals_using")} className="mb-4">
-          <h3 className="mb-1 font-display text-xl font-semibold">
-            {t("ingredients.usage", { count: ingredient.meals.length })}
-          </h3>
-          {ingredient.meals.length ? (
-            <ul className="m-0 grid list-none gap-0 p-0">
-              {ingredient.meals.map((meal) => (
-                <li key={meal.id}>
-                  <Button
-                    variant="link"
-                    disabled={editingShopping || busy}
-                    className="h-auto max-w-full whitespace-normal break-words px-0 py-1 text-left"
-                    onClick={() => openMealById(meal.id, meal.name)}
-                  >
-                    {meal.name}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="m-0 text-sm text-muted-foreground">
-              {t("ingredients.form.unused_ingredient")}
-            </p>
-          )}
-        </section>
-      )}
       {ingredient && (
         <IngredientShoppingSummary
           ingredientId={ingredient.id}
@@ -201,7 +189,7 @@ function IngredientFormContent({
               onClick={() => {
                 if (busy) return;
                 resetSave();
-                deleteIngredient(ingredient.id, { onSuccess: close });
+                deleteIngredient(ingredient.id);
               }}
             >
               {deleting ? t("ingredients.form.deleting") : t("ingredients.form.delete_ingredient")}

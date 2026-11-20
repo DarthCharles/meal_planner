@@ -67,3 +67,42 @@ test("shows unknown URLs and returns home through a link", async ({ page }) => {
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
 });
+
+for (const scenario of [
+  {
+    path: "/meals/1/edit",
+    title: "Edit meal",
+    field: "Meal name",
+    value: "Huevos a la mexicana",
+    back: "/meals",
+  },
+  {
+    path: "/ingredients/1/edit",
+    title: "Edit ingredient",
+    field: "Ingredient name",
+    value: "Egg",
+    back: "/ingredients",
+  },
+]) {
+  test(`opens and reloads the editor at ${scenario.path}`, async ({ page }) => {
+    await page.goto(scenario.path);
+    const editor = page.getByRole("region", { name: scenario.title, exact: true });
+    await expect(editor.getByLabel(scenario.field, { exact: true })).toHaveValue(scenario.value);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.reload();
+    await expect(editor.getByLabel(scenario.field, { exact: true })).toHaveValue(scenario.value);
+    await editor.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(page).toHaveURL(scenario.back);
+  });
+}
+
+test("retries a direct editor load without creating a blank edit draft", async ({ page, api }) => {
+  api.readErrors["/meals/1"] = "Meal unavailable";
+  await page.goto("/meals/1/edit");
+  const editor = page.getByRole("region", { name: "Edit meal", exact: true });
+  await expect(editor.getByText("Meal unavailable", { exact: true })).toBeVisible();
+  await expect(editor.getByLabel("Meal name", { exact: true })).toHaveCount(0);
+  delete api.readErrors["/meals/1"];
+  await editor.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(editor.getByLabel("Meal name", { exact: true })).toHaveValue("Huevos a la mexicana");
+});

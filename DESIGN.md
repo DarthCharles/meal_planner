@@ -153,3 +153,11 @@ Do:
 Map: client/src/styles.css
 Map: client/src/theme.css
 Full: .impeccable/design-full.md (read a section when you need its detail)
+
+## Previews and editing
+
+Quick ingredient usage and meal details share one preview: a bottom sheet on
+mobile and a centered modal on desktop. Back retraces preview contents; Close
+returns to the originating screen. Recipe and ingredient creation/editing use
+dedicated pages, retaining the originating screen and returning to its preview
+after Save or Cancel. Do not stack previews or put the main editors in dialogs.

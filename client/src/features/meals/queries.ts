@@ -12,10 +12,11 @@ export function useMeals({ enabled = true } = {}) {
   });
 }
 
-export function useMeal(id: number) {
+export function useMeal(id: number, { enabled = true } = {}) {
   return useQuery({
     queryKey: queryKeys.meal(id),
     queryFn: ({ signal }) => api.getMeal(id, signal),
+    enabled,
   });
 }
 
@@ -35,10 +36,11 @@ export function useUnits() {
   });
 }
 
-export function useIngredients() {
+export function useIngredients({ enabled = true } = {}) {
   return useQuery({
     queryKey: queryKeys.ingredients,
     queryFn: ({ signal }) => api.getIngredients(signal),
+    enabled,
     staleTime: 5 * 60_000,
   });
 }

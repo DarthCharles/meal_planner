@@ -331,3 +331,22 @@ export async function navigateTo(
     .click();
   await expect(page).toHaveURL(destination);
 }
+
+export function editorScreen(page: Page) {
+  return page.getByRole("region", {
+    name: /^(A new favorite|Edit meal|Add ingredient|Edit ingredient|Un nuevo favorito|Editar comida|Agregar ingrediente|Editar ingrediente)$/,
+  });
+}
+
+export async function cancelEditor(page: Page) {
+  const accept = (dialog: import("@playwright/test").Dialog) => dialog.accept();
+  page.on("dialog", accept);
+  try {
+    await editorScreen(page)
+      .getByRole("button", { name: /^(Cancel|Cancelar)$/, exact: true })
+      .click();
+    await expect(editorScreen(page)).toHaveCount(0);
+  } finally {
+    page.off("dialog", accept);
+  }
+}

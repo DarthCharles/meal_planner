@@ -7,6 +7,8 @@ export type DialogOptions = {
   title: DialogText;
   hideTitle?: boolean;
   eyebrow?: DialogText;
+  onDismiss?: () => void;
+  returnFocus?: HTMLElement | null;
   content: (controls: { close: () => void }) => ReactNode;
 };
 

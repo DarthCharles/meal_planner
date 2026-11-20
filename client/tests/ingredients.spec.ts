@@ -1,4 +1,4 @@
-import { expect, navigateTo, test } from "./fixtures/app";
+import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
 
 test(
   "opens the ingredient catalog from navigation without fetching meals",
@@ -94,7 +94,7 @@ test("creates an ingredient with validation and makes it available in a meal for
   await page.goto("/ingredients");
   const add = page.getByRole("button", { name: "+ Add ingredient", exact: true });
   await add.click();
-  const dialog = page.getByRole("dialog", { name: "Add ingredient", exact: true });
+  const dialog = page.getByRole("region", { name: "Add ingredient", exact: true });
   await expect(dialog.getByRole("button", { name: "Delete ingredient", exact: true })).toHaveCount(
     0,
   );
@@ -115,7 +115,7 @@ test("creates an ingredient with validation and makes it available in a meal for
   ]);
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();
-  const mealDialog = page.getByRole("dialog");
+  const mealDialog = editorScreen(page);
   await mealDialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
   await mealDialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
   await expect(mealDialog.getByRole("option", { name: "Potato", exact: true })).toBeVisible();
@@ -126,7 +126,7 @@ test("renames ingredients in cached meals and menus", async ({ page, api }) => {
   await expect(page.getByPlaceholder("Search meals")).toBeVisible();
   await navigateTo(page, "My Ingredients");
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
+  const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   await expect(dialog.getByRole("textbox", { name: "Ingredient name" })).toHaveValue("Egg");
   await dialog.getByRole("textbox", { name: "Ingredient name" }).fill("Free range egg");
   await dialog.getByRole("button", { name: "Save ingredient" }).click();
@@ -144,7 +144,7 @@ test("renames ingredients in cached meals and menus", async ({ page, api }) => {
   await expect(page.getByRole("combobox", { name: "Ingredient name" })).toHaveValue(
     "Free range egg",
   );
-  await page.keyboard.press("Escape");
+  await cancelEditor(page);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(api.reads["/meals"]).toBe(mealReads);
   await navigateTo(page, "My menu");
@@ -161,7 +161,7 @@ test("preserves failed edits, prevents duplicate saves, and cancels without savi
 }) => {
   await page.goto("/ingredients");
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
+  const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   const name = dialog.getByRole("textbox", { name: "Ingredient name" });
   await name.fill("Tomato");
   api.ingredientSaveError = "name: has already been taken";
@@ -174,12 +174,12 @@ test("preserves failed edits, prevents duplicate saves, and cancels without savi
   release();
   await expect(dialog.getByRole("alert")).toHaveText("name: has already been taken");
   await expect(name).toHaveValue("Tomato");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await cancelEditor(page);
   await expect(page.getByRole("button", { name: "Edit Egg", exact: true })).toBeVisible();
   expect(api.ingredientSaves).toHaveLength(1);
   await page.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
   await page.getByRole("textbox", { name: "Ingredient name" }).fill("Unsaved onion");
-  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await cancelEditor(page);
   expect(api.ingredientSaves).toHaveLength(1);
   await expect(page.getByText("Unsaved onion", { exact: true })).toHaveCount(0);
 });
@@ -202,12 +202,12 @@ test(
     ).toBeVisible();
     expect(api.reads["/meals"] ?? 0).toBe(0);
     await egg.getByRole("button", { name: "Used in 1 meal", exact: true }).click();
-    const ingredientDialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
+    const ingredientDialog = page.getByRole("dialog", { name: "Meals with Egg", exact: true });
     await expect(
       ingredientDialog.getByRole("button", { name: "Delete ingredient", exact: true }),
     ).toHaveCount(0);
-    const usage = ingredientDialog.getByRole("region", { name: "Meals using this ingredient" });
-    await expect(usage.getByRole("heading", { name: "Used in 1 meal" })).toBeVisible();
+    const usage = ingredientDialog;
+    await expect(usage.getByText("Meals using this ingredient", { exact: true })).toBeVisible();
     await usage.getByRole("button", { name: "Huevos a la mexicana", exact: true }).click();
     const mealDialog = page.getByRole("dialog", { name: "Huevos a la mexicana", exact: true });
     await expect(mealDialog.getByText("Eggs with tomato, onion, and chile.")).toBeVisible();
@@ -216,9 +216,9 @@ test(
     expect(api.reads["/meals"] ?? 0).toBe(0);
     await page.keyboard.press("Escape");
     await expect(egg.getByRole("button", { name: "Used in 1 meal", exact: true })).toBeFocused();
-    await egg.getByRole("button", { name: "Edit Egg", exact: true }).click();
+    await egg.getByRole("button", { name: "Used in 1 meal", exact: true }).click();
     await page
-      .getByRole("dialog", { name: "Edit ingredient", exact: true })
+      .getByRole("dialog", { name: "Meals with Egg", exact: true })
       .getByRole("button", { name: "Huevos a la mexicana", exact: true })
       .click();
     await expect(mealDialog.getByText("Eggs with tomato, onion, and chile.")).toBeVisible();
@@ -229,7 +229,7 @@ test(
 test("retries a failed meal opened from ingredient usage", async ({ page, api }) => {
   api.readErrors["/meals/1"] = "Meal unavailable";
   await page.goto("/ingredients");
-  await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
+  await page.getByRole("button", { name: "Used in 1 meal", exact: true }).click();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Huevos a la mexicana", exact: true })
@@ -248,28 +248,26 @@ test("updates cached ingredient usage after changing a meal's ingredients", asyn
   await page.goto("/ingredients");
   await expect(page.getByRole("button", { name: "Edit Egg", exact: true })).toBeVisible();
   const initialCatalogReads = api.reads["/ingredients"];
-  await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
+  await page.getByRole("button", { name: "Used in 1 meal", exact: true }).click();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Huevos a la mexicana", exact: true })
     .click();
   await page.getByRole("dialog").getByRole("button", { name: "Edit meal", exact: true }).click();
-  const form = page.getByRole("dialog", { name: "Edit meal", exact: true });
+  const form = page.getByRole("region", { name: "Edit meal", exact: true });
   const ingredient = form.getByRole("combobox", { name: "Ingredient name" });
   await ingredient.fill("Tomato");
   await form.getByRole("option", { name: "Tomato", exact: true }).click();
   await form.getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(form).toHaveCount(0);
+  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   const egg = page
     .getByRole("listitem")
     .filter({ has: page.getByRole("button", { name: "Edit Egg", exact: true }) });
   await expect(egg.getByText("Not used in any meals yet")).toBeVisible();
-  await page.getByRole("button", { name: "Edit Tomato", exact: true }).click();
+  await page.getByRole("button", { name: "Used in 1 meal", exact: true }).click();
   await expect(
-    page
-      .getByRole("dialog")
-      .getByRole("region", { name: "Meals using this ingredient" })
-      .getByRole("button", { name: "Huevos a la mexicana", exact: true }),
+    page.getByRole("dialog").getByRole("button", { name: "Huevos a la mexicana", exact: true }),
   ).toBeVisible();
   expect(api.reads["/ingredients"]).toBe(initialCatalogReads);
 });
@@ -281,7 +279,7 @@ test("deletes an unused ingredient from its dialog and updates the shared catalo
   await page.goto("/ingredients");
   await expect(page.getByRole("button", { name: /Delete/ })).toHaveCount(0);
   await page.getByRole("button", { name: "Edit Tomato", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
+  const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   let release!: () => void;
   api.ingredientDeleteBarrier = new Promise<void>((resolve) => {
     release = resolve;
@@ -296,7 +294,7 @@ test("deletes an unused ingredient from its dialog and updates the shared catalo
   expect(api.ingredientDeletes).toEqual([2]);
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();
-  const mealDialog = page.getByRole("dialog");
+  const mealDialog = editorScreen(page);
   await mealDialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
   await mealDialog.getByRole("combobox", { name: "Ingredient name" }).fill("Tomato");
   await expect(mealDialog.getByRole("option", { name: "Tomato", exact: true })).toHaveCount(0);
@@ -314,7 +312,7 @@ test("keeps the ingredient and draft after a failed deletion and allows retry", 
     "Cannot delete an ingredient used by meals. Remove it from those meals first.";
   await page.goto("/ingredients");
   await page.getByRole("button", { name: "Edit Tomato", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit ingredient", exact: true });
+  const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   await dialog.getByRole("textbox", { name: "Ingredient name" }).fill("Draft tomato");
   await dialog.getByRole("button", { name: "Delete ingredient", exact: true }).click();
   await expect(dialog.getByRole("alert")).toHaveText(api.ingredientDeleteError);
@@ -327,4 +325,33 @@ test("keeps the ingredient and draft after a failed deletion and allows retry", 
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "No ingredients yet" })).toBeVisible();
   expect(api.ingredientDeletes).toEqual([2, 2]);
+});
+
+test("a deletion completed after leaving cannot close a different ingredient editor", async ({
+  page,
+  api,
+}) => {
+  let release!: () => void;
+  api.ingredientDeleteBarrier = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.goto("/ingredients");
+  await page.getByRole("button", { name: "Edit Tomato", exact: true }).click();
+  await editorScreen(page).getByRole("button", { name: "Delete ingredient", exact: true }).click();
+  await expect(
+    editorScreen(page).getByRole("button", { name: "Deleting…", exact: true }),
+  ).toBeDisabled();
+  await cancelEditor(page);
+  await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
+  await expect(editorScreen(page).getByLabel("Ingredient name", { exact: true })).toHaveValue(
+    "Egg",
+  );
+  release();
+  await expect(
+    page.getByRole("button", { name: "Edit Tomato", exact: true, includeHidden: true }),
+  ).toHaveCount(0);
+  await expect(page).toHaveURL("/ingredients/1/edit");
+  await expect(editorScreen(page).getByLabel("Ingredient name", { exact: true })).toHaveValue(
+    "Egg",
+  );
 });

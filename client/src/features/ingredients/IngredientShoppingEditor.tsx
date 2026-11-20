@@ -3,6 +3,7 @@ import { FormProvider, useForm } from "react-hook-form";
 
 import { useI18n } from "../../i18n";
 import type { IngredientShoppingProfile, UnitOption } from "../../types";
+import { useEditorDraft } from "../navigation/EditorDraftContext";
 import { useUnits } from "../meals/queries";
 import { IngredientShoppingFields } from "./IngredientShoppingFields";
 import { useClearIngredientShoppingProfile, useSaveIngredientShoppingProfile } from "./queries";
@@ -56,6 +57,7 @@ function ShoppingForm({
 }: Props & { units: UnitOption[] }) {
   const { t } = useI18n();
   const methods = useForm<ShoppingDraft>({ defaultValues: shoppingProfileToDraft(profile) });
+  useEditorDraft(methods.formState.isDirty);
   const {
     handleSubmit,
     setError,
