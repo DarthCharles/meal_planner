@@ -1,0 +1,381 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-20T06:46:59.766790+00:00",
+  "title": "Design System: Comal",
+  "extensions": {
+    "colorMeta": {
+      "terracotta": {
+        "role": "primary",
+        "displayName": "Terracotta",
+        "tonalRamp": [
+          "oklch(15.0% 0.0483 41.88)",
+          "oklch(26.0% 0.0837 41.88)",
+          "oklch(38.0% 0.1127 41.88)",
+          "oklch(49.0% 0.1127 41.88)",
+          "oklch(61.0% 0.1127 41.88)",
+          "oklch(72.0% 0.1127 41.88)",
+          "oklch(84.0% 0.0721 41.88)",
+          "oklch(95.0% 0.0225 41.88)"
+        ]
+      },
+      "terracotta-hover": {
+        "role": "primary",
+        "displayName": "Terracotta Hover",
+        "tonalRamp": [
+          "oklch(15.0% 0.0445 41.98)",
+          "oklch(26.0% 0.0771 41.98)",
+          "oklch(38.0% 0.1038 41.98)",
+          "oklch(49.0% 0.1038 41.98)",
+          "oklch(61.0% 0.1038 41.98)",
+          "oklch(72.0% 0.1038 41.98)",
+          "oklch(84.0% 0.0664 41.98)",
+          "oklch(95.0% 0.0208 41.98)"
+        ]
+      },
+      "warm-cream": {
+        "role": "neutral",
+        "displayName": "Warm Cream",
+        "tonalRamp": [
+          "oklch(15.0% 0.0037 71.37)",
+          "oklch(26.0% 0.0063 71.37)",
+          "oklch(38.0% 0.0085 71.37)",
+          "oklch(49.0% 0.0085 71.37)",
+          "oklch(61.0% 0.0085 71.37)",
+          "oklch(72.0% 0.0085 71.37)",
+          "oklch(84.0% 0.0055 71.37)",
+          "oklch(95.0% 0.0017 71.37)"
+        ]
+      },
+      "raised-cream": {
+        "role": "neutral",
+        "displayName": "Raised Cream",
+        "tonalRamp": [
+          "oklch(15.0% 0.0022 71.41)",
+          "oklch(26.0% 0.0037 71.41)",
+          "oklch(38.0% 0.0050 71.41)",
+          "oklch(49.0% 0.0050 71.41)",
+          "oklch(61.0% 0.0050 71.41)",
+          "oklch(72.0% 0.0050 71.41)",
+          "oklch(84.0% 0.0032 71.41)",
+          "oklch(95.0% 0.0010 71.41)"
+        ]
+      },
+      "warm-tan": {
+        "role": "secondary",
+        "displayName": "Warm Tan",
+        "tonalRamp": [
+          "oklch(15.0% 0.0060 71.31)",
+          "oklch(26.0% 0.0104 71.31)",
+          "oklch(38.0% 0.0140 71.31)",
+          "oklch(49.0% 0.0140 71.31)",
+          "oklch(61.0% 0.0140 71.31)",
+          "oklch(72.0% 0.0140 71.31)",
+          "oklch(84.0% 0.0090 71.31)",
+          "oklch(95.0% 0.0028 71.31)"
+        ]
+      },
+      "secondary-control": {
+        "role": "secondary",
+        "displayName": "Secondary Control",
+        "tonalRamp": [
+          "oklch(15.0% 0.0060 71.31)",
+          "oklch(26.0% 0.0103 71.31)",
+          "oklch(38.0% 0.0139 71.31)",
+          "oklch(49.0% 0.0139 71.31)",
+          "oklch(61.0% 0.0139 71.31)",
+          "oklch(72.0% 0.0139 71.31)",
+          "oklch(84.0% 0.0089 71.31)",
+          "oklch(95.0% 0.0028 71.31)"
+        ]
+      },
+      "garden-sage": {
+        "role": "tertiary",
+        "displayName": "Garden Sage",
+        "tonalRamp": [
+          "oklch(15.0% 0.0125 128.84)",
+          "oklch(26.0% 0.0216 128.84)",
+          "oklch(38.0% 0.0291 128.84)",
+          "oklch(49.0% 0.0291 128.84)",
+          "oklch(61.0% 0.0291 128.84)",
+          "oklch(72.0% 0.0291 128.84)",
+          "oklch(84.0% 0.0186 128.84)",
+          "oklch(95.0% 0.0058 128.84)"
+        ]
+      },
+      "clay-interaction": {
+        "role": "primary",
+        "displayName": "Clay Interaction",
+        "tonalRamp": [
+          "oklch(15.0% 0.0137 44.65)",
+          "oklch(26.0% 0.0237 44.65)",
+          "oklch(38.0% 0.0319 44.65)",
+          "oklch(49.0% 0.0319 44.65)",
+          "oklch(61.0% 0.0319 44.65)",
+          "oklch(72.0% 0.0319 44.65)",
+          "oklch(84.0% 0.0204 44.65)",
+          "oklch(95.0% 0.0064 44.65)"
+        ]
+      },
+      "dark-brown": {
+        "role": "neutral",
+        "displayName": "Dark Brown",
+        "tonalRamp": [
+          "oklch(15.0% 0.0080 59.33)",
+          "oklch(26.0% 0.0139 59.33)",
+          "oklch(38.0% 0.0187 59.33)",
+          "oklch(49.0% 0.0187 59.33)",
+          "oklch(61.0% 0.0187 59.33)",
+          "oklch(72.0% 0.0187 59.33)",
+          "oklch(84.0% 0.0120 59.33)",
+          "oklch(95.0% 0.0037 59.33)"
+        ]
+      },
+      "secondary-text": {
+        "role": "neutral",
+        "displayName": "Secondary Text",
+        "tonalRamp": [
+          "oklch(15.0% 0.0081 63.44)",
+          "oklch(26.0% 0.0141 63.44)",
+          "oklch(38.0% 0.0189 63.44)",
+          "oklch(49.0% 0.0189 63.44)",
+          "oklch(61.0% 0.0189 63.44)",
+          "oklch(72.0% 0.0189 63.44)",
+          "oklch(84.0% 0.0121 63.44)",
+          "oklch(95.0% 0.0038 63.44)"
+        ]
+      },
+      "muted-text": {
+        "role": "neutral",
+        "displayName": "Muted Text",
+        "tonalRamp": [
+          "oklch(15.0% 0.0084 63.48)",
+          "oklch(26.0% 0.0146 63.48)",
+          "oklch(38.0% 0.0196 63.48)",
+          "oklch(49.0% 0.0196 63.48)",
+          "oklch(61.0% 0.0196 63.48)",
+          "oklch(72.0% 0.0196 63.48)",
+          "oklch(84.0% 0.0126 63.48)",
+          "oklch(95.0% 0.0039 63.48)"
+        ]
+      },
+      "field-border": {
+        "role": "neutral",
+        "displayName": "Field Border",
+        "tonalRamp": [
+          "oklch(15.0% 0.0119 67.14)",
+          "oklch(26.0% 0.0207 67.14)",
+          "oklch(38.0% 0.0278 67.14)",
+          "oklch(49.0% 0.0278 67.14)",
+          "oklch(61.0% 0.0278 67.14)",
+          "oklch(72.0% 0.0278 67.14)",
+          "oklch(84.0% 0.0178 67.14)",
+          "oklch(95.0% 0.0056 67.14)"
+        ]
+      },
+      "destructive": {
+        "role": "error",
+        "displayName": "Destructive",
+        "tonalRamp": [
+          "oklch(15.0% 0.0546 29.87)",
+          "oklch(26.0% 0.0947 29.87)",
+          "oklch(38.0% 0.1274 29.87)",
+          "oklch(49.0% 0.1274 29.87)",
+          "oklch(61.0% 0.1274 29.87)",
+          "oklch(72.0% 0.1274 29.87)",
+          "oklch(84.0% 0.0816 29.87)",
+          "oklch(95.0% 0.0255 29.87)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Empty Menu Hero",
+        "purpose": "Fluid heading in the empty menu hero."
+      },
+      "receipt": {
+        "displayName": "Shopping Receipt",
+        "purpose": "Shopping list only; increases to 14px at tablet width."
+      }
+    },
+    "shadows": [
+      {
+        "name": "subtle",
+        "value": "0 1px 2px hsl(var(--base-black) / 0.08)",
+        "purpose": "Day cards and supporting controls."
+      },
+      {
+        "name": "raised",
+        "value": "0 8px 24px hsl(var(--base-black) / 0.12)",
+        "purpose": "Primary buttons, floating navigation, popovers, and receipt paper."
+      },
+      {
+        "name": "dialog",
+        "value": "0 24px 70px hsl(var(--base-black) / 0.24)",
+        "purpose": "Dialog panels."
+      }
+    ],
+    "motion": [
+      {
+        "name": "duration",
+        "value": "150ms",
+        "purpose": "Greda interaction transitions."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Greda default transitions."
+      },
+      {
+        "name": "shimmer",
+        "value": "1.4s infinite",
+        "purpose": "Existing skeleton loading animation; preserve reduced-motion handling."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tablet",
+        "value": "641px"
+      },
+      {
+        "name": "desktop",
+        "value": "760px"
+      },
+      {
+        "name": "wide",
+        "value": "901px"
+      },
+      {
+        "name": "receipt-three-columns",
+        "value": "1100px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary Button extracted from the existing Comal interface.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">Plan my week</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:hsl(var(--primary, 18 68% 31%));color:hsl(var(--surface-primary, 32 32% 94%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow, 0 8px 24px hsl(26 20% 16% / 0.12));cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-primary:hover{background:hsl(var(--primary-hover, 18 68% 28%));}.ds-button-primary:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-primary:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-primary:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-primary:active{transform:none}}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary Button extracted from the existing Comal interface.",
+      "html": "<button class=\"ds-button-secondary\" type=\"button\">Add a meal</button>",
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:hsl(var(--secondary, 32 22% 86%));color:hsl(var(--foreground, 26 20% 16%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08));cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-secondary:hover{background:hsl(var(--secondary, 32 22% 86% / 0.8));}.ds-button-secondary:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-secondary:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-secondary:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-secondary:active{transform:none}}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Outline Button extracted from the existing Comal interface.",
+      "html": "<button class=\"ds-button-outline\" type=\"button\">Retry</button>",
+      "css": ".ds-button-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:var(--radius,12px);background:hsl(var(--surface-primary, 32 32% 94%));color:hsl(var(--foreground, 26 20% 16%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08));cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-outline:hover{background:hsl(var(--accent, 18 44% 84%));}.ds-button-outline:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-outline:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-outline:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-outline:active{transform:none}}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ghost Button extracted from the existing Comal interface.",
+      "html": "<button class=\"ds-button-ghost\" type=\"button\">Edit</button>",
+      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:transparent;color:inherit;font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:none;cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-ghost:hover{background:hsl(var(--accent, 18 44% 84%));}.ds-button-ghost:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-ghost:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-ghost:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-ghost:active{transform:none}}"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "Link Button extracted from the existing Comal interface.",
+      "html": "<button class=\"ds-button-link\" type=\"button\">View recipes</button>",
+      "css": ".ds-button-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:transparent;color:hsl(var(--primary, 18 68% 31%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:none;cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-link:hover{background:transparent;text-decoration:underline;text-underline-offset:4px;}.ds-button-link:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-link:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-link:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-link:active{transform:none}}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Search Field extracted from the existing Comal interface.",
+      "html": "<input class=\"ds-search\" type=\"search\" aria-label=\"Search meals\" placeholder=\"Search meals\">",
+      "css": ".ds-search{width:100%;height:36px;padding:4px 12px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:var(--radius,12px);background:hsl(var(--card, 32 38% 97%));color:hsl(var(--foreground, 26 20% 16%));font:400 16px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08));transition:border-color var(--duration,150ms)}.ds-search::placeholder{color:hsl(var(--text-muted, 28 12% 31%))}.ds-search[aria-invalid=\"true\"]{border-color:hsl(var(--destructive, 6.512 57.848% 35%))}.ds-search:disabled{opacity:.5;cursor:not-allowed}.ds-search:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}@media(min-width:768px){.ds-search{font-size:14px}}"
+    },
+    {
+      "name": "Breakfast Badge",
+      "kind": "chip",
+      "refersTo": "meal-type-breakfast",
+      "description": "Breakfast Badge extracted from the existing Comal interface.",
+      "html": "<span class=\"ds-badge\">Breakfast</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;padding:4px 6px;border:0;border-radius:5px;background:hsl(var(--surface-tertiary, 90 20.40816% 80.78431%));color:hsl(var(--text-secondary, 28 13% 27%));font:700 9px/1.5 \"DM Sans\", sans-serif;text-transform:uppercase}"
+    },
+    {
+      "name": "Day Card",
+      "kind": "card",
+      "refersTo": "day-card",
+      "description": "Day Card extracted from the existing Comal interface.",
+      "html": "<article class=\"ds-day\"><p class=\"ds-day-label\">Day 23</p><h4 class=\"ds-day-title\">Monday</h4><p class=\"ds-day-copy\">Your planned meals</p></article>",
+      "css": ".ds-day{padding:19px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:20px;background:hsl(var(--card, 32 38% 97%));color:hsl(var(--foreground, 26 20% 16%));box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08))}.ds-day-label{margin:0 0 5px;font:700 10px/1.5 \"DM Sans\", sans-serif;letter-spacing:.13em;text-transform:uppercase}.ds-day-title{margin:0;font:600 23px Fraunces,serif}.ds-day-copy{font:400 14px/1.5 \"DM Sans\", sans-serif}@media(min-width:641px){.ds-day{padding:22px}}"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Bottom Navigation extracted from the existing Comal interface.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Primary navigation\"><a class=\"ds-nav-link\" href=\"/\" aria-current=\"page\">My Menu</a><a class=\"ds-nav-link\" href=\"/saved-menus\">Saved Menus</a><a class=\"ds-nav-link\" href=\"/meals\">My Meals</a><a class=\"ds-nav-link\" href=\"/ingredients\">My Ingredients</a></nav>",
+      "css": ".ds-nav{display:flex;gap:4px;padding:7px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:19px;background:hsl(var(--card,32 38% 97%) / .95);color:hsl(var(--foreground, 26 20% 16%));box-shadow:var(--shadow, 0 8px 24px hsl(26 20% 16% / 0.12));backdrop-filter:blur(15px)}.ds-nav-link{flex:1;min-width:0;padding:8px 4px;border-radius:var(--radius,12px);color:inherit;text-align:center;text-decoration:none;font:500 10px/1.5 \"DM Sans\", sans-serif}.ds-nav-link[aria-current=\"page\"]{background:hsl(var(--secondary, 32 22% 86%))}.ds-nav-link:hover{background:hsl(var(--accent, 18 44% 84%))}.ds-nav-link:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}"
+    },
+    {
+      "name": "Meal Row",
+      "kind": "button",
+      "refersTo": "meal-row",
+      "description": "Meal Row extracted from the existing Comal interface.",
+      "html": "<button class=\"ds-row\" type=\"button\"><span class=\"ds-row-content\"><span class=\"ds-row-label\">Breakfast</span><strong class=\"ds-row-name\">Your recipe</strong></span><svg aria-hidden=\"true\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
+      "css": ".ds-row{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:6px 12px;border:1px solid transparent;border-radius:var(--radius-lg,12px);background:hsl(var(--card, 32 38% 97%));color:hsl(var(--foreground, 26 20% 16%));text-align:left;cursor:pointer}.ds-row-content{display:grid;gap:4px;flex:1;min-width:0}.ds-row-label{font:700 10px/1.25 \"DM Sans\", sans-serif;letter-spacing:.08em;text-transform:uppercase}.ds-row-name{overflow-wrap:break-word;font:700 13px/1.25 \"DM Sans\", sans-serif}.ds-row:hover{background:hsl(var(--accent, 18 44% 84%))}.ds-row:active{transform:translateY(1px)}.ds-row:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-row:active{transform:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Everyday Kitchen",
+    "overview": "Comal takes its warmth from Mexican cazuelas de barro: glazed clay cookware,\ncopper-brown surfaces, burnt-orange highlights, dark fired edges, and cream\npainted details. Warm ivory backgrounds and near-white raised surfaces pair with\nterracotta actions and sage tertiary panels. The full neutral palette runs from\npale tan stone supporting surfaces to warm charcoal text, with subdued borders\nand secondary controls. A soft tan undertone keeps the foundation earthy while\nlighter surfaces reduce the brown cast. Hover and focus backgrounds use a\nwarmer, more saturated clay tint.\n\nDM Sans keeps body text clear, while Fraunces and generous corners give the\ninterface a handmade character. Dark mode uses warm charcoal surfaces, lighter\ncopper actions, and deep olive tertiary surfaces. Supporting text and field\nboundaries remain readable on the supporting surfaces in both schemes. Badges\nkeep a stable background on hover because they represent noninteractive status;\nbuttons retain their hover feedback. Color and typography carry the reference\nwithout decorative textures.\n\n\"The Everyday Kitchen\" remains the guiding metaphor, with **tactile and\nconfident** components. Greda owns the Comal theme and semantic role assignments;\nthe app currently selects the light scheme. Frontmatter captures the installed\nGreda 1.5.1 light tokens and app overrides as a source snapshot, not a second\ntheme to copy into application CSS. The description above is the confirmed theme\nintent; its readability requirements have not been verified in this pass.",
+    "keyCharacteristics": [
+      "Mexican glazed clay cookware expressed through color and typography, without decorative textures.",
+      "Terracotta actions, warm ivory foundations, near-white raised surfaces, and Garden Sage panels.",
+      "Pale tan stone supporting surfaces, warm charcoal text, and subdued boundaries.",
+      "Clear DM Sans body text, Fraunces headings, and generous handmade corners.",
+      "Warm charcoal, lighter copper, and deep olive in Greda's dark scheme.",
+      "Stable noninteractive badges and visible button hover feedback.",
+      "A supermarket receipt pattern reserved for the shopping list."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Role Rule",
+        "body": "Background, text, and border roles are independent: Greda's primary background is Terracotta, while primary text and borders are neutral. Use action text/border roles for Terracotta emphasis.",
+        "section": "colors"
+      },
+      {
+        "name": "The Labeled Category Rule",
+        "body": "Breakfast uses sage, lunch uses tan, and dinner uses cream; all retain visible labels and secondary brown text. Category fills do not change on hover and do not substitute for selected-control styling.",
+        "section": "colors"
+      },
+      {
+        "name": "The Today Border Rule",
+        "body": "Today's day card uses the action-colored border while retaining the same raised cream fill and subtle shadow as other day cards.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do import Greda primitives directly and use its Comal semantic roles.",
+      "Do preserve the mobile-first layout and allow translated labels and names to wrap.",
+      "Do retain labeled categories, visible keyboard focus, and explicit field errors.",
+      "Do use Fraunces for headings and DM Sans for general text and controls.",
+      "Do preserve readable supporting text and field boundaries in both color schemes.",
+      "Do keep the receipt's monospace and torn-paper treatment within shopping lists."
+    ],
+    "donts": [
+      "Don't copy this palette into a second application theme or add UI colors without discussion.",
+      "Don't confuse neutral primary text/borders with action-colored emphasis.",
+      "Don't change category badge fills on hover or rely on category color alone.",
+      "Don't add decorative textures to convey the cazuela reference; use color and typography.",
+      "Don't add a decorative illustration to the existing menu hero during refinement.",
+      "Don't replace Greda behavior with consumer overrides before investigating the library."
+    ]
+  }
+}
