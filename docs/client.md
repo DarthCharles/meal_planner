@@ -168,14 +168,18 @@ The library keeps its own add action.
 
 My Ingredients is available in the header actions and mobile bottom navigation.
 It displays the shared catalog alphabetically, with case-insensitive local name
-search and a visible result count. Search and Add ingredient share a row, with
-the search field filling the available width. Search is disabled until catalog
+search and a visible result count. My Meals and My Ingredients share a collection
+header with a 32px title and an Add action: stacked below the title on mobile,
+alongside it from tablet width. The ingredient introduction stays below its title.
+The Collection eyebrow is omitted on both pages. Search occupies its own full-width
+row below the header, followed by the ingredient count or meal-type filters.
+Search is disabled until catalog
 data is available. Ingredient names wrap on narrow screens.
-My Meals uses the same search field styling and single-row search/Add toolbar.
+My Meals uses the same search field styling and header spacing.
 The page fetches `GET /ingredients` only when opened and reuses the same React
 Query cache as the meal form. Initial loading uses a shimmer skeleton for the
 result count and six ingredient cards
-in the catalog's responsive grid. The toolbar stays visible during loading.
+in the catalog's responsive grid. The header and search stay visible during loading.
 The skeleton announces loading once, hides decorative placeholders from
 assistive technology, and disables animation for reduced-motion preferences.
 It also shows empty catalog, no search results, and request errors with retry;
@@ -286,8 +290,9 @@ Generation failures preserve the current hero and allow retrying.
 Initial loading placeholders have space above the grid, equal heights, and use the weekly grid's
 responsive column layout.
 The meal library has no hero, keeping its heading, search, filters, and add action
-at the top of the screen. Its initial loading state shows skeletons for the search
-controls, filters, and six meal cards using the same responsive grid. The skeleton
+at the top of the screen. Its Add action remains available during initial loading;
+skeletons represent the full-width search field, filters, and six meal cards using
+the same responsive grid. The skeleton
 announces loading once, hides decorative placeholders from assistive technology,
 and disables shimmer for reduced-motion preferences. Cached meals remain visible
 during background refreshes.

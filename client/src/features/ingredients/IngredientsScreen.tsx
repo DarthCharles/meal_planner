@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button, Input } from "@darthcharles/greda";
 
 import { Notice } from "../../components/Notice";
+import { CollectionHeader } from "../../components/CollectionHeader";
 import { formatLocale, useI18n } from "../../i18n";
 import { useIngredients } from "../meals/queries";
 import { IngredientForm } from "./IngredientForm";
@@ -29,19 +30,14 @@ export function IngredientsScreen() {
 
   return (
     <section aria-labelledby="ingredients-title" className="pb-5 tablet:pb-8">
-      <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-        {t("common.collection")}
-      </p>
-      <h2
-        id="ingredients-title"
-        className="mb-3 font-display text-[32px] font-semibold tracking-[-.04em]"
-      >
-        {t("navigation.my_ingredients")}
-      </h2>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {t("ingredients.screen.ingredients_intro")}
-      </p>
-      <div className="mb-4 flex min-w-0 items-center gap-2 tablet:gap-3">
+      <CollectionHeader
+        titleId="ingredients-title"
+        title={t("navigation.my_ingredients")}
+        description={t("ingredients.screen.ingredients_intro")}
+        actionLabel={t("ingredients.screen.add_ingredient")}
+        onAdd={() => openForm()}
+      />
+      <div className="mb-4">
         <Input
           type="search"
           aria-label={t("ingredients.screen.search_ingredients")}
@@ -49,11 +45,8 @@ export function IngredientsScreen() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           disabled={!ingredients}
-          className="min-w-0 flex-1 bg-card"
+          className="min-h-11 w-full min-w-0 bg-card"
         />
-        <Button className="shrink-0" variant="secondary" onClick={() => openForm()}>
-          {t("ingredients.screen.add_ingredient")}
-        </Button>
       </div>
 
       {error && (

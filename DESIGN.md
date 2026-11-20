@@ -252,8 +252,12 @@ share a 12px top inset.
 
 App breakpoints are tablet (641px), desktop (760px), and wide (901px). Collections
 start in one column, become two at tablet, and three at wide. Weekly cards have
-16px gaps, meal-library cards 14px, and ingredient cards 12px. Search and Add
-remain in a single row, with the search input taking the available width.
+16px gaps, meal-library cards 14px, and ingredient cards 12px. My Meals and My
+Ingredients use a shared collection header with a 32px title, no eyebrow, and
+an Add action below the title on mobile and beside it from tablet width. The
+ingredient introduction remains beneath its title. Header-to-search spacing is
+24px. Search has its own full-width row and a minimum height of 44px, with 16px
+before the ingredient count or meal-type filters. Meal filters have 24px below them.
 
 The receipt uses CSS Columns: one below desktop, two from desktop, and three
 from 1100px. Complete categories stay together and flow down, then across.

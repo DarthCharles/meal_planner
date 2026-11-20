@@ -8,11 +8,9 @@ import { mealTypeColorClassName, mealTypeLabel, mealTypeOrder } from "./mealType
 
 export function MealsView({
   meals,
-  onAdd,
   onEdit,
 }: {
   meals: Meal[];
-  onAdd: () => void;
   onEdit: (meal: Meal) => void;
 }) {
   const { t } = useI18n();
@@ -28,21 +26,18 @@ export function MealsView({
     [meals, filter, search],
   );
   return (
-    <section>
-      <div className="mb-4 flex min-w-0 items-center gap-2 tablet:gap-3">
+    <section aria-labelledby="meals-title">
+      <div className="mb-4">
         <Input
           type="search"
           aria-label={t("meals.screen.search_meals")}
-          className="min-w-0 flex-1 bg-card"
+          className="min-h-11 w-full min-w-0 bg-card"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={t("meals.screen.search_meals")}
         />
-        <Button className="shrink-0" variant="secondary" onClick={onAdd}>
-          {t("meals.screen.add_meal")}
-        </Button>
       </div>
-      <div className="my-[18px] flex gap-2 overflow-x-auto">
+      <div className="mb-6 flex gap-2 overflow-x-auto">
         {["all", ...mealTypeOrder].map((item) => (
           <Button
             key={item}

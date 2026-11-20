@@ -1,6 +1,7 @@
 import { Button } from "@darthcharles/greda";
 
 import { Notice } from "../../components/Notice";
+import { CollectionHeader } from "../../components/CollectionHeader";
 import { demoMeals } from "../../demoData";
 import { useI18n } from "../../i18n";
 import { MealsSkeleton } from "./MealsSkeleton";
@@ -35,18 +36,16 @@ export function MealsScreen() {
           </Button>
         </div>
       )}
-      <div className="mb-[17px] tablet:mb-5">
-        <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-          {t("common.collection")}
-        </p>
-        <h3 className="mb-0 font-display text-[28px] font-semibold tracking-[-.04em]">
-          {t("meals.screen.meal_library")}
-        </h3>
-      </div>
+      <CollectionHeader
+        titleId="meals-title"
+        title={t("meals.screen.meal_library")}
+        actionLabel={t("meals.screen.add_meal")}
+        onAdd={openCreateMeal}
+      />
       {loading ? (
         <MealsSkeleton />
       ) : (
-        <MealsView meals={meals ?? demoMeals} onAdd={openCreateMeal} onEdit={openEditMeal} />
+        <MealsView meals={meals ?? demoMeals} onEdit={openEditMeal} />
       )}
     </>
   );

@@ -7,11 +7,8 @@ export function MealsSkeleton() {
     <div role="status" aria-label={t("meals.screen.loading_meals_label")} aria-busy="true">
       <span className="sr-only">{t("meals.screen.loading_meals")}</span>
       <div aria-hidden="true">
-        <div className="flex flex-col gap-[10px] tablet:flex-row">
-          <div className={`h-[43px] flex-1 rounded-xl ${shimmer}`} />
-          <div className={`h-[43px] w-[110px] rounded-xl ${shimmer}`} />
-        </div>
-        <div className="my-[18px] flex gap-2 overflow-hidden">
+        <div className={`mb-4 h-11 w-full rounded-xl ${shimmer}`} />
+        <div className="mb-6 flex gap-2 overflow-hidden">
           {[0, 1, 2, 3].map((item) => (
             <div key={item} className={`h-8 w-20 shrink-0 rounded-full ${shimmer}`} />
           ))}
