@@ -15,7 +15,6 @@ export function useMealDialog({ preserveParent = false } = {}) {
     () =>
       showDialog({
         title: () => t("meals.dialog.new_favorite"),
-        eyebrow: () => t("meals.dialog.add_to_library"),
         content: ({ close }) => (
           <MealDialogContent initialMeal={null} onClose={close} onSaved={close} />
         ),
@@ -26,8 +25,6 @@ export function useMealDialog({ preserveParent = false } = {}) {
     (meal: Meal) =>
       showDialog({
         title: () => t("meals.details.edit_meal"),
-        hideTitle: true,
-        eyebrow: () => t("meals.dialog.update_library"),
         content: ({ close }) => (
           <MealDialogContent initialMeal={meal} onClose={close} onSaved={close} />
         ),
@@ -38,7 +35,6 @@ export function useMealDialog({ preserveParent = false } = {}) {
     (meal: Meal) =>
       showDialog({
         title: meal.name,
-        eyebrow: () => t("meals.dialog.on_table"),
         content: () => <MealDetails meal={meal} onEdit={() => openEditMeal(meal)} />,
       }),
     [showDialog, openEditMeal, t],
@@ -47,7 +43,6 @@ export function useMealDialog({ preserveParent = false } = {}) {
     (id: number, name: string) =>
       showDialog({
         title: name,
-        eyebrow: () => t("meals.dialog.in_library"),
         content: () => <MealDetailsContent id={id} onEdit={openEditMeal} />,
       }),
     [showDialog, openEditMeal, t],

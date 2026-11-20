@@ -101,85 +101,95 @@ export function MealForm({
   };
   return (
     <FormProvider {...methods}>
-      <form noValidate onSubmit={handleSubmit(submit, clearSaveErrors)}>
-        <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-          {t("meals.form.name")}
-          <Input
-            className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
-            {...register("name", { validate: (value) => !!value.trim() })}
-            aria-invalid={!!errors.name}
-            aria-describedby={errors.name ? "meal-form-error" : undefined}
-            placeholder={t("meals.form.meal_example")}
-          />
-        </label>
-        <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-          {t("meals.form.description")}
-          <Textarea
-            className="h-auto resize-y rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
-            {...register("description", {
-              validate: (value) => !!value.trim(),
-            })}
-            aria-invalid={!!errors.description}
-            aria-describedby={errors.description ? "meal-form-error" : undefined}
-            placeholder={t("meals.form.description_help")}
-            rows={3}
-          />
-        </label>
-        <label className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-          {t("meals.form.recipe_url")}{" "}
-          <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
-          <Input
-            className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
-            {...register("recipe_url")}
-            placeholder="https://..."
-          />
-        </label>
-        <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-          <legend className="mb-[7px]">{t("meals.form.meal_time")}</legend>
-          <Controller
-            name="meal_type_ids"
-            control={control}
-            rules={{ validate: (ids) => ids.length > 0 }}
-            render={({ field }) => (
-              <div className="flex flex-wrap gap-2">
-                {types.map(([name, id], index) => {
-                  const selected = field.value.includes(id);
-                  return (
-                    <Button
-                      type="button"
-                      variant={selected ? "secondary" : "outline"}
-                      size="sm"
-                      className="capitalize"
-                      key={id}
-                      ref={index === 0 ? field.ref : undefined}
-                      onBlur={field.onBlur}
-                      aria-pressed={selected}
-                      aria-invalid={!!errors.meal_type_ids}
-                      aria-describedby={errors.meal_type_ids ? "meal-form-error" : undefined}
-                      onClick={() =>
-                        field.onChange(
-                          selected
-                            ? field.value.filter((typeId) => typeId !== id)
-                            : [...field.value, id],
-                        )
-                      }
-                    >
-                      {mealTypeLabel(name)}
-                    </Button>
-                  );
-                })}
-              </div>
-            )}
-          />
-        </fieldset>
-        <PreferredDaysField />
+      <form
+        className="@container grid min-w-0 gap-6"
+        noValidate
+        onSubmit={handleSubmit(submit, clearSaveErrors)}
+      >
+        <div className="grid min-w-0 gap-4">
+          <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
+            {t("meals.form.name")}
+            <Input
+              className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              {...register("name", { validate: (value) => !!value.trim() })}
+              aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? "meal-form-error" : undefined}
+              placeholder={t("meals.form.meal_example")}
+            />
+          </label>
+          <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
+            {t("meals.form.description")}
+            <Textarea
+              className="h-auto resize-y rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              {...register("description", {
+                validate: (value) => !!value.trim(),
+              })}
+              aria-invalid={!!errors.description}
+              aria-describedby={errors.description ? "meal-form-error" : undefined}
+              placeholder={t("meals.form.description_help")}
+              rows={3}
+            />
+          </label>
+          <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
+            <span>
+              {t("meals.form.recipe_url")}{" "}
+              <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
+            </span>
+            <Input
+              className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              {...register("recipe_url")}
+              placeholder="https://..."
+            />
+          </label>
+        </div>
+        <div className="grid min-w-0 gap-4 border-t border-border pt-6">
+          <fieldset className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
+            <legend className="mb-2">{t("meals.form.meal_time")}</legend>
+            <Controller
+              name="meal_type_ids"
+              control={control}
+              rules={{ validate: (ids) => ids.length > 0 }}
+              render={({ field }) => (
+                <div className="flex flex-wrap gap-2">
+                  {types.map(([name, id], index) => {
+                    const selected = field.value.includes(id);
+                    return (
+                      <Button
+                        type="button"
+                        variant={selected ? "secondary" : "outline"}
+                        size="sm"
+                        className="capitalize"
+                        key={id}
+                        ref={index === 0 ? field.ref : undefined}
+                        onBlur={field.onBlur}
+                        aria-pressed={selected}
+                        aria-invalid={!!errors.meal_type_ids}
+                        aria-describedby={errors.meal_type_ids ? "meal-form-error" : undefined}
+                        onClick={() =>
+                          field.onChange(
+                            selected
+                              ? field.value.filter((typeId) => typeId !== id)
+                              : [...field.value, id],
+                          )
+                        }
+                      >
+                        {mealTypeLabel(name)}
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
+            />
+          </fieldset>
+          <PreferredDaysField />
+        </div>
         <IngredientManager units={units} />
         {error && (
           <p id="meal-form-error" role="alert" className="text-xs text-destructive">
             {error}
           </p>
         )}
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
           <Button type="button" variant="ghost" onClick={onClose}>
             {t("common.cancel")}
           </Button>

@@ -28,17 +28,20 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
     name: "ingredients",
   });
   return (
-    <fieldset className="mb-4 grid gap-[7px] text-xs font-bold text-foreground">
-      <div className="flex items-center justify-between gap-3">
-        <legend className="m-0">
+    <fieldset
+      aria-labelledby="meal-ingredients-label"
+      className="grid min-w-0 gap-3 border-t border-border pt-6 text-xs font-bold text-foreground"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <span id="meal-ingredients-label">
           {t("common.ingredients")}{" "}
           <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
-        </legend>
+        </span>
         <Button
           type="button"
           variant="link"
           size="sm"
-          className="h-auto px-0 text-[11px]"
+          className="px-0 text-xs"
           onClick={() =>
             append(
               { name: "", quantity: "", unit: "", preparation_note: "" },
@@ -111,8 +114,8 @@ function IngredientRow({
   });
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   return (
-    <div className="mt-2 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_25px] tablet:grid-cols-[minmax(0,1.4fr)_66px_78px_minmax(0,1.1fr)_25px] items-center gap-[6px]">
-      <div ref={setContainer} className="col-span-2 tablet:col-span-1 min-w-0">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-center gap-2 border-t border-border pt-4 @min-[26rem]:grid-cols-[5rem_6rem_minmax(0,1fr)_2.75rem]">
+      <div ref={setContainer} className="col-span-2 min-w-0 @min-[26rem]:col-span-3">
         <Controller
           control={control}
           name={`ingredients.${index}.name`}
@@ -224,7 +227,7 @@ function IngredientRow({
         )}
       />
       <Input
-        className="col-span-2 tablet:col-span-1 h-auto min-w-0 rounded-[10px] bg-background px-2 py-[9px] text-[13px] md:text-[13px] font-normal shadow-none"
+        className="col-span-2 h-auto min-w-0 rounded-[10px] bg-background px-2 py-[9px] text-[13px] md:text-[13px] font-normal shadow-none @min-[26rem]:col-span-1"
         aria-label={t("meals.ingredient_manager.preparation_note")}
         {...register(`ingredients.${index}.preparation_note`)}
         placeholder={t("meals.ingredient_manager.note_optional")}
@@ -233,7 +236,7 @@ function IngredientRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="col-start-3 row-start-1 tablet:col-start-auto tablet:row-start-auto size-[25px] rounded-full"
+        className="col-start-3 row-start-1 size-11 rounded-full @min-[26rem]:col-start-4"
         onClick={onRemove}
         aria-label={t("meals.ingredient_manager.remove_ingredient", {
           name: name || t("meals.ingredient_manager.ingredient"),

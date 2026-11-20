@@ -316,7 +316,10 @@ message. Details use the meal already embedded in the menu and make no additiona
 API requests. An “Edit meal” action below the details replaces them with the existing edit
 form, prefilled with that meal. Closing either dialog restores focus to the row
 that opened the details.
-The edit dialog omits its visible title and keeps “Edit meal” as its accessible name.
+Meal dialogs lead with their title, without an eyebrow. The edit dialog shows
+“Edit meal” as both its visible heading and accessible name. Details group meal
+types, description, and preferred days together, followed by ingredients and a
+separate wrapping footer for the recipe link and Edit meal action.
 
 My Menu distinguishes empty data from load failures. Initial failures show a friendly
 message and Try again without demo meals. Failed refreshes preserve the last loaded
@@ -418,6 +421,10 @@ and edit. Native meal name, description, URL, quantity, and note fields use
 meal type IDs. React Query continues to own save requests, pending state, API
 errors, and cache updates.
 
+Create and edit forms group name, description, and recipe URL together, followed
+by planning preferences, ingredients, and a wrapping action footer. Field labels
+use tight spacing; section dividers and larger gaps separate those groups.
+
 Ingredient units use Greda's `Select` through RHF `Controller`, with codes from
 `GET /units`. The trigger shows the saved unit when editing, supports keyboard
 selection, and exposes validation errors. Its popup renders inside the native
@@ -443,9 +450,12 @@ before dismissing the dialog.
 `useFormContext` and `useFieldArray`. Rows use React Hook Form's generated IDs
 as React keys, so removing a row preserves the other rows' values. Each row
 watches its name for the accessible remove-button label. Generated IDs are not
-included in the submitted ingredients. On mobile, ingredient names and notes
-span the row, with quantity and unit paired beneath the name; tablet and desktop
-use a compact single row.
+included in the submitted ingredients. Ingredient names occupy the first row
+beside a 44px remove target. Quantity and unit appear below; preparation notes
+follow them. At form-container widths of at least 26rem, the note shares the
+quantity/unit row; narrower forms put it on its own row. This uses the available
+modal content width rather than the viewport width. Ingredient and preferred-day
+headers allow their actions to wrap for narrow screens and translated labels.
 
 Validation requires a nonblank name and description and at least one meal time.
 Named ingredient rows need a quantity of at least 0.001 and a unit; unnamed rows

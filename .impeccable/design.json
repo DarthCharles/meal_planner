@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-20T06:56:05.142242+00:00",
+  "generatedAt": "2026-11-20T15:38:32.485603+00:00",
   "title": "Design System: Comal",
   "extensions": {
     "colorMeta": {
@@ -192,6 +192,26 @@
         "displayName": "Empty Menu Hero",
         "purpose": "Fluid heading in the empty menu hero."
       },
+      "headline": {
+        "displayName": "Section Heading",
+        "purpose": "Section headings; today’s overview increases from 32px to 36px at tablet width."
+      },
+      "day-title": {
+        "displayName": "Day Heading",
+        "purpose": "Fraunces headings in weekly day cards."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "DM Sans general text; supporting copy uses smaller sizes."
+      },
+      "label": {
+        "displayName": "Control Label",
+        "purpose": "Medium-weight control text; small controls use 12px."
+      },
+      "eyebrow": {
+        "displayName": "Eyebrow",
+        "purpose": "Compact uppercase metadata with increased tracking where implemented."
+      },
       "receipt": {
         "displayName": "Shopping Receipt",
         "purpose": "Shopping list only; increases to 14px at tablet width."
@@ -257,7 +277,7 @@
       "refersTo": "button-primary",
       "description": "Primary Button extracted from the existing Comal interface.",
       "html": "<button class=\"ds-button-primary\" type=\"button\">Plan my week</button>",
-      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:hsl(var(--primary, 18 68% 31%));color:hsl(var(--surface-primary, 32 32% 94%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow, 0 8px 24px hsl(26 20% 16% / 0.12));cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-primary:hover{background:hsl(var(--primary-hover, 18 68% 28%));}.ds-button-primary:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-primary:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-primary:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-primary:active{transform:none}}"
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:hsl(var(--primary, 18 68% 31%));color:hsl(var(--primary-foreground, 32 32% 94%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow, 0 8px 24px hsl(26 20% 16% / 0.12));cursor:pointer}.ds-button-primary:not([aria-pressed]){transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-primary:hover{background:hsl(var(--primary-hover, 18 68% 28%));}.ds-button-primary:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-primary:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-primary:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-primary:active{transform:none}}"
     },
     {
       "name": "Secondary Button",
@@ -265,7 +285,7 @@
       "refersTo": "button-secondary",
       "description": "Secondary Button extracted from the existing Comal interface.",
       "html": "<button class=\"ds-button-secondary\" type=\"button\">Add a meal</button>",
-      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:hsl(var(--secondary, 32 22% 86%));color:hsl(var(--foreground, 26 20% 16%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08));cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-secondary:hover{background:hsl(var(--secondary, 32 22% 86% / 0.8));}.ds-button-secondary:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-secondary:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-secondary:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-secondary:active{transform:none}}"
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:hsl(var(--secondary, 32 22% 86%));color:hsl(var(--foreground, 26 20% 16%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08));cursor:pointer}.ds-button-secondary:not([aria-pressed]){transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-secondary:hover{background:hsl(var(--secondary, 32 22% 86%) / 0.8);}.ds-button-secondary:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-secondary:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-secondary:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-secondary:active{transform:none}}"
     },
     {
       "name": "Outline Button",
@@ -273,7 +293,7 @@
       "refersTo": "button-outline",
       "description": "Outline Button extracted from the existing Comal interface.",
       "html": "<button class=\"ds-button-outline\" type=\"button\">Retry</button>",
-      "css": ".ds-button-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:var(--radius,12px);background:hsl(var(--surface-primary, 32 32% 94%));color:hsl(var(--foreground, 26 20% 16%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08));cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-outline:hover{background:hsl(var(--accent, 18 44% 84%));}.ds-button-outline:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-outline:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-outline:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-outline:active{transform:none}}"
+      "css": ".ds-button-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:var(--radius,12px);background:hsl(var(--surface-primary, 32 32% 94%));color:hsl(var(--foreground, 26 20% 16%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08));cursor:pointer}.ds-button-outline:not([aria-pressed]){transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-outline:hover{background:hsl(var(--accent, 18 44% 84%));}.ds-button-outline:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-outline:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-outline:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-outline:active{transform:none}}"
     },
     {
       "name": "Ghost Button",
@@ -281,7 +301,7 @@
       "refersTo": "button-ghost",
       "description": "Ghost Button extracted from the existing Comal interface.",
       "html": "<button class=\"ds-button-ghost\" type=\"button\">Edit</button>",
-      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:transparent;color:inherit;font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:none;cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-ghost:hover{background:hsl(var(--accent, 18 44% 84%));}.ds-button-ghost:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-ghost:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-ghost:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-ghost:active{transform:none}}"
+      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:transparent;color:inherit;font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:none;cursor:pointer}.ds-button-ghost:not([aria-pressed]){transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-ghost:hover{background:hsl(var(--accent, 18 44% 84%));}.ds-button-ghost:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-ghost:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-ghost:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-ghost:active{transform:none}}"
     },
     {
       "name": "Link Button",
@@ -289,7 +309,7 @@
       "refersTo": "button-link",
       "description": "Link Button extracted from the existing Comal interface.",
       "html": "<button class=\"ds-button-link\" type=\"button\">View recipes</button>",
-      "css": ".ds-button-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:transparent;color:hsl(var(--primary, 18 68% 31%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:none;cursor:pointer;transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-link:hover{background:transparent;text-decoration:underline;text-underline-offset:4px;}.ds-button-link:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-link:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-link:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-link:active{transform:none}}"
+      "css": ".ds-button-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius,12px);background:transparent;color:hsl(var(--primary, 18 68% 31%));font:500 14px/1.5 \"DM Sans\", sans-serif;box-shadow:none;cursor:pointer}.ds-button-link:not([aria-pressed]){transition:background-color var(--duration,150ms) cubic-bezier(.4,0,.2,1),transform var(--duration,150ms)}.ds-button-link:hover{background:transparent;text-decoration:underline;text-underline-offset:4px;}.ds-button-link:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-button-link:not([aria-pressed]):not([aria-haspopup]):active{transform:translateY(1px)}.ds-button-link:disabled{pointer-events:none;opacity:.65;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-button-link:active{transform:none}}"
     },
     {
       "name": "Search Field",
@@ -311,17 +331,17 @@
       "name": "Day Card",
       "kind": "card",
       "refersTo": "day-card",
-      "description": "Day Card extracted from the existing Comal interface.",
+      "description": "Weekly day card; only today receives an action-colored border.",
       "html": "<article class=\"ds-day\"><p class=\"ds-day-label\">Day 23</p><h4 class=\"ds-day-title\">Monday</h4><p class=\"ds-day-copy\">Your planned meals</p></article>",
-      "css": ".ds-day{padding:19px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:20px;background:hsl(var(--card, 32 38% 97%));color:hsl(var(--foreground, 26 20% 16%));box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08))}.ds-day-label{margin:0 0 5px;font:700 10px/1.5 \"DM Sans\", sans-serif;letter-spacing:.13em;text-transform:uppercase}.ds-day-title{margin:0;font:600 23px Fraunces,serif}.ds-day-copy{font:400 14px/1.5 \"DM Sans\", sans-serif}@media(min-width:641px){.ds-day{padding:22px}}"
+      "css": ".ds-day{padding:19px;border:0;border-radius:20px;background:hsl(var(--card, 32 38% 97%));color:hsl(var(--foreground, 26 20% 16%));box-shadow:var(--shadow-sm, 0 1px 2px hsl(26 20% 16% / 0.08))}.ds-day-label{margin:0 0 5px;font:700 11px/1.5 \"DM Sans\", sans-serif;letter-spacing:.13em;text-transform:uppercase}.ds-day-title{margin:0;font:600 23px Fraunces,serif}.ds-day-copy{font:400 14px/1.5 \"DM Sans\", sans-serif}@media(min-width:641px){.ds-day{padding:22px}}.ds-day[data-today=\"true\"]{border:1px solid hsl(var(--border-action,18 68% 31%))}"
     },
     {
       "name": "Bottom Navigation",
       "kind": "nav",
       "refersTo": "navigation",
       "description": "Bottom Navigation extracted from the existing Comal interface.",
-      "html": "<nav class=\"ds-nav\" aria-label=\"Primary navigation\"><a class=\"ds-nav-link\" href=\"/\" aria-current=\"page\">My Menu</a><a class=\"ds-nav-link\" href=\"/saved-menus\">Saved Menus</a><a class=\"ds-nav-link\" href=\"/meals\">My Meals</a><a class=\"ds-nav-link\" href=\"/ingredients\">My Ingredients</a></nav>",
-      "css": ".ds-nav{display:flex;gap:4px;padding:7px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:19px;background:hsl(var(--card,32 38% 97%) / .95);color:hsl(var(--foreground, 26 20% 16%));box-shadow:var(--shadow, 0 8px 24px hsl(26 20% 16% / 0.12));backdrop-filter:blur(15px)}.ds-nav-link{flex:1;min-width:44px;min-height:44px;padding:8px 4px;border-radius:var(--radius,12px);color:inherit;text-align:center;text-decoration:none;font:500 12px/1.5 \"DM Sans\", sans-serif}.ds-nav-link[aria-current=\"page\"]{background:hsl(var(--secondary, 32 22% 86%))}.ds-nav-link:hover{background:hsl(var(--accent, 18 44% 84%))}.ds-nav-link:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}"
+      "html": "<nav class=\"ds-nav\" aria-label=\"Primary navigation\"><a class=\"ds-nav-link\" href=\"/\" aria-current=\"page\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z\"/></svg><span>Menu</span></a><a class=\"ds-nav-link\" href=\"/saved-menus\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M16 3v4M8 3v4M3 11h18m-10 5h.01M12 16h.01M16 16h.01\"/></svg><span>Saved Menus</span></a><a class=\"ds-nav-link\" href=\"/meals\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 3v7a2 2 0 0 0 4 0V3M6 3v18M20 21V3c-3 0-5 5-5 9h5\"/></svg><span>Meals</span></a><a class=\"ds-nav-link\" href=\"/ingredients\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7 20h10M12 20v-8M12 12C7 12 4 9 4 4c5 0 8 3 8 8Zm0 4c0-5 3-8 8-8 0 5-3 8-8 8Z\"/></svg><span>Ingredients</span></a></nav>",
+      "css": ".ds-nav{display:flex;gap:4px;padding:7px;border:1px solid hsl(var(--border, 30 14% 39%) / .9);border-radius:19px;background:hsl(var(--card,32 38% 97%) / .95);color:hsl(var(--foreground, 26 20% 16%));box-shadow:var(--shadow, 0 8px 24px hsl(26 20% 16% / 0.12));backdrop-filter:blur(15px)}.ds-nav-link{flex:1;min-width:44px;min-height:44px;padding:8px 4px;border-radius:var(--radius,12px);color:inherit;text-align:center;text-decoration:none;font:500 12px/1.5 \"DM Sans\", sans-serif}.ds-nav-link[aria-current=\"page\"]{background:hsl(var(--secondary, 32 22% 86%))}.ds-nav-link:hover{background:hsl(var(--accent, 18 44% 84%))}.ds-nav-link:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}.ds-nav-link{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}.ds-nav-link svg{width:16px;height:16px;flex-shrink:0}.ds-nav-link[aria-current=\"page\"]:hover{background:hsl(var(--secondary,32 22% 86%) / .8)}"
     },
     {
       "name": "Meal Row",
@@ -334,10 +354,10 @@
   ],
   "narrative": {
     "northStar": "The Everyday Kitchen",
-    "overview": "Comal takes its warmth from Mexican cazuelas de barro: glazed clay cookware,\ncopper-brown surfaces, burnt-orange highlights, dark fired edges, and cream\npainted details. Warm ivory backgrounds and near-white raised surfaces pair with\nterracotta actions and sage tertiary panels. The full neutral palette runs from\npale tan stone supporting surfaces to warm charcoal text, with subdued borders\nand secondary controls. A soft tan undertone keeps the foundation earthy while\nlighter surfaces reduce the brown cast. Hover and focus backgrounds use a\nwarmer, more saturated clay tint.\n\nDM Sans keeps body text clear, while Fraunces and generous corners give the\ninterface a handmade character. Dark mode uses warm charcoal surfaces, lighter\ncopper actions, and deep olive tertiary surfaces. Supporting text and field\nboundaries remain readable on the supporting surfaces in both schemes. Badges\nkeep a stable background on hover because they represent noninteractive status;\nbuttons retain their hover feedback. Color and typography carry the reference\nwithout decorative textures.\n\n\"The Everyday Kitchen\" remains the guiding metaphor, with **tactile and\nconfident** components. Greda owns the Comal theme and semantic role assignments;\nthe app currently selects the light scheme. Frontmatter captures the installed\nGreda 1.5.1 light tokens and app overrides as a source snapshot, not a second\ntheme to copy into application CSS. The description above is the confirmed theme\nintent; its readability requirements have not been verified in this pass.",
+    "overview": "Comal takes its warmth from Mexican cazuelas de barro: glazed clay cookware,\ncopper-brown surfaces, burnt-orange highlights, dark fired edges, and cream\npainted details. Warm ivory backgrounds and near-white raised surfaces pair with\nterracotta actions and sage category accents. The full neutral palette runs from\npale tan stone supporting surfaces to warm charcoal text, with subdued borders\nand secondary controls. A soft tan undertone keeps the foundation earthy while\nlighter surfaces reduce the brown cast. Hover and focus backgrounds use a\nwarmer, more saturated clay tint.\n\nDM Sans keeps body text clear, while Fraunces and generous corners give the\ninterface a handmade character. Dark mode uses warm charcoal surfaces, lighter\ncopper actions, and deep olive tertiary surfaces. Supporting text and field\nboundaries remain readable on the supporting surfaces in both schemes. Badges\nkeep a stable background on hover because they represent noninteractive status;\nbuttons retain their hover feedback. Color and typography carry the reference\nwithout decorative textures.\n\n\"The Everyday Kitchen\" remains the guiding metaphor, with **tactile and\nconfident** components. Greda owns the Comal theme and semantic role assignments;\nthe app currently selects the light scheme. Frontmatter captures the installed\nGreda 1.5.1 light tokens and app overrides as a source snapshot, not a second\ntheme to copy into application CSS. The description above is the confirmed theme\nintent; its readability requirements have not been verified in this pass.",
     "keyCharacteristics": [
       "Mexican glazed clay cookware expressed through color and typography, without decorative textures.",
-      "Terracotta actions, warm ivory foundations, near-white raised surfaces, and Garden Sage panels.",
+      "Terracotta actions, warm ivory foundations, near-white raised surfaces, and Garden Sage category accents.",
       "Pale tan stone supporting surfaces, warm charcoal text, and subdued boundaries.",
       "Clear DM Sans body text, Fraunces headings, and generous handmade corners.",
       "Warm charcoal, lighter copper, and deep olive in Greda's dark scheme.",
@@ -357,7 +377,7 @@
       },
       {
         "name": "The Today Border Rule",
-        "body": "Today's day card uses the action-colored border while retaining the same raised cream fill and subtle shadow as other day cards.",
+        "body": "Today's day card uses the action-colored border while retaining the same raised cream fill and subtle shadow as other day cards. Other day cards have no border.",
         "section": "elevation"
       }
     ],

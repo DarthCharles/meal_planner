@@ -161,7 +161,17 @@ test(
       await expect(field).toBeVisible();
       const bounds = await field.boundingBox();
       expect(bounds!.width, `${label} should have room for its value`).toBeGreaterThanOrEqual(60);
+      if (label === "Ingredient name" || label === "Preparation note") {
+        expect(bounds!.width, `${label} should have room for recipe text`).toBeGreaterThanOrEqual(
+          160,
+        );
+      }
     }
+    const removeBounds = await dialog
+      .getByRole("button", { name: "Remove Potato", exact: true })
+      .boundingBox();
+    expect(removeBounds!.width).toBeGreaterThanOrEqual(44);
+    expect(removeBounds!.height).toBeGreaterThanOrEqual(44);
     // Empty ingredient rows are intentionally excluded from the submitted recipe.
     await dialog.getByRole("button", { name: /Add ingredient/ }).click();
     expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
@@ -358,6 +368,7 @@ test("waits for edit options, prefills the meal, and saves ingredient removal", 
   await openLibrary(page);
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Edit meal", exact: true });
+  await expect(dialog.getByRole("heading", { name: "Edit meal", exact: true })).toBeVisible();
   await expect(dialog.getByText("Loading meal options…")).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Update meal", exact: true })).toHaveCount(0);
   release();

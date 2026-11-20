@@ -15,15 +15,15 @@ export function PreferredDaysField() {
       render={({ field }) => (
         <fieldset
           aria-labelledby="preferred-days-label"
-          className="mb-4 grid gap-2 text-xs font-bold text-foreground"
+          className="grid min-w-0 gap-2 text-xs font-bold text-foreground"
         >
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <span id="preferred-days-label">{t("meals.preferred_days.preferred_days")}</span>
             <Button
               type="button"
               variant="link"
               size="sm"
-              className="h-auto px-0 text-[11px]"
+              className="px-0 text-xs"
               disabled={field.value.length === 0}
               onBlur={field.onBlur}
               onClick={() => field.onChange([])}
