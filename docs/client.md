@@ -272,7 +272,8 @@ The menu screen owns the menu hero. Before a menu exists, it explains weekly
 planning. While menus load, the hero shows a loading message. Once a menu exists,
 the hero becomes a compact overview of today's breakfast, lunch, and dinner,
 on a continuous raised cream menu-board surface, using the same ordered meal
-slots as the day cards. It checks the menu's calendar
+slots as the day cards. Meal names use DM Sans in both the overview and day
+cards, with larger type in the overview. It checks the menu's calendar
 date range against the local date before presenting meals as today's plan.
 My Menu uses the current week's menu for both the overview and weekly grid.
 If only upcoming or past menus exist, it shows an empty current-week state with

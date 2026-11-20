@@ -35,7 +35,7 @@ export function MealRow({
           {mealTypeLabel(mealType)}
         </span>
         <strong
-          className={`break-words ${hero ? "font-display text-[20px] leading-[1.15] font-semibold tracking-[-.02em] text-foreground tablet:text-[23px]" : "text-[13px] leading-[1.25]"}`}
+          className={`break-words font-sans ${hero ? "text-[20px] leading-[1.15] font-semibold tracking-[-.02em] text-foreground tablet:text-[23px]" : "text-[13px] leading-[1.25]"}`}
         >
           {meal.name}
         </strong>
