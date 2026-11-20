@@ -4,10 +4,11 @@ import { api } from "../../api";
 import { queryKeys } from "../../queryKeys";
 import type { IngredientCatalogEntry, Meal, MealPayload, Menu } from "../../types";
 
-export function useMeals() {
+export function useMeals({ enabled = true } = {}) {
   return useQuery({
     queryKey: queryKeys.meals,
     queryFn: ({ signal }) => api.getMeals(signal),
+    enabled,
   });
 }
 

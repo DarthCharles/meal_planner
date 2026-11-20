@@ -143,7 +143,7 @@ test("translates category headings and editing labels without changing codes or 
   await expect(
     page.getByRole("heading", { name: "Fruit & vegetables", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Español", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Lista de compras", exact: true })).toBeVisible();
@@ -206,7 +206,7 @@ test("checks entries independently, supports keyboard toggling, and resets chang
   await cups.check();
   await page.getByRole("button", { name: "Refresh list", exact: true }).click();
   await expect(cups).toBeChecked();
-  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Español", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(
@@ -302,7 +302,7 @@ test("saving people preserves notices in each cached language", async ({ page, a
   api.localizedMenus.es = [{ ...api.menus[0], generation_notices: ["Aviso en español"] }];
   await page.goto("/saved-menus");
   await expect(page.getByText("English notice", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Español", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(page.getByText("Aviso en español", { exact: true })).toBeVisible();
@@ -314,7 +314,7 @@ test("saving people preserves notices in each cached language", async ({ page, a
   await expect(dialog.getByText("Número de personas guardado.", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Volver a los menús", exact: true }).click();
   await expect(page.getByText("Aviso en español", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Abrir acciones" }).click();
+  await page.getByRole("button", { name: "Menú" }).click();
   await page.getByRole("button", { name: "English", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(page.getByText("English notice", { exact: true })).toBeVisible();

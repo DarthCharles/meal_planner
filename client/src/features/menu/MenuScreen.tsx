@@ -2,8 +2,8 @@ import { Button } from "@darthcharles/greda";
 import { Link } from "react-router";
 
 import { Notice } from "../../components/Notice";
-import { demoMenu } from "../../demoData";
 import { useI18n } from "../../i18n";
+import { useMeals } from "../meals/queries";
 import { useMealDialog } from "../meals/useMealDialog";
 import { formatMenuDateRange, isCurrentMenu } from "./menuDates";
 import { MenuHero } from "./MenuHero";
@@ -12,31 +12,49 @@ import { useMenus } from "./queries";
 
 export function MenuScreen() {
   const { t } = useI18n();
-  const { openMeal } = useMealDialog();
-  const { data: menus, isPending: loading, isError, error: menusError } = useMenus();
+  const { openMeal, openCreateMeal } = useMealDialog();
+  const { data: menus, isPending: loading, isError, isFetching, refetch } = useMenus();
+  const { data: meals } = useMeals({ enabled: !loading && !isError && menus?.length === 0 });
   const currentMenu = menus?.find((item) => isCurrentMenu(item, new Date()));
-  const menu = currentMenu ?? (isError && !menus ? demoMenu : null);
-  const error = isError && !menus ? t("common.demo_mode") : menusError?.message;
+  const menu = currentMenu ?? null;
   return (
     <>
-      {error && <Notice>{error}</Notice>}
-      {!menu && !loading && menus?.length ? (
+      {isError && (
+        <div className="my-3 space-y-3">
+          <Notice>{t(menus ? "menu.screen.refresh_error" : "menu.screen.load_error")}</Notice>
+          <Button
+            variant="outline"
+            className="min-h-11"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            {t(isFetching ? "menu.screen.retrying" : "common.try_again")}
+          </Button>
+        </div>
+      )}
+      {isError && !menus ? null : !menu && !loading && menus?.length ? (
         <section className="rounded-[30px] surface-tertiary px-6 py-7">
           <h2 className="mb-3 font-display text-[28px] font-semibold">
             {t("menu.screen.no_current_week")}
           </h2>
           <p className="mb-4 text-sm text-muted-foreground">{t("menu.screen.browse_plans_help")}</p>
-          <Button variant="outline" asChild>
+          <Button variant="outline" className="min-h-11" asChild>
             <Link to="/saved-menus">{t("menu.screen.browse_saved")}</Link>
           </Button>
         </section>
       ) : (
-        <MenuHero menu={menu} loading={loading} onOpenMeal={openMeal} />
+        <MenuHero
+          menu={menu}
+          loading={loading}
+          onOpenMeal={openMeal}
+          onAddMeal={openCreateMeal}
+          firstRecipe={meals?.length === 0}
+        />
       )}
       {menu && (
         <div className="mt-[31px] mb-[17px] flex flex-col items-start justify-between gap-[15px] tablet:mt-[39px] tablet:mb-5 tablet:flex-row tablet:items-end tablet:gap-0">
           <div>
-            <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
+            <p className="mb-[5px] text-xs font-bold tracking-[.13em] text-muted-foreground uppercase">
               {t("menu.screen.weekly_menu")}
             </p>
             <h3 className="mb-0 font-display text-[28px] font-semibold tracking-[-.04em]">
@@ -44,7 +62,7 @@ export function MenuScreen() {
             </h3>
           </div>
           {currentMenu && (
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="min-h-11">
               <Link to={`/menus/${currentMenu.id}/shopping-list`} state={{ from: "/" }}>
                 {t("shopping_list.title")}
               </Link>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-20T06:46:59.766790+00:00",
+  "generatedAt": "2026-11-20T06:56:05.142242+00:00",
   "title": "Design System: Comal",
   "extensions": {
     "colorMeta": {
@@ -321,7 +321,7 @@
       "refersTo": "navigation",
       "description": "Bottom Navigation extracted from the existing Comal interface.",
       "html": "<nav class=\"ds-nav\" aria-label=\"Primary navigation\"><a class=\"ds-nav-link\" href=\"/\" aria-current=\"page\">My Menu</a><a class=\"ds-nav-link\" href=\"/saved-menus\">Saved Menus</a><a class=\"ds-nav-link\" href=\"/meals\">My Meals</a><a class=\"ds-nav-link\" href=\"/ingredients\">My Ingredients</a></nav>",
-      "css": ".ds-nav{display:flex;gap:4px;padding:7px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:19px;background:hsl(var(--card,32 38% 97%) / .95);color:hsl(var(--foreground, 26 20% 16%));box-shadow:var(--shadow, 0 8px 24px hsl(26 20% 16% / 0.12));backdrop-filter:blur(15px)}.ds-nav-link{flex:1;min-width:0;padding:8px 4px;border-radius:var(--radius,12px);color:inherit;text-align:center;text-decoration:none;font:500 10px/1.5 \"DM Sans\", sans-serif}.ds-nav-link[aria-current=\"page\"]{background:hsl(var(--secondary, 32 22% 86%))}.ds-nav-link:hover{background:hsl(var(--accent, 18 44% 84%))}.ds-nav-link:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}"
+      "css": ".ds-nav{display:flex;gap:4px;padding:7px;border:1px solid hsl(var(--border, 30 14% 39%));border-radius:19px;background:hsl(var(--card,32 38% 97%) / .95);color:hsl(var(--foreground, 26 20% 16%));box-shadow:var(--shadow, 0 8px 24px hsl(26 20% 16% / 0.12));backdrop-filter:blur(15px)}.ds-nav-link{flex:1;min-width:44px;min-height:44px;padding:8px 4px;border-radius:var(--radius,12px);color:inherit;text-align:center;text-decoration:none;font:500 12px/1.5 \"DM Sans\", sans-serif}.ds-nav-link[aria-current=\"page\"]{background:hsl(var(--secondary, 32 22% 86%))}.ds-nav-link:hover{background:hsl(var(--accent, 18 44% 84%))}.ds-nav-link:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}"
     },
     {
       "name": "Meal Row",
@@ -329,7 +329,7 @@
       "refersTo": "meal-row",
       "description": "Meal Row extracted from the existing Comal interface.",
       "html": "<button class=\"ds-row\" type=\"button\"><span class=\"ds-row-content\"><span class=\"ds-row-label\">Breakfast</span><strong class=\"ds-row-name\">Your recipe</strong></span><svg aria-hidden=\"true\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
-      "css": ".ds-row{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:6px 12px;border:1px solid transparent;border-radius:var(--radius-lg,12px);background:hsl(var(--card, 32 38% 97%));color:hsl(var(--foreground, 26 20% 16%));text-align:left;cursor:pointer}.ds-row-content{display:grid;gap:4px;flex:1;min-width:0}.ds-row-label{font:700 10px/1.25 \"DM Sans\", sans-serif;letter-spacing:.08em;text-transform:uppercase}.ds-row-name{overflow-wrap:break-word;font:700 13px/1.25 \"DM Sans\", sans-serif}.ds-row:hover{background:hsl(var(--accent, 18 44% 84%))}.ds-row:active{transform:translateY(1px)}.ds-row:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-row:active{transform:none}}"
+      "css": ".ds-row{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:6px 12px;border:1px solid transparent;border-radius:var(--radius-lg,12px);background:hsl(var(--card, 32 38% 97%));color:hsl(var(--foreground, 26 20% 16%));text-align:left;cursor:pointer}.ds-row-content{display:grid;gap:4px;flex:1;min-width:0}.ds-row-label{font:700 11px/1.25 \"DM Sans\", sans-serif;letter-spacing:.08em;text-transform:uppercase}.ds-row-name{overflow-wrap:break-word;font:700 13px/1.25 \"DM Sans\", sans-serif}.ds-row:hover{background:hsl(var(--accent, 18 44% 84%))}.ds-row:active{transform:translateY(1px)}.ds-row:focus-visible{outline:2px solid hsl(var(--primary, 18 68% 31%));outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-row:active{transform:none}}"
     }
   ],
   "narrative": {

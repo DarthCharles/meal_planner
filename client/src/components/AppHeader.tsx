@@ -34,20 +34,22 @@ export function AppHeader() {
         <Link
           to="/"
           aria-label={t("app_header.home")}
-          className="flex items-center gap-[11px] rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+          className="flex items-center gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring tablet:gap-[11px]"
         >
           <div className="grid size-[44px] -rotate-6 place-items-center rounded-[12px_12px_12px_4px] bg-primary">
             <FlowerArt className="h-auto w-[40px] rotate-6" />
           </div>
           <div>
             <p className="hidden">{t("common.weekly_table")}</p>
-            <h1 className="m-0 font-display text-[27px] font-bold tracking-[-.06em]">comal</h1>
+            <h1 className="m-0 font-display text-[24px] font-bold tracking-[-.04em] tablet:text-[27px]">
+              comal
+            </h1>
           </div>
         </Link>
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            className="gap-1 px-2 text-xs tablet:gap-2 tablet:px-3"
+            className="h-auto min-h-11 gap-1 px-2 text-xs tablet:gap-2 tablet:px-3"
             disabled={loadingMenus || generating}
             onClick={() => generateMenu()}
           >
@@ -63,17 +65,15 @@ export function AppHeader() {
               <Button
                 ref={actionsTrigger}
                 variant="outline"
-                size="icon"
-                className="rounded-full text-[11px]"
-                aria-label={t("app_header.open_actions")}
+                className="h-auto min-h-11 min-w-11 shrink-0 px-2 text-xs tablet:px-3 tablet:text-sm"
               >
-                MC
+                {t("app_header.menu")}
               </Button>
             </PopoverTrigger>
             <PopoverContent
               align="end"
               className="flex w-64 max-w-[calc(100vw-30px)] flex-col gap-1 p-1.5"
-              aria-label={t("app_header.actions")}
+              aria-label={t("app_header.navigation_menu")}
               onOpenAutoFocus={(event) => {
                 event.preventDefault();
                 menuLink.current?.focus();
@@ -89,7 +89,7 @@ export function AppHeader() {
                 } else if (addingMeal.current) {
                   event.preventDefault();
                   addingMeal.current = false;
-                  // Open after the popover closes so the dialog restores focus to MC.
+                  // Open after the popover closes so the dialog restores focus to Menu.
                   actionsTrigger.current?.focus();
                   openCreateMeal();
                 }
@@ -113,7 +113,7 @@ export function AppHeader() {
                       className={({ isActive }) =>
                         buttonVariants({
                           variant: isActive ? "default" : "ghost",
-                          className: "w-full justify-start",
+                          className: "min-h-11 w-full justify-start",
                         })
                       }
                       onClick={(event) => {
@@ -138,7 +138,7 @@ export function AppHeader() {
               <hr className="my-1 border-border" />
               <Button
                 variant="ghost"
-                className="w-full justify-start"
+                className="min-h-11 w-full justify-start"
                 onClick={() => {
                   addingMeal.current = true;
                   setActionsOpen(false);
@@ -159,7 +159,7 @@ export function AppHeader() {
                     lang={code}
                     variant={locale === code ? "default" : "ghost"}
                     size="sm"
-                    className="flex-1"
+                    className="min-h-11 flex-1"
                     aria-pressed={locale === code}
                     onClick={() => setLocale(code)}
                   >

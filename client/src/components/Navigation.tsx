@@ -41,7 +41,7 @@ export function Navigation() {
             buttonVariants({
               variant: isActive ? "secondary" : "ghost",
               className:
-                "h-auto min-w-0 flex-1 flex-col whitespace-normal text-center gap-[3px] px-1 py-2 text-[10px] tablet:min-w-[94px] tablet:flex-initial tablet:px-[13px]",
+                "h-auto min-h-11 min-w-11 flex-1 flex-col whitespace-normal text-center gap-[3px] px-1 py-2 text-xs tablet:min-w-[94px] tablet:flex-initial tablet:px-[13px]",
             })
           }
         >

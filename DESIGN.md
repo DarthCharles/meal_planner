@@ -21,7 +21,7 @@ typography:
     fontSize: "clamp(37px, 5vw, 62px)"
     fontWeight: 600
     lineHeight: 0.98
-    letterSpacing: "-0.055em"
+    letterSpacing: "-0.04em"
   headline:
     fontFamily: "Fraunces, serif"
     fontSize: "32px"
@@ -284,7 +284,8 @@ Greda provides rounded controls and fields. The app's large-radius override is
 large-radius value. The frontmatter records both aliases deliberately.
 
 Meal-library cards use 17px corners, day cards 20px, heroes 30px, and floating
-navigation 19px. Filter buttons and the MC control are pill/circular forms.
+navigation 19px. Filter buttons are pill forms; the Menu control uses the standard
+rounded outline button.
 Category badges use compact 5px corners. Mobile dialogs use asymmetric
 24px upper and 15px lower corners; desktop dialogs use uniform 24px corners.
 
@@ -307,6 +308,9 @@ buttons use action text and underline on hover. Focus retains Greda's ring;
 invalid and destructive states use the destructive role. Disabled controls
 retain the library's disabled behavior; app-wide button styling adds 65% opacity
 and a waiting cursor.
+
+Header navigation, language choices, recipe entry, and retry controls use a
+minimum 44px height for touch.
 
 Greda transitions normally use 150ms with cubic-bezier(0.4, 0, 0.2, 1).
 Eligible action buttons move down 1px when pressed; pressed-state toggles and
@@ -339,9 +343,9 @@ inside a native dialog must portal into that dialog's top layer.
 The floating bottom navigation uses a 95%-opaque raised cream surface, a border,
 15px backdrop blur, and raised shadow. It sits 18px above the bottom edge and
 is hidden from desktop width. Active links use secondary buttons; other links
-use ghost buttons, with visible labels beneath 16px icons.
+use ghost buttons, with visible 12px labels beneath 16px icons and a minimum 44px target height.
 
-The MC popover remains available at every width. Its active destination and
+The Menu / Menú popover remains available at every width. Its active destination and
 selected language use primary buttons; other choices use ghost buttons.
 The Comal wordmark and flower link home. Keep navigation as links with active-page
 semantics and action controls as buttons.
@@ -352,8 +356,9 @@ Meal rows are full-width ghost buttons with a raised cream resting surface,
 clay interaction hover, a meal-time label, a wrapping meal name, and a 16px
 chevron. Minimum height is 44px; weekly rows use 57px on mobile and 67px at
 tablet width. Hero rows use quieter labels and medium-weight secondary text,
-with a 68px minimum height on tablet. The sage hero shows these rows in one
-column on mobile and three on tablet. It has no decorative illustration.
+with 11px category labels and a 68px minimum height on tablet. The sage hero shows these rows in one
+column on mobile and three on tablet. It has no decorative illustration. The empty home hero provides a direct recipe
+creation action, with first-recipe wording only after confirming an empty library.
 
 ### Dialogs
 

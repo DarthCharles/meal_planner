@@ -104,7 +104,7 @@ test("retries history errors without showing demo menus", async ({ page, api }) 
   api.readErrors["/menus"] = "Could not load saved menus.";
   api.menus = [savedMenu(2, "2026-10-12", "2026-10-18", "Saved breakfast")];
   await page.goto("/");
-  await page.getByText("Demo mode · connect the Rails API to use your own meals.").waitFor();
+  await page.getByText("We couldn’t load your saved data. Showing examples for now.").waitFor();
   await navigateTo(page, "Saved Menus");
   await expect(page.getByText("Could not load saved menus.")).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);

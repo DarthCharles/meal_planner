@@ -27,7 +27,7 @@ export function DayCard({
     >
       <div className="mb-[17px] flex items-start justify-between">
         <div>
-          <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
+          <p className="mb-[5px] text-[11px] font-bold tracking-[.13em] text-muted-foreground uppercase">
             {featured
               ? t("menu.day_card.today")
               : t("menu.day_card.day_number", { number: dayNumber })}

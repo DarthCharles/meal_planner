@@ -10,7 +10,7 @@ async function openLibrary(page: Page) {
 }
 
 async function addMeal(page: Page) {
-  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   return page.getByRole("dialog", { name: "A new favorite" });
 }
@@ -432,7 +432,7 @@ test("retains cached meals when a background refresh fails", async ({ page, api 
   await expect(page.getByText("Could not refresh meals.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Breakfast from the API" })).toBeVisible();
   await expect(
-    page.getByText("Demo mode · connect the Rails API to use your own meals."),
+    page.getByText("We couldn’t load your saved data. Showing examples for now."),
   ).toHaveCount(0);
 });
 

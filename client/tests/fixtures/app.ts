@@ -317,7 +317,7 @@ export async function navigateTo(
   name: "My menu" | "My meals" | "My Ingredients" | "Saved Menus",
 ) {
   if (page.viewportSize()!.width >= 760) {
-    await page.getByRole("button", { name: "Open actions" }).click();
+    await page.getByRole("button", { name: "Menu" }).click();
   }
   const destination = {
     "My menu": "/",

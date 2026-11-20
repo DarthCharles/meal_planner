@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures/app";
 
 async function chooseLanguage(page: Page, language: "English" | "Español") {
-  await page.getByRole("button", { name: /Open actions|Abrir acciones/ }).click();
+  await page.getByRole("button", { name: /^(Menu|Menú)$/ }).click();
   await page
     .getByRole("group", { name: /Language|Idioma/ })
     .getByRole("button", { name: language, exact: true })
@@ -19,6 +19,11 @@ test(
     await page.getByRole("searchbox", { name: "Search meals" }).fill("Huevos");
     await chooseLanguage(page, "Español");
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    await expect(page.getByRole("button", { name: "Menú", exact: true })).toHaveText("Menú");
+    await page.getByRole("button", { name: "Menú", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Menú de navegación", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: "Menú", exact: true })).toBeFocused();
     await expect(page).toHaveURL("/meals");
     await expect(page.getByRole("searchbox", { name: "Buscar comidas" })).toHaveValue("Huevos");
     await expect(page.getByRole("heading", { name: "Tu colección de comidas" })).toBeVisible();
@@ -41,6 +46,7 @@ test(
     );
     await chooseLanguage(page, "English");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.getByRole("button", { name: "Menu", exact: true })).toHaveText("Menu");
     await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
   },
 );

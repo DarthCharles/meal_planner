@@ -57,7 +57,7 @@ not authorize running them during active editing.
 ## Languages and translation keys
 
 Comal supports English and Spanish. Choose **English** or **Español** in the
-header's MC actions menu. The choice is stored locally as `comal.locale` and
+header's Menu navigation popover. The choice is stored locally as `comal.locale` and
 synchronized across tabs. Incoming storage events apply the latest stored choice
 without writing it back, so queued events cannot replay old preferences between
 tabs. Without a saved choice, the first supported browser
@@ -140,7 +140,7 @@ Keep Rails API traffic on its configured API origin; do not rewrite API requests
 to the client entry point. The service worker caches the app shell and both language manifests; offline deep
 links and PWA installation require separate verification.
 
-Saved Menus is available in the mobile bottom navigation and MC menu. It
+Saved Menus is available in the mobile bottom navigation and Menu popover. It
 uses the shared `GET /menus` query and lists all saved weeks newest first,
 with Upcoming, Current, and Past labels based on calendar dates in the browser's
 timezone. Date labels preserve the API calendar dates and include the year.
@@ -151,12 +151,16 @@ Saved Menus contains saved weekly assignments, not previous regenerations of the
 same week. Meals still reference the live library, so later recipe edits also
 appear in old menus.
 
-The header's MC button opens a Greda popover on all screen sizes, ordered as
+The header's translated Menu / Menú button opens a Greda popover on all screen
+sizes, ordered as
 “My Menu”, “My Meals”, “My Ingredients”, a separator, “Saved Menus”, a separator, and “Add a meal”.
 Choosing a destination closes the popover before navigating, so its exiting
 keyboard layer cannot intercept Escape in a dialog on the destination screen. “Add a meal” opens the meal form;
-closing the form returns focus to MC. Mobile also keeps its bottom navigation.
-The MC popover uses Greda's primary (`default`) button variant for the current
+closing the form returns focus to Menu. The popover is named Navigation menu /
+Menú de navegación. Its trigger uses
+Greda's standard rounded outline button, with a compact label and wordmark on
+narrow screens. Mobile also keeps its bottom navigation.
+The Menu popover uses Greda's primary (`default`) button variant for the current
 destination and selected language, with `ghost` for the other choices.
 All choices use `primary-hover` backgrounds and `primary-foreground` text on
 hover and visible keyboard focus.
@@ -255,7 +259,7 @@ the dialog; failures keep it open with the draft and API error. Used ingredients
 and the create dialog have no Delete button;
 the backend also rejects deletion if an ingredient becomes used after loading.
 
-The single “Plan my week” action has a plus icon and sits beside MC in the header on mobile and
+The single “Plan my week” action has a plus icon and sits beside Menu in the header on mobile and
 desktop, including while browsing the meal library. It is disabled while menus
 load or generation is pending, and shows “Planning” during generation. Failures
 appear below the header and allow retrying without discarding the saved menu.
@@ -307,7 +311,14 @@ form, prefilled with that meal. Closing either dialog restores focus to the row
 that opened the details.
 The edit dialog omits its visible title and keeps “Edit meal” as its accessible name.
 
-The client falls back to demo data when the API is unavailable so the visual shell can still be developed.
+My Menu distinguishes empty data from load failures. Initial failures show a friendly
+message and Try again without demo meals. Failed refreshes preserve the last loaded
+plan. The empty home screen links directly to recipe creation; it checks the meal
+library only after successfully loading an empty menu collection, showing “Add your
+first recipe” only for a confirmed empty library and “Add a recipe” otherwise.
+The recipe library and recipe-option forms still label fallback examples explicitly;
+the library also provides Try again. Header and meal-row labels are larger on phones, and header
+and bottom-navigation controls have a minimum 44px touch height.
 
 ## Structure
 
@@ -384,9 +395,10 @@ React Router derives the current screen from the URL. The dialog provider owns t
 active dialog. Unsaved form inputs, validation errors, search, and filters stay
 local to their components.
 
-Initial meal, menu, type, and unit query failures use demo data only for the failed resource and show the
-demo notice in the screen or modal that owns the query. Successful resources
-stay intact. Demo values are presentation
+Initial menu failures show a recovery message and Try again without example data.
+Initial meal, type, and unit query failures use demo data only for the failed
+resource and label the examples in the screen or modal that owns the query.
+Successful resources stay intact. Demo values are presentation
 fallbacks and are never stored as successful query results. A failed background
 refresh retains cached data and displays the error; failed mutations retain the
 existing data and leave the form open for correction or retry.
@@ -519,8 +531,9 @@ Navigation uses `House`, `CalendarDays`, `Utensils`, and `Sprout`. Planning uses
 `Plus` or `Ellipsis` while pending; meal rows use `ChevronRight`, close/remove
 buttons use `X`, and notices use `Info`. Icons inherit the surrounding semantic
 text color and are hidden from assistive technology; visible labels and existing
-button accessible names identify each action. The custom flower SVG and MC
-initials remain part of the header's identity.
+button accessible names identify each action. The custom flower SVG remains part
+of the header's identity. The navigation
+trigger uses a visible translated Menu / Menú label rather than profile initials.
 `styles.css` imports Tailwind,
 Greda's compiled styles in the `components` layer, its Tailwind 4 tokens, the
 packaged `@darthcharles/greda/themes/comal.css` theme, then `theme.css`. Do not

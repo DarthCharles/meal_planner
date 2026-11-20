@@ -232,7 +232,7 @@ test(
       expect(navBox!.y).toBeGreaterThan(700);
     } else {
       await expect(navigation).toHaveCount(0);
-      await page.getByRole("button", { name: "Open actions" }).click();
+      await page.getByRole("button", { name: "Menu" }).click();
       await expect(navigation).toBeVisible();
       await expect(navigation.getByRole("link", { name: "My Menu" })).toHaveAttribute(
         "aria-current",
@@ -318,15 +318,26 @@ test("keeps the current menu when generation fails and allows retrying", async (
   expect(api.generationRequests).toBe(2);
 });
 
-test("falls back to demo data when the API is unavailable", async ({ page, api }) => {
-  api.unavailable = true;
+test("recovers the menu after a load failure without showing example meals", async ({ page, api }) => {
+  api.readErrors["/menus"] = "Internal connection details";
   await page.goto("/");
-  await expect(
-    page.getByText("Demo mode · connect the Rails API to use your own meals."),
-  ).toBeVisible();
+  await expect(page.getByText("We couldn’t load your menu. Please try again.")).toBeVisible();
+  await expect(page.getByText("Internal connection details")).toHaveCount(0);
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Add (your first |a )recipe/ })).toHaveCount(0);
+  delete api.readErrors["/menus"];
+  let release!: () => void;
+  api.readBarriers["/menus"] = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Finding your menu…" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Try again", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Plan my week" })).toBeDisabled();
+  release();
+  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
+  await expect(page.getByText("We couldn’t load your menu. Please try again.")).toHaveCount(0);
   await expect(page.getByRole("article")).toHaveCount(3);
-  await navigateTo(page, "My meals");
-  await expect(page.getByRole("button", { name: "Edit Avena cocida", exact: true })).toBeVisible();
 });
 
 test("keeps reference query failures inside the modal", async ({ page, api }) => {
@@ -336,13 +347,13 @@ test("keeps reference query failures inside the modal", async ({ page, api }) =>
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Thursday" })).toBeVisible();
   await expect(
-    page.getByText("Demo mode · connect the Rails API to use your own meals."),
+    page.getByText("We couldn’t load your saved data. Showing examples for now."),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(
-    dialog.getByText("Demo mode · connect the Rails API to use your own meals."),
+    dialog.getByText("We couldn’t load your saved data. Showing examples for now."),
   ).toBeVisible();
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Thursday" })).toBeVisible();
@@ -358,7 +369,7 @@ test("loads each resource only when its screen or form needs it", async ({ page,
   await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(3);
   expect(Object.keys(api.reads).sort()).toEqual(["/meals", "/menus"]);
-  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   await expect(
     page.getByRole("dialog").getByRole("button", { name: "Breakfast", exact: true }),
@@ -378,7 +389,7 @@ test("loads each resource only when its screen or form needs it", async ({ page,
 test("creating a meal from the menu does not eagerly load the library", async ({ page, api }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
-  await page.getByRole("button", { name: "Open actions" }).click();
+  await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await page.getByLabel("Meal name", { exact: true }).fill("New breakfast");
@@ -395,7 +406,7 @@ test("creating a meal from the menu does not eagerly load the library", async ({
 });
 
 test(
-  "keeps the planning action beside MC on both screens without overflow",
+  "keeps the planning action beside the labeled Menu button without overflow",
   { tag: "@responsive" },
   async ({ page, api }) => {
     await page.goto("/");
@@ -404,16 +415,17 @@ test(
       if (view === "My meals") await navigateTo(page, view);
       const header = page.getByRole("banner");
       const plan = header.getByRole("button", { name: "Plan my week" });
-      const avatar = header.getByRole("button", { name: "Open actions" });
+      const menuTrigger = header.getByRole("button", { name: "Menu", exact: true });
       await expect(plan).toBeEnabled();
       await expect(
         page.getByRole("main").getByRole("button", { name: "Plan my week" }),
       ).toHaveCount(0);
       const planBox = (await plan.boundingBox())!;
-      const avatarBox = (await avatar.boundingBox())!;
-      expect(planBox.x + planBox.width).toBeLessThanOrEqual(avatarBox.x);
+      await expect(menuTrigger).toHaveText("Menu");
+      const menuBox = (await menuTrigger.boundingBox())!;
+      expect(planBox.x + planBox.width).toBeLessThanOrEqual(menuBox.x);
       expect(
-        Math.abs(planBox.y + planBox.height / 2 - avatarBox.y - avatarBox.height / 2),
+        Math.abs(planBox.y + planBox.height / 2 - menuBox.y - menuBox.height / 2),
       ).toBeLessThan(2);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,

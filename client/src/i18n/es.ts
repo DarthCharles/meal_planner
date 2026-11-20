@@ -24,8 +24,8 @@ export const es: typeof en = {
     home: "Inicio de Comal",
     planning: "Planeando",
     plan_week: "Planear semana",
-    open_actions: "Abrir acciones",
-    actions: "Acciones",
+    menu: "Menú",
+    navigation_menu: "Menú de navegación",
     add_meal_action: "Agregar una comida",
     language: "Idioma",
   },
@@ -65,7 +65,7 @@ export const es: typeof en = {
   },
   common: {
     close: "Cerrar",
-    demo_mode: "Modo de demostración · conecta la API de Rails para usar tus propias comidas.",
+    demo_mode: "No pudimos cargar tus datos guardados. Por ahora mostramos ejemplos.",
     try_again: "Intentar de nuevo",
     collection: "Tu colección",
     edit: "Editar",
@@ -245,6 +245,9 @@ export const es: typeof en = {
       day_number: "Día %{number}",
     },
     hero: {
+      add_first_recipe: "Agrega tu primera receta",
+      add_recipe: "Agregar una receta",
+      recipe_help: "Guarda las comidas que te gusta preparar. Comal usa tus recetas para crear menús semanales y listas de compras.",
       next_menu: "Tu próximo menú",
       finding_menu: "Buscando tu menú…",
       menu_intro:
@@ -271,6 +274,9 @@ export const es: typeof en = {
       past: "Anterior",
     },
     screen: {
+      load_error: "No pudimos cargar tu menú. Inténtalo de nuevo.",
+      refresh_error: "No pudimos actualizar tu menú. Tu último plan cargado sigue aquí.",
+      retrying: "Intentando de nuevo…",
       no_current_week: "No hay un plan para esta semana.",
       browse_plans_help: "Consulta tus planes próximos y anteriores en Menús guardados.",
       browse_saved: "Ver menús guardados",

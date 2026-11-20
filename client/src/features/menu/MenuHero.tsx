@@ -1,3 +1,5 @@
+import { Button } from "@darthcharles/greda";
+
 import { formatLocale, useI18n } from "../../i18n";
 import type { Meal, Menu } from "../../types";
 import { MealRow } from "../meals/MealRow";
@@ -8,10 +10,14 @@ export function MenuHero({
   menu,
   loading,
   onOpenMeal,
+  onAddMeal,
+  firstRecipe,
 }: {
   menu: Menu | null;
   loading: boolean;
   onOpenMeal: (meal: Meal) => void;
+  onAddMeal: () => void;
+  firstRecipe: boolean;
 }) {
   const { t } = useI18n();
   const now = new Date();
@@ -28,12 +34,9 @@ export function MenuHero({
         className="mt-2 rounded-[30px] surface-tertiary px-6 py-7 tablet:px-12 tablet:py-10"
       >
         <div>
-          <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-            {t("common.weekly_table")}
-          </p>
           <h2
             id="menu-hero-title"
-            className="mb-4 font-display text-[clamp(37px,5vw,62px)] leading-[.98] font-semibold tracking-[-.055em]"
+            className="mb-4 font-display text-[clamp(37px,5vw,62px)] leading-[.98] font-semibold tracking-[-.04em]"
           >
             {loading ? (
               t("menu.hero.next_menu")
@@ -49,8 +52,15 @@ export function MenuHero({
             className="mb-0 max-w-[350px] text-sm leading-relaxed text-muted-foreground"
             role={loading ? "status" : undefined}
           >
-            {loading ? t("menu.hero.finding_menu") : t("menu.hero.menu_intro")}
+            {loading ? t("menu.hero.finding_menu") : t("menu.hero.recipe_help")}
           </p>
+          {!loading && (
+            <div className="mt-6">
+              <Button className="h-auto min-h-11 whitespace-normal" onClick={onAddMeal}>
+                {t(firstRecipe ? "menu.hero.add_first_recipe" : "menu.hero.add_recipe")}
+              </Button>
+            </div>
+          )}
         </div>
       </section>
     );
@@ -63,7 +73,7 @@ export function MenuHero({
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="mb-2 text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
+          <p className="mb-2 text-xs font-bold tracking-[.13em] text-muted-foreground uppercase">
             {now.toLocaleDateString(formatLocale(), {
               weekday: "long",
               month: "short",

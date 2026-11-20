@@ -43,7 +43,7 @@ for (const path of ["/meals", "/saved-menus", "/ingredients"]) {
     await expect(page).toHaveURL(path);
     await expect(screen).toBeVisible();
     if (page.viewportSize()!.width >= 760) {
-      await page.getByRole("button", { name: "Open actions" }).click();
+      await page.getByRole("button", { name: "Menu" }).click();
     }
     const navigation = page.getByRole("navigation", { name: "Primary navigation" });
     const current = navigation.getByRole("link").and(page.locator('[aria-current="page"]'));
