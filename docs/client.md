@@ -267,7 +267,7 @@ appear below the header and allow retrying without discarding the saved menu.
 The menu screen owns the menu hero. Before a menu exists, it explains weekly
 planning. While menus load, the hero shows a loading message. Once a menu exists,
 the hero becomes a compact overview of today's breakfast, lunch, and dinner,
-each on a light card surface within the pale green hero, using the same ordered meal
+on a continuous raised cream menu-board surface, using the same ordered meal
 slots as the day cards. It checks the menu's calendar
 date range against the local date before presenting meals as today's plan.
 My Menu uses the current week's menu for both the overview and weekly grid.
@@ -276,7 +276,8 @@ a button to browse Saved Menus. On Monday, date selection picks the new current
 week on the next render or page load; no menu records need a status update.
 Current menus without today's meals show an unplanned-day message. Only days in the current menu receive the
 “Today” highlight, using an accent border, the standard card background, and
-the same subtle shadow as the other day cards.
+the same subtle shadow as the other day cards. Other day cards have no border,
+keeping the weekly view quiet while today's accent remains distinct.
 The dated weekly grid appears below the overview. Its range preserves the API
 calendar dates across timezones. Card date numbers come from each weekday's date
 within the menu range, including month and year boundaries, rather than day IDs.
@@ -291,14 +292,20 @@ announces loading once, hides decorative placeholders from assistive technology,
 and disables shimmer for reduced-motion preferences. Cached meals remain visible
 during background refreshes.
 
-Hero meals and weekly day cards reuse `MealRow`: a light button with a meal-time
-label, meal name, and a `ChevronRight` icon. The hero variant uses compact padding,
-quiet meal-time labels, and smaller medium-weight meal names in `text-secondary`;
-cards share an equal minimum height on tablet/desktop and size to their content
-on mobile. Weekly rows retain their
-compact styling. Rows declare both `bg-card` and `hover:bg-accent` in the app's
-utilities layer so the resting fill does not override Greda's component-layer
-hover styling. Badges use Comal's surface roles: sage (`surface-tertiary`) for
+Hero meals and weekly day cards reuse `MealRow`, with a meal-time label, meal
+name, and a `ChevronRight` icon. The hero uses transparent buttons, compact
+category badges, and larger Fraunces meal names. Sage is confined to the breakfast
+badge; lunch uses tan and dinner uses cream, matching the library categories.
+The heading uses 32px type on mobile and 36px on tablet, with the local date below
+it. Header and meal text share an inset. Meals stack with horizontal separators
+below 901px, then form three equal columns with vertical separators. At 1100px,
+the heading and date move into a left column beside the meals; the horizontal
+rule above the meals is removed. Buttons stretch to equal heights in the
+three-column layout, keep at least 44px touch targets, and center their chevrons
+without fixed offsets. Long names wrap without truncation. Weekly rows retain
+their compact styling and raised cream fill. Both variants declare
+`hover:bg-accent` in the app's utilities layer to retain hover feedback.
+Badges use Comal's surface roles: sage (`surface-tertiary`) for
 breakfast, tan (`surface-secondary`) for lunch, and cream (`surface-primary`)
 for dinner.
 Clicking a row or activating it with Enter or
@@ -561,8 +568,9 @@ text consistently in the library and meal details: `surface-tertiary` (sage) for
 breakfast, `surface-secondary` (tan) for lunch, and `surface-primary` (cream) for
 dinner. Category fills use surface roles independently of control and interaction
 colors.
-Menu heroes, including loading and empty states, use Greda’s `surface-tertiary`
-utility for the pale sage supporting surface.
+Menu heroes, including loading, empty, and no-current-week states, use Greda’s
+raised cream `bg-card` surface. Category badges carry the sage accent instead
+of the whole hero.
 Unknown categories use cream (`surface-primary`). Badges use `mealTypeColorClassName`; the fill mapping lives in
 `features/meals/mealTypes.ts`. Badges use plain text labels without decorative
 dots; the visible labels identify each category without relying on color.
@@ -583,7 +591,7 @@ terracotta (`bg-primary`) tile supplies the fill. The header preserves its
 tilted tile with asymmetric corners and counter-rotates the flower to keep it
 upright. The tile is 44px square with a 40px-wide flower mark.
 
-Menu heroes use the sage surface with headings, supporting text, and meal rows.
+Menu heroes use the raised cream surface with headings, supporting text, and meal rows.
 Loading, loaded, and empty heroes have no decorative illustration or space
 reserved for one. The navbar flower retains its fixed SVG colors, independently
 of UI tokens.

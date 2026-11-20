@@ -130,11 +130,16 @@ test(
       }),
     );
     for (const box of boxes) expect(box.height).toBeGreaterThanOrEqual(44);
-    if (page.viewportSize()!.width >= 641) {
+    if (page.viewportSize()!.width >= 901) {
       expect(boxes.map((box) => box.y)).toEqual(Array(3).fill(boxes[0].y));
       expect(boxes.map((box) => box.height)).toEqual(Array(3).fill(boxes[0].height));
       expect(boxes[1].x).toBeGreaterThanOrEqual(boxes[0].x + boxes[0].width);
       expect(boxes[2].x).toBeGreaterThanOrEqual(boxes[1].x + boxes[1].width);
+      if (page.viewportSize()!.width >= 1100) {
+        const headingBox = await hero.getByRole("heading", { name: "Today’s menu" }).boundingBox();
+        expect(headingBox).not.toBeNull();
+        expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(boxes[0].x);
+      }
     } else {
       expect(boxes[1].y).toBeGreaterThanOrEqual(boxes[0].y + boxes[0].height);
       expect(boxes[2].y).toBeGreaterThanOrEqual(boxes[1].y + boxes[1].height);

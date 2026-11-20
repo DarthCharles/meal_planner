@@ -128,7 +128,7 @@ components:
 Comal takes its warmth from Mexican cazuelas de barro: glazed clay cookware,
 copper-brown surfaces, burnt-orange highlights, dark fired edges, and cream
 painted details. Warm ivory backgrounds and near-white raised surfaces pair with
-terracotta actions and sage tertiary panels. The full neutral palette runs from
+terracotta actions and sage category accents. The full neutral palette runs from
 pale tan stone supporting surfaces to warm charcoal text, with subdued borders
 and secondary controls. A soft tan undertone keeps the foundation earthy while
 lighter surfaces reduce the brown cast. Hover and focus backgrounds use a
@@ -152,7 +152,7 @@ intent; its readability requirements have not been verified in this pass.
 **Key Characteristics:**
 
 - Mexican glazed clay cookware expressed through color and typography, without decorative textures.
-- Terracotta actions, warm ivory foundations, near-white raised surfaces, and Garden Sage panels.
+- Terracotta actions, warm ivory foundations, near-white raised surfaces, and Garden Sage category accents.
 - Pale tan stone supporting surfaces, warm charcoal text, and subdued boundaries.
 - Clear DM Sans body text, Fraunces headings, and generous handmade corners.
 - Warm charcoal, lighter copper, and deep olive in Greda's dark scheme.
@@ -180,12 +180,12 @@ palette names; their values come from Greda rather than the metaphor.
 
 ### Tertiary
 
-- **Garden Sage**: menu hero surfaces and breakfast badges.
+- **Garden Sage**: breakfast badges, including those in the menu hero.
 
 ### Neutral
 
 - **Warm Cream**: page background, dinner badges, and inverse text on actions.
-- **Raised Cream**: cards, popovers, dialogs, search inputs, and receipt paper.
+- **Raised Cream**: menu heroes, cards, popovers, dialogs, search inputs, and receipt paper.
 - **Dark Brown**: main text. Secondary and muted brown roles express hierarchy.
 - **Field Border**: field outlines, card borders, and separators.
 - **Destructive**: validation errors and destructive actions.
@@ -228,7 +228,7 @@ is used by the application.
 
 - **Display:** the fluid, tightly tracked heading in the empty menu hero.
 - **Headline:** section headings use the frontmatter headline role. Today's
-  overview instead uses 26px on mobile and 36px from the tablet breakpoint.
+  overview uses 32px on mobile and 36px from the tablet breakpoint.
 - **Title:** day headings use the day-title role; meal-library and ingredient
   names use an 18px serif. Dialog headings use 27px, weight 600, and -0.04em tracking.
 - **Body:** the base size is 16px; supporting descriptions commonly use 14px
@@ -260,7 +260,7 @@ do not silently equate that with the app's desktop breakpoint.
 
 ## Elevation & Depth
 
-The implementation combines tonal grouping with shadows. The sage hero groups
+The implementation combines tonal grouping with shadows. The raised cream hero groups
 content without a shadow; day cards have subtle elevation, meal-library cards
 explicitly remove shadows, and ingredients use bordered surfaces. Primary
 buttons, floating navigation, popovers, and the receipt use stronger elevation.
@@ -276,6 +276,7 @@ than a separately confirmed elevation philosophy.
 
 **The Today Border Rule.** Today's day card uses the action-colored border while
 retaining the same raised cream fill and subtle shadow as other day cards.
+Other day cards have no border.
 
 ## Shapes
 
@@ -355,9 +356,15 @@ semantics and action controls as buttons.
 Meal rows are full-width ghost buttons with a raised cream resting surface,
 clay interaction hover, a meal-time label, a wrapping meal name, and a 16px
 chevron. Minimum height is 44px; weekly rows use 57px on mobile and 67px at
-tablet width. Hero rows use quieter labels and medium-weight secondary text,
-with 11px category labels and a 68px minimum height on tablet. The sage hero shows these rows in one
-column on mobile and three on tablet. It has no decorative illustration. The empty home hero provides a direct recipe
+tablet width. Hero rows sit directly on raised cream, with 11px category badges
+and Fraunces meal names at 20px on mobile and 23px on tablet. Their minimum
+height is 88px in the three-column layout from 901px. Badges use the same
+sage/tan/cream category mapping as the library. The hero uses aligned text
+insets, a 16px header-to-meals gap (24px from tablet), and centered chevrons.
+Meals stack below 901px with horizontal separators; three equal columns use
+vertical separators from 901px. The date stays below the heading. At 1100px,
+the heading and date sit in a left column beside the meals, removing the rule
+above the meals. It has no decorative illustration. The empty home hero provides a direct recipe
 creation action, with first-recipe wording only after confirming an empty library.
 
 ### Dialogs

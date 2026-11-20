@@ -31,7 +31,7 @@ export function MenuHero({
     return (
       <section
         aria-labelledby="menu-hero-title"
-        className="mt-2 rounded-[30px] surface-tertiary px-6 py-7 tablet:px-12 tablet:py-10"
+        className="mt-2 rounded-[30px] bg-card px-6 py-7 tablet:px-12 tablet:py-10"
       >
         <div>
           <h2
@@ -69,43 +69,45 @@ export function MenuHero({
   return (
     <section
       aria-labelledby="menu-hero-title"
-      className="mt-2 rounded-[30px] surface-tertiary px-5 py-5 tablet:px-9 tablet:py-6"
+      className={`mt-2 grid gap-4 rounded-[30px] bg-card p-4 tablet:gap-6 tablet:p-6 ${today?.meals.length ? "min-[1100px]:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]" : ""}`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="mb-2 text-xs font-bold tracking-[.13em] text-muted-foreground uppercase">
-            {now.toLocaleDateString(formatLocale(), {
-              weekday: "long",
-              month: "short",
-              day: "numeric",
-            })}
-          </p>
-          <h2
-            id="menu-hero-title"
-            className="m-0 font-display text-[26px] leading-tight font-semibold tracking-[-.04em] tablet:text-[36px]"
-          >
-            {today?.meals.length
-              ? t("menu.hero.today")
-              : isCurrent
-                ? t("menu.hero.no_today")
-                : t("menu.hero.week_planned")}
-          </h2>
-        </div>
+      <div className="flex min-w-0 flex-col gap-2 px-2 pt-2">
+        <h2
+          id="menu-hero-title"
+          className="m-0 min-w-0 font-display text-[32px] leading-[1.1] font-semibold tracking-[-.03em] text-balance tablet:text-[36px]"
+        >
+          {today?.meals.length
+            ? t("menu.hero.today")
+            : isCurrent
+              ? t("menu.hero.no_today")
+              : t("menu.hero.week_planned")}
+        </h2>
+        <p className="m-0 text-xs leading-relaxed text-secondary">
+          {now.toLocaleDateString(formatLocale(), {
+            weekday: "long",
+            month: "short",
+            day: "numeric",
+          })}
+        </p>
       </div>
       {today?.meals.length ? (
-        <div className="mt-3 grid gap-2 pt-2 tablet:grid-cols-3 tablet:gap-6 tablet:pt-4">
+        <ul className="m-0 grid min-w-0 list-none divide-y divide-border/30 border-t border-border/30 p-0 pt-2 wide:grid-cols-3 wide:divide-x wide:divide-y-0 wide:pt-4 min-[1100px]:border-t-0 min-[1100px]:pt-0">
           {today.meals.map((meal, index) => (
-            <MealRow
+            <li
               key={`${meal.id}-${index}`}
-              meal={meal}
-              mealType={mealTypeOrder[index]}
-              onOpen={onOpenMeal}
-              variant="hero"
-            />
+              className="flex min-w-0 wide:px-3 wide:first:pl-0 wide:last:pr-0"
+            >
+              <MealRow
+                meal={meal}
+                mealType={mealTypeOrder[index]}
+                onOpen={onOpenMeal}
+                variant="hero"
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       ) : (
-        <p className="mt-3 mb-0 max-w-[500px] text-sm leading-relaxed text-muted-foreground">
+        <p className="m-0 max-w-[500px] px-2 pb-2 text-sm leading-relaxed text-muted-foreground">
           {isCurrent ? t("menu.hero.fresh_week") : t("menu.hero.browse_or_plan")}
         </p>
       )}

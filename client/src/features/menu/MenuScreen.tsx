@@ -33,7 +33,7 @@ export function MenuScreen() {
         </div>
       )}
       {isError && !menus ? null : !menu && !loading && menus?.length ? (
-        <section className="rounded-[30px] surface-tertiary px-6 py-7">
+        <section className="rounded-[30px] bg-card px-6 py-7">
           <h2 className="mb-3 font-display text-[28px] font-semibold">
             {t("menu.screen.no_current_week")}
           </h2>

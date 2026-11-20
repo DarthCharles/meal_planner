@@ -3,7 +3,7 @@ import { ChevronRight } from "@darthcharles/greda/icons";
 
 import { useI18n } from "../../i18n";
 import type { Meal, MealTypeName } from "../../types";
-import { mealTypeLabel } from "./mealTypes";
+import { mealTypeColorClassName, mealTypeLabel } from "./mealTypes";
 
 export function MealRow({
   meal,
@@ -25,17 +25,17 @@ export function MealRow({
       type="button"
       variant="ghost"
       aria-label={t("meals.row.view_meal", { type: mealTypeLabel(mealType), name: meal.name })}
-      className={`flex h-auto min-h-[44px] w-full min-w-0 items-center justify-start gap-[11px] rounded-xl bg-card text-left whitespace-normal hover:bg-accent ${hero ? "px-3 py-2 tablet:min-h-[68px]" : "px-3 py-1.5"} ${className}`}
+      className={`flex h-auto min-h-[44px] w-full min-w-0 items-center justify-start gap-[11px] rounded-xl text-left whitespace-normal hover:bg-accent ${hero ? "bg-transparent px-2 py-3 wide:min-h-[88px]" : "bg-card px-3 py-1.5"} ${className}`}
       onClick={() => onOpen(meal)}
     >
-      <span className="grid min-w-0 flex-1 gap-1">
+      <span className={`grid min-w-0 flex-1 ${hero ? "gap-2" : "gap-1"}`}>
         <span
-          className={`leading-tight text-muted-foreground uppercase ${hero ? "text-[11px] font-medium tracking-[.12em]" : "text-[11px] font-bold tracking-[.08em]"}`}
+          className={`leading-tight uppercase ${hero ? `${mealTypeColorClassName(mealType)} w-fit max-w-full rounded-[5px] px-1.5 py-1 text-[11px] font-medium tracking-[.08em] text-secondary` : "text-[11px] font-bold tracking-[.08em] text-muted-foreground"}`}
         >
           {mealTypeLabel(mealType)}
         </span>
         <strong
-          className={`break-words ${hero ? "text-[13px] leading-snug font-medium text-secondary" : "text-[13px] leading-[1.25]"}`}
+          className={`break-words ${hero ? "font-display text-[20px] leading-[1.15] font-semibold tracking-[-.02em] text-foreground tablet:text-[23px]" : "text-[13px] leading-[1.25]"}`}
         >
           {meal.name}
         </strong>

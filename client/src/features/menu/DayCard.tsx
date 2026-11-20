@@ -23,7 +23,7 @@ export function DayCard({
   return (
     <Card
       role="article"
-      className={`rounded-[20px] border p-[19px] tablet:p-[22px] ${featured ? "border-action bg-card shadow-sm" : "border-border bg-card shadow-sm max-[640px]:pt-[17px] max-[640px]:pb-[10px]"}`}
+      className={`rounded-[20px] bg-card p-[19px] shadow-sm tablet:p-[22px] ${featured ? "border border-action" : "border-0 max-[640px]:pt-[17px] max-[640px]:pb-[10px]"}`}
     >
       <div className="mb-[17px] flex items-start justify-between">
         <div>
