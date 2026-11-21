@@ -7,6 +7,7 @@ import type {
   IngredientShoppingProfile,
   IngredientShoppingProfilePayload,
   Meal,
+  MeasurementReference,
   MealPayload,
   Menu,
   ShoppingList,
@@ -24,6 +25,10 @@ type MockApi = {
   requests: { path: string; language: string | undefined }[];
   meals: Meal[];
   ingredients: IngredientOption[];
+  ingredientReferences: Record<number, MeasurementReference[]>;
+  referenceSaves: { id: number; body: { references: MeasurementReference[] } }[];
+  referenceSaveError: string | null;
+  referenceSaveBarrier?: Promise<void>;
   ingredientProfiles: Record<number, IngredientShoppingProfile | null>;
   profileSaves: { id: number; body: IngredientShoppingProfilePayload }[];
   profileDeletes: number[];
@@ -64,6 +69,9 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           { id: 1, name: "Egg" },
           { id: 2, name: "Tomato" },
         ],
+        ingredientReferences: {},
+        referenceSaves: [],
+        referenceSaveError: null,
         ingredientProfiles: {},
         profileSaves: [],
         profileDeletes: [],
@@ -111,6 +119,9 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           await api.initialBarrier;
           await api.readBarriers[path];
           if (api.readErrors[path]) return void (await fail(api.readErrors[path]));
+          if (/^\/ingredients\/\d+\/measurement_references$/.test(path)) {
+            return void (await respond(api.ingredientReferences[Number(path.split("/")[2])] ?? []));
+          }
           if (/^\/ingredients\/\d+\/shopping_profile$/.test(path)) {
             const id = Number(path.split("/")[2]);
             return void (await respond(api.ingredientProfiles[id] ?? null));
@@ -183,6 +194,18 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           const generated = { ...structuredClone(menu), generation_notices: api.generationNotices };
           api.menus = [generated];
           return void (await respond(generated));
+        }
+        if (
+          /^\/ingredients\/\d+\/measurement_references$/.test(path) &&
+          request.method() === "PUT"
+        ) {
+          const id = Number(path.split("/")[2]);
+          const body = request.postDataJSON() as { references: MeasurementReference[] };
+          api.referenceSaves.push({ id, body });
+          await api.referenceSaveBarrier;
+          if (api.referenceSaveError) return void (await fail(api.referenceSaveError));
+          api.ingredientReferences[id] = body.references;
+          return void (await respond(body.references));
         }
         if (/^\/ingredients\/\d+\/shopping_profile$/.test(path) && request.method() === "PUT") {
           const id = Number(path.split("/")[2]);
@@ -260,6 +283,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           if (api.saveError) return void (await fail(api.saveError));
           const savedMeal: Meal = {
             ...body,
+            servings: Number(body.servings),
             ingredients: body.ingredients.map((row) => {
               let ingredient = row.ingredient_id
                 ? api.ingredients.find((item) => item.id === row.ingredient_id)
@@ -274,7 +298,18 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
                 };
                 api.ingredients.push(ingredient);
               }
-              return { ...row, name: ingredient.name, ingredient_id: ingredient.id };
+              const quantity =
+                ({ "1/2": "0.5", "½": "0.5", "1 ½": "1.5" } as Record<string, string>)[
+                  row.quantity
+                ] ?? row.quantity;
+              return {
+                ...row,
+                quantity,
+                package_quantity: row.package_quantity ?? null,
+                package_unit: row.package_unit ?? null,
+                name: ingredient.name,
+                ingredient_id: ingredient.id,
+              };
             }),
             id: request.method() === "POST" ? 4 : 1,
             meal_types: mealTypes
@@ -343,10 +378,20 @@ export async function cancelEditor(page: Page) {
   page.on("dialog", accept);
   try {
     await editorScreen(page)
-      .getByRole("button", { name: /^(Cancel|Cancelar)$/, exact: true })
+      .getByRole("button", { name: /^(Cancel|Cancelar|Done|Listo)$/, exact: true })
+      .last()
       .click();
     await expect(editorScreen(page)).toHaveCount(0);
   } finally {
     page.off("dialog", accept);
   }
+}
+
+export async function finishIngredientSave(page: Page) {
+  await expect(
+    editorScreen(page).getByRole("button", { name: /^(Save ingredient|Guardar ingrediente)$/ }),
+  ).toBeEnabled();
+  await editorScreen(page)
+    .getByRole("button", { name: /^(Done|Listo)$/ })
+    .click();
 }

@@ -6,6 +6,7 @@ import type {
   IngredientShoppingProfile,
   IngredientShoppingProfilePayload,
   Meal,
+  MeasurementReference,
   MealPayload,
   MealTypeOption,
   Menu,
@@ -15,12 +16,22 @@ import type {
 } from "./types";
 
 function errorFieldLabel(field: string) {
-  if (field.startsWith("equivalences")) return t("ingredients.shopping.amounts");
+  if (field.startsWith("references")) return t("measurements.title");
   switch (field) {
-    case "base_unit":
+    case "mode":
     case "shopping_unit":
-    case "round_up":
       return t("ingredients.shopping.title");
+    case "package_quantity":
+      return t("recipe.contents");
+    case "package_unit":
+      return t("recipe.contents_unit");
+    case "reference_quantity":
+    case "kind":
+    case "source":
+    case "approximate":
+      return t("measurements.title");
+    case "servings":
+      return t("recipe.servings");
     case "people_count":
       return t("shopping_list.people_label");
     case "shopping_category":
@@ -102,6 +113,13 @@ export const api = {
     }),
   clearIngredientShoppingProfile: (id: number) =>
     request<boolean>(`/ingredients/${id}/shopping_profile`, { method: "DELETE" }),
+  getIngredientMeasurementReferences: (id: number, signal?: AbortSignal) =>
+    request<MeasurementReference[]>(`/ingredients/${id}/measurement_references`, { signal }),
+  saveIngredientMeasurementReferences: (id: number, references: MeasurementReference[]) =>
+    request<MeasurementReference[]>(`/ingredients/${id}/measurement_references`, {
+      method: "PUT",
+      body: JSON.stringify({ references }),
+    }),
   createIngredient: (ingredient: IngredientPayload) =>
     request<IngredientCatalogEntry>("/ingredients", {
       method: "POST",

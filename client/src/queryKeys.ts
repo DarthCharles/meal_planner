@@ -6,6 +6,7 @@ export const queryKeys = {
   mealTypes: ["meal-types"] as const,
   units: ["units"] as const,
   ingredients: ["ingredients"] as const,
+  ingredientReferences: (id: number) => ["ingredient-measurement-references", id] as const,
   ingredientProfiles: ["ingredient-shopping-profile"] as const,
   shoppingCategories: ["shopping-categories"] as const,
   shoppingLists: ["shopping-lists"] as const,

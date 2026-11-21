@@ -1,4 +1,11 @@
-import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
+import {
+  cancelEditor,
+  editorScreen,
+  expect,
+  finishIngredientSave,
+  navigateTo,
+  test,
+} from "./fixtures/app";
 
 test(
   "opens the ingredient catalog from navigation without fetching meals",
@@ -103,7 +110,8 @@ test("creates an ingredient with validation and makes it available in a meal for
   expect(api.ingredientSaves).toHaveLength(0);
   await dialog.getByRole("textbox", { name: "Ingredient name" }).fill("  Potato  ");
   await dialog.getByRole("button", { name: "Save ingredient" }).click();
-  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL("/ingredients/3/edit");
+  await finishIngredientSave(page);
   await expect(add).toBeFocused();
   await expect(page.getByRole("listitem")).toContainText(["Egg", "Potato", "Tomato"]);
   expect(api.ingredientSaves).toEqual([
@@ -130,6 +138,7 @@ test("renames ingredients in cached meals and menus", async ({ page, api }) => {
   await expect(dialog.getByRole("textbox", { name: "Ingredient name" })).toHaveValue("Egg");
   await dialog.getByRole("textbox", { name: "Ingredient name" }).fill("Free range egg");
   await dialog.getByRole("button", { name: "Save ingredient" }).click();
+  await finishIngredientSave(page);
   await expect(dialog).toHaveCount(0);
   expect(api.ingredientSaves).toEqual([
     {

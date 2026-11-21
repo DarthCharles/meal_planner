@@ -7,6 +7,7 @@ export type Meal = {
   id: number;
   name: string;
   description: string;
+  servings: number;
   recipe_url?: string;
   meal_types: string[];
   preferred_days: Weekday[];
@@ -21,6 +22,8 @@ export type Ingredient = {
   unit: string;
   preparation_note?: string | null;
   position?: number;
+  package_quantity?: string | null;
+  package_unit?: string | null;
 };
 
 export type Day = {
@@ -44,6 +47,9 @@ export type MealTypeOption = [string, number];
 export type UnitOption = {
   code: string;
   name: string;
+  dimension: "mass" | "volume" | "count" | "package";
+  canonical_unit: string | null;
+  factor: string | null;
 };
 
 export type IngredientOption = {
@@ -74,6 +80,10 @@ export type ShoppingListItem = {
   shopping_category: ShoppingCategoryCode;
   quantity: string;
   unit: string;
+  status: "calculated" | "approximate" | "incomplete";
+  required_quantity: string;
+  required_unit: string;
+  presentation?: IngredientShoppingProfile;
   approximate?: boolean;
 };
 
@@ -90,27 +100,31 @@ export type ShoppingList = {
     name: string;
     units: string[];
     target_unit: string | null;
-    reason: "equivalence_missing" | "shopping_profile_missing";
+    reason: "measurement_reference_missing";
   }[];
 };
 
 export type IngredientShoppingProfile = {
   ingredient_id: number;
-  base_unit: string;
+  mode: "bulk" | "piece" | "package";
   shopping_unit: string;
-  round_up: boolean;
-  equivalences: {
-    unit: string;
-    quantity: string;
-    source: string;
-    description: string;
-    approximate: boolean;
-  }[];
+  package_quantity: string | null;
+  package_unit: string | null;
 };
 
 export type IngredientShoppingProfilePayload = Omit<IngredientShoppingProfile, "ingredient_id">;
 
+export type MeasurementReference = {
+  kind: "density" | "piece_weight";
+  quantity: string;
+  reference_quantity: string;
+  source: string;
+  description: string;
+  approximate: boolean;
+};
+
 export type MealForm = {
+  servings: string;
   name: string;
   description: string;
   recipe_url: string;
@@ -126,6 +140,8 @@ export type IngredientForm = {
   quantity: string;
   unit: string;
   preparation_note: string;
+  package_quantity?: string;
+  package_unit?: string;
 };
 
 export type MealPayload = Omit<MealForm, "ingredients"> & {

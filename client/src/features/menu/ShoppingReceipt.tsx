@@ -9,7 +9,16 @@ import { useWorkspaceNavigation } from "../navigation/useWorkspaceNavigation";
 import { formatMenuDateRange } from "./menuDates";
 
 function itemKey(item: ShoppingList["items"][number]) {
-  return `${item.ingredient_id}-${item.unit}-${item.quantity}`;
+  return JSON.stringify([
+    item.ingredient_id,
+    item.unit,
+    item.quantity,
+    item.presentation?.mode ?? null,
+    item.presentation?.shopping_unit ?? null,
+    item.presentation?.package_quantity ?? null,
+    item.presentation?.package_unit ?? null,
+    item.status === "incomplete",
+  ]);
 }
 
 function readChecks(storageKey: string) {
@@ -34,7 +43,7 @@ export function ShoppingReceipt({
 }) {
   const { t } = useI18n();
   const { preview } = useWorkspaceNavigation();
-  const storageKey = `comal.shopping-checks.v1.${list.menu_id}`;
+  const storageKey = `comal.shopping-checks.v2.${list.menu_id}`;
   const [checked, setChecked] = useState<Set<string>>(() => readChecks(storageKey));
   useEffect(() => {
     const current = new Set(list.items.map(itemKey));
@@ -54,6 +63,9 @@ export function ShoppingReceipt({
   }, [checked, list.items, storageKey]);
   const collator = new Intl.Collator(formatLocale(), { sensitivity: "base" });
   const number = new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 3 });
+  const unresolvedCount = new Set(
+    list.items.filter((item) => item.status === "incomplete").map((item) => item.ingredient_id),
+  ).size;
   const checkedCount = list.items.filter((item) => checked.has(itemKey(item))).length;
 
   const groups = [...list.categories]
@@ -90,6 +102,11 @@ export function ShoppingReceipt({
           <p role="status" className="m-0 text-center font-bold tabular-nums">
             {t("shopping_list.checked", { checked: checkedCount, count: list.items.length })}
           </p>
+          {!!unresolvedCount && (
+            <p className="mt-1 mb-0 text-center text-xs">
+              {t("shopping_details.unresolved", { count: unresolvedCount })}
+            </p>
+          )}
         </div>
       )}
       {!list.items.length && (
@@ -121,7 +138,17 @@ export function ShoppingReceipt({
                 const isChecked = checked.has(key);
                 const quantity = `${number.format(Number(item.quantity))} ${unitLabel(item.unit, Number(item.quantity))}`;
                 return (
-                  <li key={key}>
+                  <li
+                    key={key}
+                    aria-describedby={
+                      item.status === "incomplete" &&
+                      list.conversion_warnings.some(
+                        (warning) => warning.ingredient_id === item.ingredient_id,
+                      )
+                        ? `conversion-warning-${item.ingredient_id}`
+                        : undefined
+                    }
+                  >
                     <div className="flex min-h-14 min-w-0 items-start gap-1">
                       <label className="flex min-h-14 w-11 shrink-0 cursor-pointer items-start justify-center pt-4">
                         <Checkbox
@@ -162,6 +189,42 @@ export function ShoppingReceipt({
                             {quantity}
                           </span>
                         </span>
+                        {item.status === "incomplete" && (
+                          <span className="mt-1 block text-xs font-semibold">
+                            {t("shopping_details.incomplete")}
+                          </span>
+                        )}
+                        <details className="mt-1 text-xs text-muted-foreground">
+                          <summary className="min-h-8 cursor-pointer content-center rounded-sm focus-visible:outline-2 focus-visible:outline-ring">
+                            {t("shopping_details.details")}
+                          </summary>
+                          <p className="mt-1 mb-0">
+                            {t("shopping_details.need", {
+                              quantity: number.format(Number(item.required_quantity)),
+                              unit: unitLabel(item.required_unit, Number(item.required_quantity)),
+                            })}
+                          </p>
+                          {item.presentation && (
+                            <p className="mt-2 mb-0">
+                              {t("shopping_details.presentation", {
+                                unit: unitLabel(item.presentation.shopping_unit),
+                              })}
+                              {item.presentation.mode === "package" && (
+                                <>
+                                  {" "}
+                                  ·{" "}
+                                  {t("shopping_details.contents", {
+                                    quantity: item.presentation.package_quantity ?? "",
+                                    unit: unitLabel(
+                                      item.presentation.package_unit ?? "",
+                                      Number(item.presentation.package_quantity),
+                                    ),
+                                  })}
+                                </>
+                              )}
+                            </p>
+                          )}
+                        </details>
                         {item.approximate && (
                           <span className="mt-1 block text-[10px] text-muted-foreground tablet:text-xs">
                             {t("shopping_list.approximate")}

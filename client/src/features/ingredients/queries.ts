@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../../api";
-import { useI18n } from "../../i18n";
 import { queryKeys } from "../../queryKeys";
 import type {
   IngredientCatalogEntry,
@@ -9,6 +8,7 @@ import type {
   IngredientShoppingProfile,
   IngredientShoppingProfilePayload,
   Meal,
+  MeasurementReference,
   Menu,
 } from "../../types";
 
@@ -20,12 +20,12 @@ export function useShoppingCategories() {
   });
 }
 
-export function useIngredientShoppingProfile(id: number) {
-  const { locale } = useI18n();
+export function useIngredientShoppingProfile(id: number, { enabled = true } = {}) {
   return useQuery({
-    queryKey: [...queryKeys.ingredientProfile(id), locale],
-    queryFn: ({ signal }) => api.getIngredientShoppingProfile(id, signal, locale),
+    queryKey: queryKeys.ingredientProfile(id),
+    queryFn: ({ signal }) => api.getIngredientShoppingProfile(id, signal),
     staleTime: 0,
+    enabled,
   });
 }
 
@@ -68,6 +68,8 @@ export function useDeleteIngredient(onDeleted?: () => void) {
       await client.cancelQueries({ queryKey: queryKeys.ingredients });
       await client.cancelQueries({ queryKey: queryKeys.ingredientProfile(id) });
       client.removeQueries({ queryKey: queryKeys.ingredientProfile(id) });
+      await client.cancelQueries({ queryKey: queryKeys.ingredientReferences(id) });
+      client.removeQueries({ queryKey: queryKeys.ingredientReferences(id) });
       client.setQueryData<IngredientCatalogEntry[]>(queryKeys.ingredients, (catalog) =>
         catalog?.filter((ingredient) => ingredient.id !== id),
       );
@@ -113,6 +115,28 @@ export function useSaveIngredient() {
         })),
       );
       await client.invalidateQueries({ queryKey: queryKeys.ingredients });
+      await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
+    },
+  });
+}
+
+export function useIngredientMeasurementReferences(id: number) {
+  return useQuery({
+    queryKey: queryKeys.ingredientReferences(id),
+    queryFn: ({ signal }) => api.getIngredientMeasurementReferences(id, signal),
+    staleTime: 0,
+  });
+}
+
+export function useSaveIngredientMeasurementReferences(id: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (references: MeasurementReference[]) =>
+      api.saveIngredientMeasurementReferences(id, references),
+    onSuccess: async (references) => {
+      await client.cancelQueries({ queryKey: queryKeys.ingredientReferences(id) });
+      client.setQueryData(queryKeys.ingredientReferences(id), references);
+      // A failed recalculation belongs to the shopping query, not this successful save.
       await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
     },
   });

@@ -162,7 +162,9 @@ Quick ingredient usage and meal details share one preview: a bottom sheet on
 mobile and a centered modal on desktop. Back retraces preview contents; Close
 returns to the originating screen. Recipe and ingredient creation/editing use
 dedicated pages, retaining the originating screen and returning to its preview
-after Save or Cancel. Do not stack previews or put the main editors in dialogs.
+after recipe Save/Cancel or ingredient Done. Ingredient section saves stay on
+the editor page and retain other drafts. Do not stack previews or put the main
+editors in dialogs.
 Editor back links, page headings, forms, and supporting messages use the shared
 centered page container without an additional editor-specific width limit.
 
@@ -174,4 +176,26 @@ and three from 1100px; keep each category together. The compact header shows
 the week and people count, with serving controls inside an Adjust disclosure.
 Checked progress sticks below the header while scrolling. Grocery text is 14px,
 checkbox labels provide a 44px-wide touch target, and checked rows stay in place.
-Save checks per menu on the device, clearing checks for changed quantities.
+Save checks per menu on the device, clearing checks for changed purchases,
+including container contents and transitions to/from incomplete calculations.
+Keep calculation completeness separate from cart progress. Partial lines share
+an ingredient explanation and one Complete reference action. Required amounts
+and presentations stay inside compact disclosures below the main purchase line.
+
+## Ingredient measurements and recipe containers
+
+Refine the existing Operate forms with Greda controls and Comal semantic tokens.
+Separate buying presentation from measured recipe relationships with section
+headings and full-width dividers. Each section has its own actions, status, and
+retry; use Done to return to the originating screen. Source details and derived
+equivalents remain supporting information. Correction links focus the measurement
+section on the dedicated ingredient page.
+
+Recipe servings explain the entered quantities. Package units reveal their own
+content quantity and unit, with an explicit action to fill from the habitual
+presentation. Clearing a selection requires fresh contents. Inputs and unit
+selectors remain full-width on small screens and use existing tablet columns.
+
+The implementation and source/diff review are recorded in
+`docs/client-ingredient-shopping-plan.md`. Rendered review at 320 px, 800 px,
+and desktop remains pending under the repository opt-in verification policy.

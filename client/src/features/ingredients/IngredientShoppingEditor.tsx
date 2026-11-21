@@ -15,6 +15,7 @@ type Props = {
   ingredientName: string;
   profile: IngredientShoppingProfile | null;
   onDone: () => void;
+  onSaved: () => void;
 };
 
 export function IngredientShoppingEditor(props: Props) {
@@ -26,7 +27,7 @@ export function IngredientShoppingEditor(props: Props) {
         {t("ingredients.shopping.loading")}
       </p>
     );
-  if (!units || error)
+  if (!units)
     return (
       <div className="flex flex-col gap-3">
         <p role="alert" className="m-0 text-sm">
@@ -45,7 +46,24 @@ export function IngredientShoppingEditor(props: Props) {
         </Button>
       </div>
     );
-  return <ShoppingForm {...props} units={units} />;
+  return (
+    <>
+      {error && (
+        <div>
+          <p role="alert">{error.message}</p>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            {t("common.try_again")}
+          </Button>
+        </div>
+      )}
+      <ShoppingForm {...props} units={units} />
+    </>
+  );
 }
 
 function ShoppingForm({
@@ -53,6 +71,7 @@ function ShoppingForm({
   ingredientName,
   profile,
   onDone,
+  onSaved,
   units,
 }: Props & { units: UnitOption[] }) {
   const { t } = useI18n();
@@ -60,7 +79,6 @@ function ShoppingForm({
   useEditorDraft(methods.formState.isDirty);
   const {
     handleSubmit,
-    setError,
     clearErrors,
     formState: { errors },
   } = methods;
@@ -80,7 +98,6 @@ function ShoppingForm({
   const message =
     errors.root?.message ??
     errors.packageUnit?.message ??
-    errors.pieceWeight?.message ??
     errors.packageSize?.message ??
     saveError?.message ??
     clearError?.message;
@@ -92,12 +109,13 @@ function ShoppingForm({
   const submit = (draft: ShoppingDraft) => {
     if (busy) return;
     resetClear();
-    const result = shoppingDraftToProfile(draft, profile);
-    if (!result.ok) {
-      setError("root", { message: t("ingredients.shopping.keep_measurements") });
-      return;
-    }
-    save(result.payload, { onSuccess: onDone });
+    save(shoppingDraftToProfile(draft), {
+      onSuccess: () => {
+        methods.reset(draft);
+        onSaved();
+        onDone();
+      },
+    });
   };
 
   return (
@@ -110,7 +128,6 @@ function ShoppingForm({
         <IngredientShoppingFields
           ingredientName={ingredientName}
           units={units}
-          profile={profile}
           busy={busy}
           onModeChange={() => {
             clearErrors();
@@ -131,13 +148,27 @@ function ShoppingForm({
               disabled={busy}
               onClick={() => {
                 resetSave();
-                clear(undefined, { onSuccess: onDone });
+                clear(undefined, {
+                  onSuccess: () => {
+                    methods.reset(shoppingProfileToDraft(null));
+                    onSaved();
+                    onDone();
+                  },
+                });
               }}
             >
               {clearing ? t("ingredients.shopping.clearing") : t("ingredients.shopping.clear")}
             </Button>
           )}
-          <Button type="button" variant="ghost" disabled={busy} onClick={onDone}>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={busy}
+            onClick={() => {
+              if (!methods.formState.isDirty || window.confirm(t("measurements.confirm_cancel")))
+                onDone();
+            }}
+          >
             {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={busy}>

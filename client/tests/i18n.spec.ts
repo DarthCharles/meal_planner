@@ -94,10 +94,11 @@ test.describe("Spanish browser preference", () => {
     const dialog = page.getByRole("region", { name: "Un nuevo favorito" });
     await dialog.getByRole("button", { name: "Guardar comida", exact: true }).click();
     await expect(dialog.getByRole("alert")).toHaveText(
-      "Agrega un nombre, una descripción y al menos un horario de comida.",
+      "Ingresa un número entero positivo de porciones.",
     );
     await dialog.getByLabel("Nombre de la comida", { exact: true }).fill("My soup");
     await dialog.getByLabel("Descripción", { exact: true }).fill("Con verduras");
+    await dialog.getByLabel("Porciones de la receta", { exact: true }).fill("2");
     await dialog.getByRole("button", { name: "Comida", exact: true }).click();
     await dialog.getByRole("button", { name: "Lunes", exact: true }).click();
     await dialog.getByRole("button", { name: "+ Agregar ingrediente", exact: true }).click();
@@ -114,7 +115,7 @@ test.describe("Spanish browser preference", () => {
       description: "Con verduras",
       meal_type_ids: [2],
       preferred_days: ["monday"],
-      ingredients: [{ ingredient_id: 2, quantity: "2", unit: "pieza", preparation_note: "" }],
+      ingredients: [{ ingredient_id: 2, quantity: "2", unit: "piece", preparation_note: "" }],
     });
   });
 

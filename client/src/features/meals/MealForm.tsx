@@ -32,6 +32,7 @@ export function MealForm({
   const methods = useForm<MealFormValues>({
     defaultValues: {
       name: initialMeal?.name ?? "",
+      servings: initialMeal ? String(initialMeal.servings) : "",
       description: initialMeal?.description ?? "",
       recipe_url: initialMeal?.recipe_url ?? "",
       meal_type_ids: initialMeal
@@ -40,7 +41,17 @@ export function MealForm({
       preferred_days: initialMeal?.preferred_days ?? [],
       ingredients:
         initialMeal?.ingredients?.map(
-          ({ ingredient_id, name, quantity, unit, preparation_note }) => ({
+          ({
+            ingredient_id,
+            name,
+            quantity,
+            unit,
+            preparation_note,
+            package_quantity,
+            package_unit,
+          }) => ({
+            package_quantity: package_quantity ?? "",
+            package_unit: package_unit ?? "",
             ingredient_id,
             name,
             quantity: String(quantity),
@@ -70,13 +81,16 @@ export function MealForm({
     reset: resetUpdateMeal,
   } = useUpdateMeal();
   const saving = creating || updating;
-  const validationError =
-    errors.name || errors.description || errors.meal_type_ids
+  const validationError = errors.servings
+    ? t("recipe.servings_error")
+    : errors.name || errors.description || errors.meal_type_ids
       ? t("meals.form.meal_required")
       : errors.ingredients
         ? errors.ingredients.some?.((row) => row?.name)
           ? t("meals.form.ingredient_selection_required")
-          : t("meals.form.ingredient_amount_required")
+          : errors.ingredients.some?.((row) => row?.package_quantity || row?.package_unit)
+            ? t("recipe.contents_required")
+            : t("meals.form.ingredient_amount_required")
         : undefined;
   const error = validationError || createError?.message || updateError?.message;
   const clearSaveErrors = () => {
@@ -88,12 +102,25 @@ export function MealForm({
     clearSaveErrors();
     const ingredients: MealPayload["ingredients"] = form.ingredients
       .filter((ingredient) => ingredient.name.trim())
-      .map(({ ingredient_id, name, quantity, unit, preparation_note }) => ({
-        ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
-        quantity,
-        unit,
-        preparation_note,
-      }));
+      .map(
+        ({
+          ingredient_id,
+          name,
+          quantity,
+          unit,
+          preparation_note,
+          package_quantity,
+          package_unit,
+        }) => ({
+          ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
+          quantity,
+          unit,
+          preparation_note,
+          ...(units.find((option) => option.code === unit)?.dimension === "package"
+            ? { package_quantity, package_unit }
+            : {}),
+        }),
+      );
     const values = { ...form, ingredients };
     if (initialMeal) {
       updateMeal({ id: initialMeal.id, form: values }, { onSuccess: onSaved });
@@ -119,6 +146,27 @@ export function MealForm({
               placeholder={t("meals.form.meal_example")}
             />
           </label>
+          <div className="grid min-w-0 gap-2 text-xs">
+            <label className="grid min-w-0 gap-2 font-bold text-foreground">
+              {t("recipe.servings")}
+              <Input
+                inputMode="numeric"
+                {...register("servings", {
+                  validate: (value) =>
+                    /^\d+$/.test(value) &&
+                    BigInt(value) > 0n &&
+                    BigInt(value) <= 9223372036854775807n,
+                })}
+                aria-invalid={!!errors.servings}
+                aria-describedby={
+                  errors.servings ? "meal-form-error servings-help" : "servings-help"
+                }
+              />
+            </label>
+            <span id="servings-help" className="font-normal text-muted-foreground">
+              {t("recipe.servings_help")}
+            </span>
+          </div>
           <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
             {t("meals.form.description")}
             <Textarea

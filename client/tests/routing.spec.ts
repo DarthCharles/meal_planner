@@ -91,7 +91,7 @@ for (const scenario of [
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.reload();
     await expect(editor.getByLabel(scenario.field, { exact: true })).toHaveValue(scenario.value);
-    await editor.getByRole("button", { name: "Cancel", exact: true }).click();
+    await editor.getByRole("button", { name: /^(Cancel|Done)$/, exact: true }).click();
     await expect(page).toHaveURL(scenario.back);
   });
 }

@@ -22,6 +22,7 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
           ))}
         </div>
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">{meal.description}</p>
+        <p className="m-0 text-sm">{t("recipe.serves", { count: meal.servings })}</p>
         <p className="m-0 text-sm text-muted-foreground">
           <span className="font-semibold">{t("meals.details.preferred_days_prefix")}</span>
           {preferredDaysLabel(meal.preferred_days ?? [])}
@@ -37,10 +38,21 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
                 className="border-t border-border pt-3 text-sm leading-relaxed"
               >
                 <span className="font-semibold">
-                  {new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 3 }).format(
+                  {new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 6 }).format(
                     Number(ingredient.quantity),
                   )}{" "}
-                  {unitLabel(ingredient.unit)} · {ingredient.name}
+                  {unitLabel(ingredient.unit, Number(ingredient.quantity))}
+                  {ingredient.package_quantity && (
+                    <>
+                      {" "}
+                      {t("recipe.of")} {ingredient.package_quantity}{" "}
+                      {unitLabel(
+                        ingredient.package_unit ?? "",
+                        Number(ingredient.package_quantity),
+                      )}
+                    </>
+                  )}{" "}
+                  · {ingredient.name}
                 </span>
                 {ingredient.preparation_note && (
                   <p className="mt-1 mb-0 text-muted-foreground">{ingredient.preparation_note}</p>

@@ -17,10 +17,11 @@ async function addMeal(page: Page) {
 
 async function selectUnit(page: Page, code: string, index = 0) {
   await page.getByRole("combobox", { name: "Unit", exact: true }).nth(index).click();
-  await page.getByRole("option", { name: code === "pieza" ? "pieces" : code, exact: true }).click();
+  await page.getByRole("option", { name: code === "piece" ? "pieces" : code, exact: true }).click();
 }
 
 async function fillMeal(page: Page) {
+  await page.getByLabel("Recipe servings", { exact: true }).fill("2");
   await page.getByLabel("Meal name", { exact: true }).fill("Tacos de papa");
   await page
     .getByRole("textbox", { name: "Description", exact: true })
@@ -113,9 +114,7 @@ test("validates required fields and ingredient quantity/unit before saving", asy
   await openLibrary(page);
   const dialog = await addMeal(page);
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
-  await expect(
-    dialog.getByText("Add a name, description, and at least one meal time."),
-  ).toBeVisible();
+  await expect(dialog.getByText("Enter a positive whole number of servings.")).toBeVisible();
   await fillMeal(page);
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await page.getByLabel("Ingredient name").fill("Potato");
@@ -129,8 +128,8 @@ test("validates required fields and ingredient quantity/unit before saving", asy
   await expect(
     dialog.getByText("Complete the quantity and unit for each ingredient."),
   ).toBeVisible();
-  await selectUnit(page, "pieza");
-  await page.getByLabel("Quantity").fill("0.0001");
+  await selectUnit(page, "piece");
+  await page.getByLabel("Quantity").fill("0.0000001");
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(dialog.getByRole("alert")).toHaveText(
     "Complete the quantity and unit for each ingredient.",
@@ -154,7 +153,7 @@ test(
     await page.getByLabel("Ingredient name").fill("Potato");
     await page.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
     await page.getByLabel("Quantity").fill("2");
-    await selectUnit(page, "pieza");
+    await selectUnit(page, "piece");
     await page.getByLabel("Preparation note").fill("diced");
     for (const label of ["Ingredient name", "Quantity", "Unit", "Preparation note"]) {
       const field = page.getByLabel(label, { exact: true });
@@ -202,6 +201,7 @@ test(
         path: "/meals",
         body: {
           name: "Tacos de papa",
+          servings: "2",
           description: "Potato tacos with salsa.",
           recipe_url: "https://example.com/tacos",
           meal_type_ids: [2],
@@ -210,7 +210,7 @@ test(
             {
               name: "Potato",
               quantity: "2",
-              unit: "pieza",
+              unit: "piece",
               preparation_note: "diced",
             },
           ],
@@ -240,11 +240,11 @@ test(
     await expect(ingredient).toHaveValue("Egg");
     expect(api.saves).toEqual([]);
     await dialog.getByLabel("Quantity").fill("2");
-    await selectUnit(page, "pieza");
+    await selectUnit(page, "piece");
     await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
     await expect(dialog).toHaveCount(0);
     expect(api.saves[0].body.ingredients).toEqual([
-      { ingredient_id: 1, quantity: "2", unit: "pieza", preparation_note: "" },
+      { ingredient_id: 1, quantity: "2", unit: "piece", preparation_note: "" },
     ]);
   },
 );
@@ -333,7 +333,7 @@ test("keeps created ingredients as drafts until save and reuses the saved catalo
   await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
   await dialog.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
   await dialog.getByLabel("Quantity").fill("1");
-  await selectUnit(page, "pieza");
+  await selectUnit(page, "piece");
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   dialog = await addMeal(page);
@@ -469,7 +469,7 @@ test("preserves ingredient values after removing a middle row", async ({ page, a
       .getByLabel("Quantity", { exact: true })
       .nth(index)
       .fill(String(index + 1));
-    await selectUnit(page, "pieza", index);
+    await selectUnit(page, "piece", index);
     await page.getByLabel("Preparation note", { exact: true }).nth(index).fill(`${name} note`);
   }
   await dialog.getByRole("button", { name: "Remove Onion", exact: true }).click();
@@ -486,13 +486,13 @@ test("preserves ingredient values after removing a middle row", async ({ page, a
     {
       name: "Potato",
       quantity: "1",
-      unit: "pieza",
+      unit: "piece",
       preparation_note: "Potato note",
     },
     {
       name: "Garlic",
       quantity: "4",
-      unit: "pieza",
+      unit: "piece",
       preparation_note: "Garlic note",
     },
   ]);

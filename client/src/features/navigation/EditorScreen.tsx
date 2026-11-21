@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 
 import { Button } from "@darthcharles/greda";
 import { ArrowLeft } from "@darthcharles/greda/icons";
-import { useBlocker, useParams } from "react-router";
+import { useBlocker, useLocation, useNavigate, useParams } from "react-router";
 
 import { Notice } from "../../components/Notice";
 import { useI18n } from "../../i18n";
@@ -20,6 +20,8 @@ export function EditorScreen({
   create?: boolean;
 }) {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useI18n();
   const { finishEditor } = useWorkspaceNavigation();
   const heading = useRef<HTMLHeadingElement>(null);
@@ -77,8 +79,13 @@ export function EditorScreen({
       ? t(create ? "meals.dialog.new_favorite" : "meals.details.edit_meal")
       : t(create ? "ingredients.form.add_ingredient_title" : "ingredients.form.edit_ingredient");
   useEffect(() => {
-    heading.current?.focus({ preventScroll: true });
-    window.scrollTo(0, 0);
+    if (
+      kind !== "ingredient" ||
+      new URLSearchParams(location.search).get("section") !== "measurements"
+    ) {
+      heading.current?.focus({ preventScroll: true });
+      window.scrollTo(0, 0);
+    }
   }, []);
   return (
     <section role="region" aria-labelledby="editor-title" className="pb-8 pt-3">
@@ -124,6 +131,11 @@ export function EditorScreen({
             />
           ) : (
             <IngredientForm
+              key={ingredient?.id ?? "new"}
+              onCreated={(entry) => {
+                drafts.current.clear();
+                navigate(`/ingredients/${entry.id}/edit`, { replace: true, state: location.state });
+              }}
               ingredient={create ? undefined : ingredient}
               close={finishEditor}
               onSaved={saved}

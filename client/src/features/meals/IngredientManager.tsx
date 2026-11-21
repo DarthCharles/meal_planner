@@ -17,6 +17,8 @@ import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-
 
 import { unitLabel, useI18n } from "../../i18n";
 import type { IngredientOption, MealForm, UnitOption } from "../../types";
+import { RecipePackageFields } from "./RecipePackageFields";
+import { validQuantity } from "./quantity";
 import { useIngredients } from "./queries";
 
 export function IngredientManager({ units }: { units: UnitOption[] }) {
@@ -104,6 +106,7 @@ function IngredientRow({
     register,
     control,
     setValue,
+    clearErrors,
     formState: { errors },
   } = useFormContext<MealForm>();
   const name = useWatch({ control, name: `ingredients.${index}.name` });
@@ -111,6 +114,12 @@ function IngredientRow({
     control,
     name: `ingredients.${index}.ingredient_id`,
   });
+  const unit = useWatch({ control, name: `ingredients.${index}.unit` });
+  const clearContents = () => {
+    setValue(`ingredients.${index}.package_quantity`, "", { shouldDirty: true });
+    setValue(`ingredients.${index}.package_unit`, "", { shouldDirty: true });
+    clearErrors([`ingredients.${index}.package_quantity`, `ingredients.${index}.package_unit`]);
+  };
   const fieldId = useId();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   return (
@@ -148,6 +157,8 @@ function IngredientRow({
               error={catalogError}
               onCreate={(label) => ({ value: `new:${label.toLowerCase()}`, label })}
               onValueChange={(option) => {
+                if (option?.label !== name || (option && Number(option.value) !== ingredientId))
+                  clearContents();
                 setValue(
                   `ingredients.${index}.ingredient_id`,
                   option && !option.value.startsWith("new:") ? Number(option.value) : undefined,
@@ -196,13 +207,10 @@ function IngredientRow({
           id={`${fieldId}-quantity`}
           aria-label={t("meals.ingredient_manager.quantity")}
           className="h-11 min-w-0 rounded-[10px] bg-background px-3 text-sm md:text-sm font-normal shadow-none tabular-nums"
-          type="number"
-          min="0.001"
-          step="any"
+          type="text"
           {...register(`ingredients.${index}.quantity`, {
             validate: (value, values) =>
-              !values.ingredients[index]?.name.trim() ||
-              (Number.isFinite(Number(value)) && Number(value) >= 0.001),
+              !values.ingredients[index]?.name.trim() || validQuantity(value),
           })}
           aria-invalid={!!errors.ingredients?.[index]?.quantity}
           aria-describedby={errors.ingredients?.[index]?.quantity ? "meal-form-error" : undefined}
@@ -220,7 +228,13 @@ function IngredientRow({
             validate: (value, values) => !values.ingredients[index]?.name.trim() || !!value.trim(),
           }}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select
+              value={field.value}
+              onValueChange={(value) => {
+                if (value !== field.value) clearContents();
+                field.onChange(value);
+              }}
+            >
               <SelectTrigger
                 id={`${fieldId}-unit`}
                 ref={field.ref}
@@ -244,7 +258,15 @@ function IngredientRow({
           )}
         />
       </div>
-      <div className="col-span-3 grid min-w-0 gap-2">
+      {units.find((option) => option.code === unit)?.dimension === "package" && (
+        <RecipePackageFields
+          key={`${ingredientId ?? name}:${unit}`}
+          index={index}
+          ingredientId={ingredientId}
+          units={units}
+        />
+      )}
+      <div className="col-span-full grid min-w-0 gap-2">
         <label htmlFor={`${fieldId}-note`} className="font-normal text-muted-foreground">
           {t("meals.ingredient_manager.preparation_note")} {t("common.optional")}
         </label>

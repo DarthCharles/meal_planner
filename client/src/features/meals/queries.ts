@@ -73,7 +73,9 @@ function useSyncSavedMeal() {
             shopping_category:
               catalog.get(ingredient.ingredient_id)?.shopping_category ?? "uncategorized",
             meals: [
-              ...(catalog.get(ingredient.ingredient_id)?.meals ?? []),
+              ...(catalog
+                .get(ingredient.ingredient_id)
+                ?.meals.filter((entry) => entry.id !== meal.id) ?? []),
               { id: meal.id, name: meal.name },
             ].sort((left, right) => left.name.localeCompare(right.name)),
           });

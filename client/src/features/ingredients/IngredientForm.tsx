@@ -15,6 +15,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useI18n } from "../../i18n";
 import type { IngredientCatalogEntry, IngredientPayload, ShoppingCategory } from "../../types";
 import { useEditorDraft } from "../navigation/EditorDraftContext";
+import { IngredientMeasurements } from "./IngredientMeasurements";
 import { IngredientShoppingSummary } from "./IngredientShoppingSummary";
 import { useDeleteIngredient, useSaveIngredient, useShoppingCategories } from "./queries";
 
@@ -22,11 +23,12 @@ export function IngredientForm(props: {
   ingredient?: IngredientCatalogEntry;
   close: () => void;
   onSaved?: () => void;
+  onCreated?: (ingredient: IngredientCatalogEntry) => void;
 }) {
   const { t } = useI18n();
   const { data: categories, isPending, error, refetch, isFetching } = useShoppingCategories();
   if (isPending) return <p role="status">{t("shopping_list.loading_categories")}</p>;
-  if (!categories || error)
+  if (!categories)
     return (
       <div>
         <p role="alert">{error?.message}</p>
@@ -35,7 +37,19 @@ export function IngredientForm(props: {
         </Button>
       </div>
     );
-  return <IngredientFormContent {...props} categories={categories} />;
+  return (
+    <>
+      {error && (
+        <div>
+          <p role="alert">{error.message}</p>
+          <Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>
+            {t("common.try_again")}
+          </Button>
+        </div>
+      )}
+      <IngredientFormContent {...props} categories={categories} />
+    </>
+  );
 }
 
 function IngredientFormContent({
@@ -43,11 +57,13 @@ function IngredientFormContent({
   close,
   onSaved = close,
   categories,
+  onCreated,
 }: {
   ingredient?: IngredientCatalogEntry;
   close: () => void;
   onSaved?: () => void;
   categories: ShoppingCategory[];
+  onCreated?: (ingredient: IngredientCatalogEntry) => void;
 }) {
   const { t } = useI18n();
   const formId = useId();
@@ -60,11 +76,13 @@ function IngredientFormContent({
   }, []);
   const categoryId = useId();
   const [categoryContainer, setCategoryContainer] = useState<HTMLDivElement | null>(null);
+  const [saved, setSaved] = useState(false);
   const [editingShopping, setEditingShopping] = useState(false);
   const {
     register,
     control,
     handleSubmit,
+    reset,
     formState: { errors, isDirty },
   } = useForm<IngredientPayload>({
     defaultValues: {
@@ -89,23 +107,30 @@ function IngredientFormContent({
   });
   const busy = saving || deleting;
   const fieldError = errors.name?.message ?? saveError?.message;
-  const message = deleteError?.message ?? fieldError;
   return (
     <div>
       <form
         id={formId}
-        className={editingShopping ? "hidden" : undefined}
         noValidate
         onSubmit={handleSubmit(
           (values) => {
-            if (busy || editingShopping) return;
+            if (busy) return;
             resetDelete();
             saveIngredient(
               {
                 id: ingredient?.id,
                 values: { name: values.name.trim(), shopping_category: values.shopping_category },
               },
-              { onSuccess: onSaved },
+              {
+                onSuccess: (savedIngredient) => {
+                  reset({
+                    name: savedIngredient.name,
+                    shopping_category: savedIngredient.shopping_category,
+                  });
+                  setSaved(true);
+                  if (!ingredient) onCreated?.(savedIngredient);
+                },
+              },
             );
           },
           () => {
@@ -120,9 +145,9 @@ function IngredientFormContent({
             {...register("name", {
               validate: (value) => !!value.trim() || t("ingredients.form.ingredient_required"),
             })}
-            disabled={busy || editingShopping}
+            disabled={busy}
             aria-invalid={!!fieldError}
-            aria-describedby={fieldError && !deleteError ? "ingredient-form-error" : undefined}
+            aria-describedby={fieldError ? "ingredient-form-error" : undefined}
             placeholder={t("ingredients.form.ingredient_example")}
           />
         </label>
@@ -132,11 +157,7 @@ function IngredientFormContent({
             name="shopping_category"
             control={control}
             render={({ field }) => (
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                disabled={busy || editingShopping}
-              >
+              <Select value={field.value} onValueChange={field.onChange} disabled={busy}>
                 <SelectTrigger
                   type="button"
                   id={categoryId}
@@ -164,7 +185,21 @@ function IngredientFormContent({
             {t("ingredients.form.rename_ingredient_help")}
           </p>
         )}
+        {fieldError && (
+          <p id="ingredient-form-error" role="alert" className="mb-4 text-sm text-destructive">
+            {fieldError}
+          </p>
+        )}
+        {saved && !isDirty && <p role="status">{t("configuration.name_saved")}</p>}
+        <div className="mb-6 flex flex-wrap justify-end gap-2">
+          <Button type="submit" disabled={busy}>
+            {saving ? t("common.saving") : t("ingredients.form.save_ingredient")}
+          </Button>
+        </div>
       </form>
+      {!ingredient && (
+        <p className="mb-4 text-sm text-muted-foreground">{t("configuration.create_help")}</p>
+      )}
       {ingredient && (
         <IngredientShoppingSummary
           ingredientId={ingredient.id}
@@ -174,35 +209,31 @@ function IngredientFormContent({
           onEditingChange={setEditingShopping}
         />
       )}
-      {message && (
-        <p id="ingredient-form-error" role="alert" className="mb-4 text-sm text-destructive">
-          {message}
+      {ingredient && <IngredientMeasurements ingredientId={ingredient.id} />}
+      {deleteError && (
+        <p role="alert" className="mb-4 text-sm text-destructive">
+          {deleteError.message}
         </p>
       )}
-      {!editingShopping && (
-        <div className="flex flex-wrap justify-end gap-2">
-          {ingredient && ingredient.meals.length === 0 && (
-            <Button
-              variant="ghost"
-              className="mr-auto text-destructive"
-              disabled={busy || editingShopping}
-              onClick={() => {
-                if (busy) return;
-                resetSave();
-                deleteIngredient(ingredient.id);
-              }}
-            >
-              {deleting ? t("ingredients.form.deleting") : t("ingredients.form.delete_ingredient")}
-            </Button>
-          )}
-          <Button variant="ghost" onClick={close}>
-            {t("common.cancel")}
+      <div className="flex flex-wrap justify-end gap-2">
+        {ingredient && ingredient.meals.length === 0 && (
+          <Button
+            variant="ghost"
+            className="mr-auto text-destructive"
+            disabled={busy}
+            onClick={() => {
+              if (busy) return;
+              resetSave();
+              deleteIngredient(ingredient.id);
+            }}
+          >
+            {deleting ? t("ingredients.form.deleting") : t("ingredients.form.delete_ingredient")}
           </Button>
-          <Button type="submit" form={formId} disabled={busy || editingShopping}>
-            {saving ? t("common.saving") : t("ingredients.form.save_ingredient")}
-          </Button>
-        </div>
-      )}
+        )}
+        <Button variant={ingredient ? "default" : "ghost"} onClick={close}>
+          {t(ingredient ? "configuration.done" : "common.cancel")}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { unitLabel, useI18n } from "../../i18n";
-import type { IngredientShoppingProfile, UnitOption } from "../../types";
+import type { UnitOption } from "../../types";
 import type { ShoppingDraft } from "./shoppingProfileForm";
 import { shoppingUnitOptions, validShoppingAmount } from "./shoppingProfileForm";
 
@@ -71,7 +71,7 @@ function ShoppingSelect({
               onBlur={field.onBlur}
               aria-invalid={fieldState.invalid}
               aria-describedby={fieldState.invalid ? "shopping-setup-error" : undefined}
-              className="w-full min-w-0"
+              className="h-11 w-full min-w-0"
             >
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
@@ -92,13 +92,11 @@ function ShoppingSelect({
 export function IngredientShoppingFields({
   ingredientName,
   units,
-  profile,
   busy,
   onModeChange,
 }: {
   ingredientName: string;
   units: UnitOption[];
-  profile: IngredientShoppingProfile | null;
   busy: boolean;
   onModeChange: () => void;
 }) {
@@ -109,7 +107,7 @@ export function IngredientShoppingFields({
     formState: { errors },
   } = useFormContext<ShoppingDraft>();
   const how = useWatch({ control, name: "how" });
-  const options = shoppingUnitOptions(units, profile);
+  const options = shoppingUnitOptions(units);
 
   return (
     <>
@@ -130,24 +128,6 @@ export function IngredientShoppingFields({
           <p className="m-0 text-sm text-muted-foreground">
             {t("ingredients.shopping.piece_help")}
           </p>
-          <label className="flex flex-col gap-2 text-sm font-semibold">
-            {t("ingredients.shopping.piece_weight")}
-            <Input
-              type="number"
-              min="0.000001"
-              max="1000000000"
-              step="any"
-              disabled={busy}
-              {...register("pieceWeight", {
-                validate: (value, draft) =>
-                  draft.how !== "piece" ||
-                  validShoppingAmount(value) ||
-                  t("ingredients.shopping.enter_weight"),
-              })}
-              aria-invalid={!!errors.pieceWeight}
-              aria-describedby={errors.pieceWeight ? "shopping-setup-error" : undefined}
-            />
-          </label>
         </div>
       )}
 
@@ -176,14 +156,11 @@ export function IngredientShoppingFields({
             }
           />
           <p className="m-0 text-sm font-semibold">{t("ingredients.shopping.package_contains")}</p>
-          <div className="flex min-w-0 gap-2">
+          <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
             <Input
-              type="number"
-              min="0.000001"
-              max="1000000000"
-              step="any"
+              type="text"
               disabled={busy}
-              className="min-w-0 flex-1"
+              className="h-11 min-w-0 flex-1"
               aria-label={t("ingredients.shopping.package_size")}
               {...register("packageSize", {
                 validate: (value, draft) =>
@@ -194,13 +171,12 @@ export function IngredientShoppingFields({
               aria-invalid={!!errors.packageSize}
               aria-describedby={errors.packageSize ? "shopping-setup-error" : undefined}
             />
-            <div className="w-[100px] shrink-0">
+            <div className="min-w-0">
               <ShoppingSelect
                 name="packageMeasure"
                 label={t("ingredients.shopping.package_measure")}
                 options={unitOptions(options.measures)}
                 disabled={busy}
-                hideLabel
               />
             </div>
           </div>
