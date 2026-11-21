@@ -3,23 +3,27 @@ es:
     messages:
       invalid: "no es válido"
       inclusion: "no está incluido en la lista"
-      invalid_base_unit: "debe ser g, ml o pieza"
-      duplicate_units: "debe incluir cada unidad una sola vez"
-      missing_equivalence: "requiere una equivalencia a la unidad base"
-      redundant_equivalence: "debe usar una unidad canónica distinta de la unidad base"
-      invalid_array: "debe ser una lista de equivalencias"
+      invalid_quantity: "debe ser positiva, no mayor que 1000000000 y representable con seis decimales"
+      invalid_array: "debe ser una lista"
+      duplicate_references: "debe incluir cada tipo de referencia una sola vez"
+      unexpected_contents: "solo se permite para envases"
   activerecord:
     attributes:
+      ingredient:
+        measurement_references: "Referencias de medidas"
       ingredient_shopping_profile:
         ingredient: "Ingrediente"
-        base_unit: "Unidad base"
+        mode: "Forma de compra"
         shopping_unit: "Unidad de compra"
-        round_up: "Redondeo de compra"
-        equivalences: "Equivalencias"
-        unit_equivalences: "Equivalencias"
-      ingredient_unit_equivalence:
-        unit: "Unidad"
-        quantity: "Cantidad"
+        package_quantity: "Contenido del envase"
+        package_unit: "Unidad del contenido"
+      ingredient_measurement_reference:
+        kind: "Tipo de referencia"
+        quantity: "Peso en gramos"
+        reference_quantity: "Cantidad de referencia"
         source: "Fuente"
         description: "Descripción"
-        approximate: "Aproximación"
+        approximate: "Aproximada"
+      meal_ingredient:
+        package_quantity: "Contenido del envase"
+        package_unit: "Unidad del contenido"

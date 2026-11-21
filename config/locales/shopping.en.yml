@@ -1,8 +1,7 @@
 en:
   errors:
     messages:
-      invalid_base_unit: "must be g, ml, or pieza"
-      duplicate_units: "must contain each unit only once"
-      missing_equivalence: "requires an equivalence to the base unit"
-      redundant_equivalence: "must use a canonical unit different from the base unit"
-      invalid_array: "must be an array of equivalences"
+      invalid_quantity: "must be positive, no greater than 1000000000, and representable with six decimal places"
+      invalid_array: "must be an array"
+      duplicate_references: "must contain each reference kind only once"
+      unexpected_contents: "is only allowed for packages"

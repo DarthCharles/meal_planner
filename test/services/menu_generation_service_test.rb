@@ -91,9 +91,9 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     breakfast = MealType.find_by!(description: "breakfast")
     lunch = MealType.find_by!(description: "lunch")
     dinner = MealType.find_by!(description: "dinner")
-    shared = Meal.create!(name: "Shared", description: "Flexible", meal_types: [breakfast, lunch])
-    Meal.create!(name: "Breakfast", description: "Morning", meal_types: [breakfast])
-    Meal.create!(name: "Dinner", description: "Evening", meal_types: [dinner])
+    shared = Meal.create!(servings: 1, name: "Shared", description: "Flexible", meal_types: [breakfast, lunch])
+    Meal.create!(servings: 1, name: "Breakfast", description: "Morning", meal_types: [breakfast])
+    Meal.create!(servings: 1, name: "Dinner", description: "Evening", meal_types: [dinner])
     menu = MenuGenerationService.new.call(week_start: Date.new(2025, 3, 3))
     menu.days.each do |day|
       assert_equal shared.id, day.daily_meals.find_by!(position: 1).meal_id
@@ -142,7 +142,7 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     { breakfast: breakfast_count, lunch: lunch_count, dinner: dinner_count }.each do |type_name, count|
       type = MealType.find_by!(description: type_name.to_s)
       count.times do |i|
-        meal = Meal.create!(name: "#{type_name}_meal_#{i}_#{SecureRandom.hex(2)}", description: "Description #{i}", recipe_url: "")
+        meal = Meal.create!(servings: 1, name: "#{type_name}_meal_#{i}_#{SecureRandom.hex(2)}", description: "Description #{i}", recipe_url: "")
         meal.meal_types << type unless meal.meal_types.include?(type)
       end
     end

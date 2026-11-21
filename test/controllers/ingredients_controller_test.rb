@@ -32,7 +32,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
   test "renames a shared ingredient without changing recipe quantities or identity" do
     ingredient = Ingredient.create!(name: "Catalog tomato")
     unit = Unit.find_or_create_by!(code: "g") { |record| record.name = "grams" }
-    meal = Meal.create!(name: "Soup", description: "Tomato soup")
+    meal = Meal.create!(servings: 1, name: "Soup", description: "Tomato soup")
     row = meal.meal_ingredients.create!(ingredient: ingredient, unit: unit, quantity: 150, preparation_note: "diced")
     patch "/ingredients/#{ingredient.id}", params: { name: "  Catalog cherry tomato  " }, as: :json
     assert_response :ok
@@ -57,8 +57,8 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
   test "catalog lists every meal using an ingredient in name order" do
     ingredient = Ingredient.create!(name: "Usage onion")
     unit = Unit.find_or_create_by!(code: "g") { |record| record.name = "grams" }
-    soup = Meal.create!(name: "Soup", description: "Onion soup")
-    pasta = Meal.create!(name: "Pasta", description: "Onion pasta")
+    soup = Meal.create!(servings: 1, name: "Soup", description: "Onion soup")
+    pasta = Meal.create!(servings: 1, name: "Pasta", description: "Onion pasta")
     [soup, pasta].each { |meal| meal.meal_ingredients.create!(ingredient: ingredient, unit: unit, quantity: 100) }
     get "/ingredients"
     assert_response :ok
@@ -83,7 +83,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
   test "rejects deletion of an ingredient used by a meal and preserves the recipe" do
     ingredient = Ingredient.create!(name: "Used catalog onion")
     unit = Unit.find_or_create_by!(code: "g") { |record| record.name = "grams" }
-    meal = Meal.create!(name: "Onion soup", description: "Soup with onions")
+    meal = Meal.create!(servings: 1, name: "Onion soup", description: "Soup with onions")
     row = meal.meal_ingredients.create!(ingredient: ingredient, unit: unit, quantity: 100, preparation_note: "diced")
 
     assert_no_difference ["Ingredient.count", "Meal.count", "MealIngredient.count"] do

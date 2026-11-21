@@ -141,47 +141,43 @@ After changing Ruby or dependencies, stop any existing `bin/dev` process, select
 the pinned Ruby, run `bundle install`, and restart `bin/dev`. A running server
 continues using the Ruby and gems with which it started.
 
-## Ingredient equivalences
+## Ingredient measurements and shopping
 
-Run `bundle exec rails db:migrate` after updating the backend. The migration
-creates shopping-profile and equivalence tables and adds the jar unit to the
-catalog if absent. The following packaging migration adds bags, cans, bottles,
-and packages. Catalog additions preserve existing units. Rolling back the
-profile migration removes configuration tables; packaging units are intentionally
-retained because recipes or profiles may already reference them.
+Apply `bundle exec rails db:migrate`, then `bundle exec rails db:seed`.
+The November 21 measurement rebuild intentionally deletes prototype recipe
+ingredient rows, old shopping profiles/equivalences, and units before installing
+the new standard. Meals and menus remain; seeds repopulate sample recipe rows.
+The rebuild is irreversible; no legacy compatibility or data backfill is provided.
+The schema dump supports fresh setup with `db:prepare` followed by seeds.
 
-Configure an existing ingredient directly through its shopping-profile endpoint:
+The following unit-code migration replaces the Spanish codes with `jar`, `piece`,
+`cup`, `tablespoon`, and `teaspoon`, preserving IDs and their relationships.
 
-```http
-PUT /ingredients/12/shopping_profile
-Content-Type: application/json
+The standard is g/kg, ml/l, a 240 ml cup, 15 ml tablespoon, 5 ml teaspoon, and
+whole pieces. Containers have no universal size. Recipe containers must include
+their contents, separately from the ingredient's habitual buying presentation.
+Recipes require explicit `servings` on creation.
 
-{
-  "base_unit": "g",
-  "shopping_unit": "pieza",
-  "round_up": true,
-  "equivalences": [{
-    "unit": "pieza",
-    "quantity": "200",
-    "source": "Manual household measurement",
-    "description": "Example average weight of the onions normally purchased",
-    "approximate": true
-  }]
-}
-```
+Ingredient measurement references are configured through
+`PUT /ingredients/:id/measurement_references`; the habitual presentation through
+`PUT /ingredients/:id/shopping_profile`. See `docs/api.md` for the full replacement
+payloads and the intentionally breaking client contract. Removing shopping setup
+does not remove the references.
 
-Use the actual ingredient ID from `GET /ingredients` and replace the example
-factor with a documented reference or household measurement. Equivalences are
-stored directly in the database; there is no YAML template catalog or automatic
-matching by ingredient name. Stored recipe quantities remain unchanged, and
-menu calculation makes no external API calls. Shopping-list output represents
-recipe requirements, using equivalences to combine compatible measures. It keeps
-base quantities below one configured shopping unit; after reaching one
-piece/container, it displays a whole count rounded up. This threshold rule does
-not use the legacy `round_up` setting. Do not generalize a product
-package size to every brand or treat edible-portion vegetable weights as
-guaranteed whole purchase weights. See `docs/api.md` for the request and warning
-contracts, including stable unit codes and their English display labels.
+Seeds contain a sample mayonnaise reference of 13 g per 15 ml based on the linked
+Hellmann's product label and an approximate 148 g medium-onion edible weight from
+the FDA. Sources and limitations are stored with each reference. The 390 g jar
+and 140 g tuna can are chosen demonstration presentations, not universal product
+sizes. Other ingredients use natural buying units without invented densities.
+The current-week sample menu includes a recipe with an explicit can size.
+Seeded recipe quantities are explicitly for one person; they are demonstration
+recipes rather than nutritional guidance.
+
+The list always rounds pieces up. Containers remain in base quantities below
+one package and become whole counts once that threshold is reached. Missing
+references keep all needs visible and mark that ingredient incomplete. Calculation
+is local and makes no external calls. Client adoption and browser coverage are a
+separate task; existing client shopping forms target the removed profile contract.
 
 ## Scheduled generation
 

@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   resources :shopping_categories, only: :index
   resources :units, only: :index
   resources :ingredients, only: %i[index create update destroy] do
+    resource :measurement_references, only: %i[show update], controller: :ingredient_measurement_references
     resource :shopping_profile, only: %i[show update destroy], controller: :ingredient_shopping_profiles
   end
 end

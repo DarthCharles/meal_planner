@@ -1,6 +1,7 @@
 # Database model
 
-The current prototype models menus, days, meals, and meal classifications. It does not yet include users or ownership. The planned multi-user model should add ownership to user-managed records before authentication is introduced.
+The application models shared menus, recipes, ingredients, measurement references,
+and buying presentations. It has no authentication or ownership.
 
 ## Relationships
 
@@ -17,26 +18,28 @@ erDiagram
   INGREDIENTS ||--o{ MEAL_INGREDIENTS : used_in
   UNITS ||--o{ MEAL_INGREDIENTS : measures
   INGREDIENTS ||--o| INGREDIENT_SHOPPING_PROFILES : configures
-  INGREDIENT_SHOPPING_PROFILES ||--o{ INGREDIENT_UNIT_EQUIVALENCES : contains
+  INGREDIENTS ||--o{ INGREDIENT_MEASUREMENT_REFERENCES : describes
   UNITS ||--o{ INGREDIENT_SHOPPING_PROFILES : measures
-  UNITS ||--o{ INGREDIENT_UNIT_EQUIVALENCES : identifies
+  UNITS ||--o{ MEAL_INGREDIENTS : package_contents
 
   INGREDIENT_SHOPPING_PROFILES {
     int id PK
     int ingredient_id FK "unique, not null"
-    int base_unit_id FK "not null"
+    string mode "bulk, piece, package"
     int shopping_unit_id FK "not null"
-    boolean round_up "default false, not null"
+    decimal package_quantity "required only for packages"
+    int package_unit_id FK "required only for packages"
   }
 
-  INGREDIENT_UNIT_EQUIVALENCES {
+  INGREDIENT_MEASUREMENT_REFERENCES {
     int id PK
-    int ingredient_shopping_profile_id FK "not null"
-    int unit_id FK "unique per profile, not null"
-    decimal quantity "positive, precision 18 scale 6"
+    int ingredient_id FK "not null"
+    string kind "density or piece_weight; unique per ingredient"
+    decimal quantity "grams; positive"
+    decimal reference_quantity "ml or pieces; positive; default 1"
     string source "not null"
     string description "not null"
-    boolean approximate "default false, not null"
+    boolean approximate "default true, not null"
   }
 
   MENUS {
@@ -78,7 +81,7 @@ erDiagram
     string name "not null"
     string description "not null"
     string recipe_url
-    int servings "default 1, positive, not null"
+    int servings "explicit, positive, not null"
     datetime created_at
     datetime updated_at
   }
@@ -111,6 +114,8 @@ erDiagram
     int ingredient_id FK "not null"
     decimal quantity "not null"
     int unit_id FK "not null"
+    decimal package_quantity "snapshot of contents per recipe container"
+    int package_unit_id FK "contents unit"
     string preparation_note
     int position "default 0"
     datetime created_at
@@ -121,6 +126,8 @@ erDiagram
     int id PK
     string code "not null, unique"
     string name "not null"
+    string dimension "mass, volume, count, package"
+    decimal factor "factor to canonical unit; null for packages"
     datetime created_at
     datetime updated_at
   }
@@ -129,16 +136,14 @@ erDiagram
 ## Summary
 
 - `Menu` has many `Day` records, one for each weekday.
-- `Menu.people_count` stores how many people the menu feeds. `Meal.servings`
-  records how many people its stored ingredient quantities serve. Both default
-  to `1`, including records predating the fields. Changing either count does
-  not rewrite ingredient quantities.
-- Shopping lists are calculated from live recipes for each scheduled occurrence
-  using `quantity × people_count ÷ servings`, grouped by ingredient and compatible
-  requirement units. Mixed units use ingredient-specific base-unit equivalences.
-  Below one configured piece/container the list shows the base quantity; at or
-  above that threshold it shows whole units rounded up. It does not deduct pantry stock. There are no shopping-list or checked-item records. Regeneration
-  replaces a week's menu ID, preserving its people count unless overridden.
+- `Menu.people_count` is a positive integer defaulting to 1. `Meal.servings`
+  explicitly records the positive number of people served by its stored quantities;
+  new recipes have no implicit serving count. Changing counts does not rewrite quantities.
+- Shopping lists use `quantity × people_count ÷ servings` for every scheduled
+  occurrence, accumulate before rounding, and do not subtract pantry stock.
+  Pieces always round upward; packages display their canonical need below one
+  configured container and whole counts at/above it. Bulk quantities stay in g/ml.
+  There are no persisted shopping lists or checked-item records.
 - `Day` belongs to a `Menu` and a `Weekday`.
 - `Day` has many `Meal` records through `DailyMeal`.
 - `DailyMeal.position` orders meals within a day: `0` breakfast, `1` lunch, `2` dinner.
@@ -156,20 +161,29 @@ erDiagram
 - `Meal` has many `Ingredient` records through `MealIngredient`.
 - `MealIngredient` stores the quantity, unit, preparation note, and display order.
 - Units are selected from the structured `Unit` catalog instead of free text.
-- An optional `IngredientShoppingProfile` selects the base and shopping units
-  and retains a legacy whole-purchase rounding preference for compatibility. The
-  configured shopping unit sets the threshold for displaying rounded whole units;
-  the legacy `round_up` flag does not override the threshold rule. Each
-  `IngredientUnitEquivalence` expresses one unit in base units and records its
-  source, description, and approximation flag. The base can be grams,
-  milliliters, or pieces. Profiles and equivalences belong to the shared
-  ingredient, not to a recipe or menu. Removing an unused ingredient removes
-  its profile and equivalences; changing profiles never rewrites recipes.
-- Exact `kg → g` and `l → ml` conversions are application rules; household
-  measures, density, piece weights, and package sizes require an explicit
-  ingredient-specific equivalence. Missing conversions preserve quantities
-  and return warnings. Equivalences and their measurement sources are stored
-  directly in the database; no template catalog or name matching is involved.
+- Repeated ingredient rows are permitted in one recipe; quantities accumulate by
+  ingredient ID while row notes and order remain independent.
+- `Unit` stores a fixed standard's dimension and factor to g, ml, or pieces.
+  Culinary volumes use 5 ml teaspoons, 15 ml tablespoons, and 240 ml cups.
+  Package units have no universal factor. Model validation protects the standard.
+- `IngredientMeasurementReference` stores a measured ratio, with at most one
+  density and one piece weight per ingredient. `quantity` is grams;
+  `reference_quantity` is ml for density or whole pieces for piece weight.
+  Ratios use exact rational division during calculation, not a rounded density.
+  Sources, descriptions, and approximation flags document each reference.
+- `IngredientShoppingProfile` independently selects bulk, piece, or package
+  buying. A package stores its content quantity and mass/volume/count unit.
+  It is not a cooking conversion. Deleting a profile retains the ingredient's
+  measurement references; deleting an unused ingredient removes both.
+- Recipe containers store their own content snapshot on `MealIngredient`.
+  Updating a shopping presentation never changes recipe contents. Package rows
+  require contents; ordinary recipe measures reject them.
+- Missing dimension bridges preserve every quantity and mark the ingredient
+  incomplete, with a warning even when only one unresolved measure remains.
+  Preparation notes do not automatically apply cooking or peeling yields.
+- The measurement rebuild removes legacy equivalences, base units, and `round_up`.
+  It clears disposable recipe ingredient rows and installs the standard catalog.
+  Seeds recreate sample recipe rows and documented example references.
 
 ## Constraints
 
@@ -179,14 +193,17 @@ The schema enforces required foreign keys and prevents duplicate relationships:
 - A meal cannot be added twice to the same day.
 - Each preferred weekday can occur only once per meal, with foreign keys to both records.
 - An ingredient name is unique after trimming and lowercasing.
-- An ingredient cannot be added twice to the same meal.
+- Ingredients may repeat within a meal; the meal/ingredient index is nonunique.
 - Meal ingredient units must reference the unit catalog.
 - Weekday names and meal type descriptions are unique.
 - Recipe servings and menu people counts must be non-null positive integers,
   enforced by model validations and SQLite check constraints.
-- Each ingredient has at most one shopping profile. Each profile can have only
-  one equivalence for a given unit. Equivalence factors must be positive at
-  database level; models also reject nonfinite factors and conflicting units.
+- Each ingredient has at most one shopping profile and one reference per kind.
+- Measurement quantities and recipe quantities are positive, at most 1000000000,
+  stored to six decimal places, and must remain positive after storage rounding.
+- Profile modes, reference kinds, unit dimensions, positive factors, and package
+  content field consistency have database constraints. Cross-table compatibility
+  of unit dimensions is validated by models.
 
 ## Shopping categories
 

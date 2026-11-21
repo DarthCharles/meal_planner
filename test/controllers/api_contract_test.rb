@@ -5,8 +5,8 @@ class ApiContractTest < ActionDispatch::IntegrationTest
   setup do
     @breakfast = MealType.find_or_create_by!(description: "breakfast")
     @dinner = MealType.find_or_create_by!(description: "dinner")
-    @unit = Unit.find_or_create_by!(code: "pieza") { |unit| unit.name = "pieces" }
-    @meal = Meal.create!(name: "Avena", description: "Con leche", recipe_url: nil)
+    @unit = Unit.find_or_create_by!(code: "piece") { |unit| unit.name = "pieces" }
+    @meal = Meal.create!(servings: 1, name: "Avena", description: "Con leche", recipe_url: nil)
     @meal.meal_types << @breakfast
   end
 
@@ -26,11 +26,11 @@ class ApiContractTest < ActionDispatch::IntegrationTest
       "preferred_days" => [],
       "ingredients" => [
         { "id" => earlier.id, "ingredient_id" => earlier.ingredient_id,
-          "name" => "Manzana", "quantity" => "1.0", "unit" => "pieza",
-          "preparation_note" => nil, "position" => 0 },
+          "name" => "Manzana", "quantity" => "1.0", "unit" => "piece",
+          "package_quantity" => nil, "package_unit" => nil, "preparation_note" => nil, "position" => 0 },
         { "id" => later.id, "ingredient_id" => later.ingredient_id,
-          "name" => "Plátano", "quantity" => "0.125", "unit" => "pieza",
-          "preparation_note" => "rebanado", "position" => 2 }
+          "name" => "Plátano", "quantity" => "0.125", "unit" => "piece",
+          "package_quantity" => nil, "package_unit" => nil, "preparation_note" => "rebanado", "position" => 2 }
       ]
     }
 
@@ -44,9 +44,9 @@ class ApiContractTest < ActionDispatch::IntegrationTest
   end
 
   test "meal writes accept nested ingredients and replace meal types" do
-    post "/meals", params: {
+    post "/meals", params: { servings: 1,
       name: "Tacos", description: "Con verduras", meal_type_ids: [@breakfast.id],
-      ingredients: [{ name: "  Zanahoria  ", quantity: "0.25", unit: "PIEZA" }]
+      ingredients: [{ name: "  Zanahoria  ", quantity: "0.25", unit: "PIECE" }]
     }, as: :json
     assert_response :ok
     created = response.parsed_body.fetch("data")
@@ -56,7 +56,7 @@ class ApiContractTest < ActionDispatch::IntegrationTest
 
     put "/meals/#{created.fetch('id')}", params: {
       name: "Tacos actualizados", meal_type_ids: [@dinner.id],
-      ingredients: [{ name: "Pepino", quantity: 2, unit: "pieza" }]
+      ingredients: [{ name: "Pepino", quantity: 2, unit: "piece" }]
     }, as: :json
     assert_response :ok
     updated = response.parsed_body.fetch("data")
@@ -79,7 +79,7 @@ class ApiContractTest < ActionDispatch::IntegrationTest
 
   test "invalid meal creates and updates return field errors without saving" do
     assert_no_difference "Meal.count" do
-      post "/meals", params: { name: "", description: "" }, as: :json
+      post "/meals", params: { servings: 1, name: "", description: "" }, as: :json
     end
     assert_response :unprocessable_entity
     assert_equal ["can't be blank"], response.parsed_body.dig("errors", "name")
@@ -135,7 +135,7 @@ class ApiContractTest < ActionDispatch::IntegrationTest
     get "/units", as: :json
     assert_response :ok
     units = response.parsed_body.fetch("data")
-    assert_includes units, { "code" => "pieza", "name" => "pieces" }
+    assert_includes units, { "code" => "piece", "name" => "pieces", "dimension" => "count", "canonical_unit" => "piece", "factor" => "1.0" }
     assert_equal units.map { |unit| unit.fetch("code") }.sort,
       units.map { |unit| unit.fetch("code") }
   end
@@ -152,7 +152,7 @@ class ApiContractTest < ActionDispatch::IntegrationTest
     assert_equal [], day.fetch("meals")
     DailyMeal.create!(day_id: day.fetch("id"), meal: @meal, position: 0)
 
-    second = Meal.create!(name: "Sopa", description: "Verduras")
+    second = Meal.create!(servings: 1, name: "Sopa", description: "Verduras")
     DailyMeal.create!(day_id: day.fetch("id"), meal: second, position: -1)
     get "/menus/#{menu.id}", as: :json
     assert_response :ok

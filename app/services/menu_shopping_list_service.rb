@@ -3,16 +3,17 @@ class MenuShoppingListService
     requirements = {}
     missing = {}
     occurrences = DailyMeal.joins(:day).where(days: { menu_id: menu.id })
-      .includes(meal: { meal_ingredients: [:unit, { ingredient: { shopping_profile: [:base_unit, :shopping_unit, { unit_equivalences: :unit }] } }] })
+      .includes(meal: { meal_ingredients: [:unit, :package_unit,
+        { ingredient: [:measurement_references, { shopping_profile: [:shopping_unit, :package_unit] }] }] })
 
     occurrences.each do |occurrence|
       meal = occurrence.meal
       missing[meal.id] = { id: meal.id, name: meal.name } if meal.meal_ingredients.empty?
       meal.meal_ingredients.each do |row|
-        code, multiplier = Unit.canonical(row.unit.code)
-        quantity = Rational(row.quantity.to_s) * menu.people_count / meal.servings * multiplier
+        quantity, unit = row.requirement
+        quantity *= Rational(menu.people_count, meal.servings)
         entry = requirements[row.ingredient_id] ||= { ingredient: row.ingredient, totals: Hash.new(Rational(0)) }
-        entry[:totals][code] += quantity
+        entry[:totals][unit] += quantity
       end
     end
 
@@ -38,58 +39,58 @@ class MenuShoppingListService
 
   def ingredient_requirements(ingredient, totals)
     profile = ingredient.shopping_profile
-    combined = Hash.new(Rational(0))
-    approximate = {}
-    unresolved = []
-    # Aggregate exact requirements in the ingredient's base unit before choosing
-    # whether a complete configured piece/container has been reached.
+    # Unconfigured ingredients use natural canonical units; no fictional container is inferred.
+    target = profile&.requirement_unit&.canonical_code || %w[g ml piece].find { |code| totals.key?(code) }
+    converter = IngredientMeasurementConverter.new(ingredient)
+    converted = Rational(0)
+    approximate = false
+    unresolved = {}
     totals.each do |unit, quantity|
-      factor = profile&.factor_for(unit)
-      if factor
-        unit = profile.base_unit.code
-        quantity *= factor.first
-        approximate[unit] = true if factor.last
-      elsif profile
-        unresolved << unit
+      result = converter.convert(quantity, from: unit, to: target)
+      if result
+        converted += result.first
+        approximate ||= result.last
+      else
+        unresolved[unit] = quantity
       end
-      combined[unit] += quantity
     end
 
-    items = combined.map do |unit, quantity|
-      estimated = approximate[unit]
-      display_quantity = quantity_string(quantity)
-      if profile && combined.size == 1 && unit == profile.base_unit.code
-        target = profile.shopping_unit.code
-        factor = profile.factor_for(target)
-        if !%w[g kg ml l].include?(target) && factor && quantity >= factor.first
-          display_quantity = (quantity / factor.first).ceil.to_s
-          unit = target
-          # A recipe already expressed in the displayed count needs no estimated
-          # weight conversion; the base-unit factors cancel in that case.
-          estimated = totals.keys == [target] ? false : estimated || factor.last
-        end
+    if unresolved.any?
+      # Preserve all quantities, but do not round or label a partial result as a complete purchase.
+      partials = unresolved.merge(converted.positive? ? { target => converted } : {})
+      items = partials.map do |unit, quantity|
+        item(ingredient, unit, quantity_string(quantity), "incomplete", unit, quantity,
+          approximate: unit == target && approximate, profile: profile)
       end
-      item = {
-        ingredient_id: ingredient.id, name: ingredient.name,
-        shopping_category: ingredient.shopping_category, unit: unit, quantity: display_quantity
-      }
-      item[:approximate] = true if estimated
-      item
+      warning = { ingredient_id: ingredient.id, name: ingredient.name, units: unresolved.keys.sort,
+        target_unit: target, reason: "measurement_reference_missing" }
+      return [items, warning]
     end
-    warning = if combined.size > 1
-      {
-        ingredient_id: ingredient.id, name: ingredient.name,
-        units: profile ? unresolved.sort : combined.keys.sort,
-        target_unit: profile&.base_unit&.code,
-        reason: profile ? "equivalence_missing" : "shopping_profile_missing"
-      }
+
+    unit = target
+    display_quantity = target == "piece" ? converted.ceil.to_s : quantity_string(converted)
+    if profile&.mode == "package"
+      size = Rational(profile.package_quantity.to_s) * profile.package_unit.canonical_factor
+      if converted >= size
+        unit = profile.shopping_unit.code
+        display_quantity = (converted / size).ceil.to_s
+      end
     end
-    [items, warning]
+    status = approximate ? "approximate" : "calculated"
+    [[item(ingredient, unit, display_quantity, status, target, converted, approximate: approximate, profile: profile)], nil]
+  end
+
+  def item(ingredient, unit, quantity, status, required_unit, required_quantity, approximate:, profile:)
+    result = { ingredient_id: ingredient.id, name: ingredient.name,
+      shopping_category: ingredient.shopping_category, unit: unit, quantity: quantity,
+      status: status, required_unit: required_unit, required_quantity: quantity_string(required_quantity) }
+    result[:approximate] = true if approximate
+    result[:presentation] = profile.configuration_json if profile
+    result
   end
 
   def quantity_string(total)
     rounded = (BigDecimal(total.numerator.to_s) / BigDecimal(total.denominator.to_s)).round(3, :half_up)
-    # Keep a positive requirement visible even when it is smaller than display precision.
     [rounded, BigDecimal("0.001")].max.to_s("F")
   end
 end

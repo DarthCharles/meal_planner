@@ -1,46 +1,25 @@
 class IngredientShoppingProfileSaveService
   def call(ingredient:, attributes:)
+    attributes = attributes.symbolize_keys
     profile = ingredient.shopping_profile || ingredient.build_shopping_profile
-    attributes = attributes.deep_symbolize_keys
-    IngredientShoppingProfile.transaction do
-      profile.unit_equivalences.destroy_all if profile.persisted?
-      profile.assign_attributes(
-        base_unit: unit_for(attributes[:base_unit]),
-        shopping_unit: unit_for(attributes[:shopping_unit]),
-        round_up: boolean(attributes.fetch(:round_up, false))
-      )
-      rows = attributes.fetch(:equivalences, [])
-      unless rows.is_a?(Array) && rows.all? { |row| row.is_a?(Hash) }
-        profile.errors.add(:unit_equivalences, :invalid_array)
-        raise ActiveRecord::RecordInvalid.new(profile)
-      end
-      rows.each do |row|
-        profile.unit_equivalences.build(
-          unit: unit_for(row[:unit]), quantity: scalar(row[:quantity]),
-          source: text(row[:source]), description: text(row[:description]),
-          approximate: boolean(row.fetch(:approximate, false))
-        )
-      end
-      profile.save!
-      profile
+    profile.assign_attributes(
+      mode: attributes[:mode].is_a?(String) ? attributes[:mode] : nil,
+      shopping_unit: unit_for(attributes[:shopping_unit]),
+      package_quantity: attributes[:package_quantity].nil? ? nil : MeasurementQuantity.parse(attributes[:package_quantity]),
+      package_unit: unit_for(attributes[:package_unit])
+    )
+    # Do not silently discard malformed or unknown contents on non-package profiles.
+    if (!attributes[:package_quantity].nil? && profile.package_quantity.nil?) || (!attributes[:package_unit].nil? && profile.package_unit.nil?)
+      profile.errors.add(:package_quantity, :invalid_quantity)
+      raise ActiveRecord::RecordInvalid.new(profile)
     end
+    profile.save!
+    profile
   end
 
   private
 
   def unit_for(code)
     Unit.find_by(code: code) if code.is_a?(String)
-  end
-
-  def text(value)
-    value if value.is_a?(String)
-  end
-
-  def boolean(value)
-    value if value == true || value == false
-  end
-
-  def scalar(value)
-    value if value.is_a?(String) || value.is_a?(Numeric)
   end
 end

@@ -5,8 +5,11 @@ class MealsControllerTest < ActionDispatch::IntegrationTest
     Meal::WEEKDAY_NAMES.each { |name| Weekday.find_or_create_by!(name: name) }
   end
 
-  test "servings default to one and omitted updates preserve the saved value" do
+  test "creation requires servings and omitted updates preserve the saved value" do
     post "/meals", params: { name: "Soup", description: "Warm" }, as: :json
+    assert_response :unprocessable_entity
+    assert response.parsed_body.dig("errors", "servings").present?
+    post "/meals", params: { servings: 1, name: "Soup", description: "Warm" }, as: :json
     assert_response :ok
     id = response.parsed_body.fetch("data").fetch("id")
     assert_equal 1, response.parsed_body.dig("data", "servings")
@@ -35,7 +38,7 @@ class MealsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creates preferences and returns them in weekday order" do
-    post "/meals", params: { name: "Pizza", description: "Cheesy", preferred_days: %w[sunday friday saturday friday] }, as: :json
+    post "/meals", params: { servings: 1, name: "Pizza", description: "Cheesy", preferred_days: %w[sunday friday saturday friday] }, as: :json
     assert_response :ok
     meal = Meal.find(response.parsed_body["data"]["id"])
     assert_equal %w[friday saturday sunday], meal.reload.preferred_days
@@ -44,7 +47,7 @@ class MealsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "omitted preferences default to any day and updates preserve or clear them" do
-    post "/meals", params: { name: "Pizza", description: "Cheesy" }, as: :json
+    post "/meals", params: { servings: 1, name: "Pizza", description: "Cheesy" }, as: :json
     assert_response :ok
     id = response.parsed_body["data"]["id"]
     assert_equal [], response.parsed_body["data"]["preferred_days"]
@@ -59,7 +62,7 @@ class MealsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid preferences return 422 without changing the meal" do
-    meal = Meal.create!(name: "Pizza", description: "Cheesy", preferred_days: %w[friday])
+    meal = Meal.create!(servings: 1, name: "Pizza", description: "Cheesy", preferred_days: %w[friday])
     [%w[funday], [1], "friday", nil, { friday: true }, [["friday"]]].each do |invalid|
       patch "/meals/#{meal.id}", params: { name: "Changed", preferred_days: invalid }, as: :json
       assert_response :unprocessable_entity

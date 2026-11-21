@@ -1,47 +1,38 @@
 class IngredientShoppingProfile < ApplicationRecord
   belongs_to :ingredient
-  belongs_to :base_unit, class_name: "Unit"
   belongs_to :shopping_unit, class_name: "Unit"
-  has_many :unit_equivalences, class_name: "IngredientUnitEquivalence", dependent: :destroy,
-    inverse_of: :ingredient_shopping_profile, autosave: true
+  belongs_to :package_unit, class_name: "Unit", optional: true
 
   validates :ingredient_id, uniqueness: true
-  validates :round_up, inclusion: { in: [true, false] }
-  validates_associated :unit_equivalences
+  validates :mode, inclusion: { in: %w[bulk piece package] }
+  validates :package_quantity, positive_quantity: true, if: -> { mode == "package" }
   validate :valid_units
 
-  # Returns [base quantity per unit, approximate], or nil if no conversion exists.
-  def factor_for(code)
-    canonical, multiplier = Unit.canonical(code)
-    return [multiplier, false] if canonical == base_unit&.code
-
-    equivalence = unit_equivalences.find { |row| row.unit&.code == canonical }
-    return unless equivalence&.usable_quantity?
-
-    [Rational(equivalence.quantity.to_s) * multiplier, equivalence.approximate]
+  def requirement_unit
+    mode == "package" ? package_unit : shopping_unit
   end
 
   def configuration_json
-    {
-      ingredient_id: ingredient_id, base_unit: base_unit.code,
-      shopping_unit: shopping_unit.code, round_up: round_up,
-      equivalences: unit_equivalences.sort_by { |row| row.unit.code }.map do |row|
-        { unit: row.unit.code, quantity: row.quantity, source: row.source,
-          description: row.description, approximate: row.approximate }
-      end
-    }
+    { ingredient_id: ingredient_id, mode: mode, shopping_unit: shopping_unit.code,
+      package_quantity: package_quantity, package_unit: package_unit&.code }
   end
 
   private
 
   def valid_units
-    errors.add(:base_unit, :invalid_base_unit) if base_unit && !%w[g ml pieza].include?(base_unit.code)
-    return if unit_equivalences.any? { |row| !row.valid? }
-
-    codes = unit_equivalences.map { |row| row.unit.code }
-    errors.add(:unit_equivalences, :duplicate_units) if codes.uniq.size != codes.size
-    if base_unit && shopping_unit && !factor_for(shopping_unit.code)
-      errors.add(:shopping_unit, :missing_equivalence)
+    if shopping_unit
+      valid = case mode
+      when "bulk" then %w[g kg ml l].include?(shopping_unit.code)
+      when "piece" then shopping_unit.code == "piece"
+      when "package" then shopping_unit.package?
+      else false
+      end
+      errors.add(:shopping_unit, :invalid) unless valid
+    end
+    if mode == "package"
+      errors.add(:package_unit, :invalid) unless package_unit && %w[g kg ml l piece].include?(package_unit.code)
+    elsif package_unit || package_quantity
+      errors.add(:package_quantity, :unexpected_contents)
     end
   end
 end

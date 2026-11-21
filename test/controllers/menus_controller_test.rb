@@ -85,7 +85,7 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "menu_id" => menu.id, "people_count" => 4,
       "from" => menu.from.as_json, "to" => menu.to.as_json,
       "categories" => ShoppingCategory.catalog.as_json,
-      "items" => [{ "ingredient_id" => row.ingredient_id, "name" => "Rice", "shopping_category" => "uncategorized", "unit" => "g", "quantity" => "200.0" }],
+      "items" => [{ "ingredient_id" => row.ingredient_id, "name" => "Rice", "shopping_category" => "uncategorized", "unit" => "g", "quantity" => "200.0", "status" => "calculated", "required_unit" => "g", "required_quantity" => "200.0" }],
       "meals_without_ingredients" => [], "conversion_warnings" => [] }, response.parsed_body.fetch("data"))
 
     row.update!(quantity: 150)
@@ -120,7 +120,7 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     %w[breakfast lunch dinner].each do |type_name|
       type = MealType.find_by!(description: type_name)
       7.times do |i|
-        meal = Meal.create!(name: "#{type_name}_#{i}_#{SecureRandom.hex(2)}", description: "Desc", recipe_url: "")
+        meal = Meal.create!(servings: 1, name: "#{type_name}_#{i}_#{SecureRandom.hex(2)}", description: "Desc", recipe_url: "")
         meal.meal_types << type unless meal.meal_types.include?(type)
       end
     end

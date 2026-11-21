@@ -1,8 +1,8 @@
 require "test_helper"
 
 class PortionCountsTest < ActiveSupport::TestCase
-  test "counts default to one and validate raw values before integer coercion" do
-    records = { Meal.new(name: "Soup", description: "Warm") => :servings,
+  test "counts validate raw values before integer coercion" do
+    records = { Meal.new(servings: 1, name: "Soup", description: "Warm") => :servings,
       Menu.new(from: Time.utc(2026, 11, 16), to: Time.utc(2026, 11, 22)) => :people_count }
     records.each do |record, attribute|
       assert_equal 1, record.public_send(attribute)
@@ -20,7 +20,7 @@ class PortionCountsTest < ActiveSupport::TestCase
   end
 
   test "database constraints reject nonpositive and null counts when validations are bypassed" do
-    meal = Meal.create!(name: "Soup", description: "Warm")
+    meal = Meal.create!(servings: 1, name: "Soup", description: "Warm")
     menu = Menu.create!(from: Time.utc(2026, 11, 16), to: Time.utc(2026, 11, 22))
     { meal => :servings, menu => :people_count }.each do |record, attribute|
       [0, -1, nil].each do |invalid|

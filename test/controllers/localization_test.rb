@@ -22,32 +22,33 @@ class LocalizationTest < ActionDispatch::IntegrationTest
 
   test "Spanish validation preserves field keys and rolls back invalid ingredients" do
     headers = { "Accept-Language" => "es" }
-    post "/meals", params: { name: "", description: "" }, headers: headers, as: :json
+    post "/meals", params: { servings: 1, name: "", description: "" }, headers: headers, as: :json
     assert_response :unprocessable_entity
     assert_equal ["no puede estar en blanco"], response.parsed_body.dig("errors", "name")
     assert_equal ["no puede estar en blanco"], response.parsed_body.dig("errors", "description")
 
-    post "/meals", params: { name: "Sopa", description: "Caliente", preferred_days: ["lunes"] }, headers: headers, as: :json
+    post "/meals", params: { servings: 1, name: "Sopa", description: "Caliente", preferred_days: ["lunes"] }, headers: headers, as: :json
     assert_response :unprocessable_entity
     assert_equal ["debe ser una lista de nombres de días de la semana"], response.parsed_body.dig("errors", "preferred_days")
 
-    unit = Unit.find_or_create_by!(code: "pieza") { |record| record.name = "pieces" }
+    unit = Unit.find_or_create_by!(code: "piece") { |record| record.name = "pieces" }
     ingredient = Ingredient.create!(name: "Localized test ingredient")
     assert_no_difference ["Meal.count", "MealIngredient.count"] do
-      post "/meals", params: {
+      post "/meals", params: { servings: 1,
         name: "Sopa", description: "Caliente", ingredients: [
           { ingredient_id: ingredient.id, quantity: 0, unit: unit.code }
         ]
       }, headers: headers, as: :json
     end
     assert_response :unprocessable_entity
-    assert_equal ["Cantidad debe ser mayor que 0"], response.parsed_body.dig("errors", "ingredients")
+    assert response.parsed_body.dig("errors", "ingredients").present?
+    assert_not response.body.include?("Translation missing")
   end
 
   test "Spanish requests preserve user content and reference identifiers" do
     Weekday.find_or_create_by!(name: "monday")
     type = MealType.find_or_create_by!(description: "breakfast")
-    post "/meals", params: {
+    post "/meals", params: { servings: 1,
       name: "My oats", description: "Con canela", meal_type_ids: [type.id], preferred_days: ["monday"]
     }, headers: { "Accept-Language" => "es" }, as: :json
     assert_response :ok

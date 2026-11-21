@@ -18,9 +18,9 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
   test "selects existing ingredients by id and creates new names in the same save" do
     egg = Ingredient.create!(name: "Egg")
     assert_difference "Ingredient.count", 1 do
-      post "/meals", params: {
+      post "/meals", params: { servings: 1,
         name: "Breakfast", description: "Egg and potato",
-        ingredients: [{ ingredient_id: egg.id, quantity: 2, unit: "pieza" }, { name: "Potato", quantity: 1, unit: "g" }]
+        ingredients: [{ ingredient_id: egg.id, quantity: 2, unit: "piece" }, { name: "Potato", quantity: 1, unit: "g" }]
       }, as: :json
     end
     assert_response :ok
@@ -30,9 +30,9 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
   test "reuses existing ingredients for case and whitespace variants" do
     egg = Ingredient.create!(name: "Egg")
     assert_no_difference "Ingredient.count" do
-      post "/meals", params: {
+      post "/meals", params: { servings: 1,
         name: "Breakfast", description: "Egg",
-        ingredients: [{ name: "  eGG  ", quantity: 2, unit: "pieza" }]
+        ingredients: [{ name: "  eGG  ", quantity: 2, unit: "piece" }]
       }, as: :json
     end
     assert_response :ok
@@ -41,18 +41,19 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
 
   test "invalid ingredient rows return field errors and roll back the entire update" do
     egg = Ingredient.create!(name: "Egg")
-    meal = Meal.create!(name: "Breakfast", description: "Original", preferred_days: ["monday"])
+    meal = Meal.create!(servings: 1, name: "Breakfast", description: "Original", preferred_days: ["monday"])
     breakfast = MealType.create!(description: "breakfast")
     dinner = MealType.create!(description: "dinner")
     meal.meal_types = [breakfast]
-    original = meal.meal_ingredients.create!(ingredient: egg, quantity: 2, unit: Unit.find_by!(code: "pieza"))
+    original = meal.meal_ingredients.create!(ingredient: egg, quantity: 2, unit: Unit.find_by!(code: "piece"))
     invalid_rows = [
       { ingredient_id: -1, quantity: 1, unit: "g" },
       { ingredient_id: egg.id, name: "Egg", quantity: 1, unit: "g" },
       { name: " ", quantity: 1, unit: "g" },
       { ingredient_id: egg.id, quantity: 0, unit: "g" },
       { ingredient_id: egg.id, quantity: 1, unit: "unknown" },
-      { ingredient_id: egg.id, quantity: 1, unit: "g" }
+      { ingredient_id: egg.id, quantity: 1, unit: "can" },
+      { ingredient_id: egg.id, quantity: 1, unit: "g", package_quantity: [] }
     ]
     invalid_rows.each do |row|
       assert_no_difference ["Ingredient.count", "MealIngredient.count"] do
@@ -76,7 +77,7 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
 
   test "failed creation leaves neither a meal nor draft ingredients" do
     assert_no_difference ["Meal.count", "Ingredient.count"] do
-      post "/meals", params: {
+      post "/meals", params: { servings: 1,
         name: "Breakfast", description: "Invalid recipe",
         ingredients: [{ name: "New draft", quantity: 1, unit: "g" }, { name: "Invalid", quantity: -1, unit: "g" }]
       }, as: :json
@@ -85,8 +86,8 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "an empty ingredient array clears the recipe" do
-    meal = Meal.create!(name: "Breakfast", description: "Egg")
-    meal.meal_ingredients.create!(ingredient: Ingredient.create!(name: "Egg"), quantity: 2, unit: Unit.find_by!(code: "pieza"))
+    meal = Meal.create!(servings: 1, name: "Breakfast", description: "Egg")
+    meal.meal_ingredients.create!(ingredient: Ingredient.create!(name: "Egg"), quantity: 2, unit: Unit.find_by!(code: "piece"))
     put "/meals/#{meal.id}", params: { ingredients: [] }, as: :json
     assert_response :ok
     assert_empty meal.reload.meal_ingredients
@@ -94,7 +95,7 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
 
   test "rejects non-array ingredients" do
     [nil, "Egg", { name: "Egg" }, ["Egg"]].each do |ingredients|
-      post "/meals", params: { name: "Breakfast", description: "Egg", ingredients: ingredients }, as: :json
+      post "/meals", params: { servings: 1, name: "Breakfast", description: "Egg", ingredients: ingredients }, as: :json
       assert_response :unprocessable_entity
       assert response.parsed_body.dig("errors", "ingredients").present?
     end

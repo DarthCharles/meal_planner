@@ -1,6 +1,7 @@
 class Ingredient < ApplicationRecord
   has_many :meal_ingredients, dependent: :restrict_with_exception
-  has_many :meals, through: :meal_ingredients
+  has_many :meals, -> { distinct }, through: :meal_ingredients
+  has_many :measurement_references, class_name: "IngredientMeasurementReference", dependent: :destroy
   has_one :shopping_profile, class_name: "IngredientShoppingProfile", dependent: :destroy
 
   before_validation :normalize_name

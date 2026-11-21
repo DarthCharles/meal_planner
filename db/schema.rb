@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_21_122000) do
   create_table "daily_meals", id: :integer, default: nil, force: :cascade do |t|
     t.integer "day_id", null: false
     t.integer "meal_id", null: false
@@ -32,31 +32,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
     t.index ["weekday_id"], name: "index_days_on_weekday_id"
   end
 
-  create_table "ingredient_shopping_profiles", force: :cascade do |t|
+  create_table "ingredient_measurement_references", force: :cascade do |t|
     t.integer "ingredient_id", null: false
-    t.integer "base_unit_id", null: false
-    t.integer "shopping_unit_id", null: false
-    t.boolean "round_up", default: false, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["base_unit_id"], name: "index_ingredient_shopping_profiles_on_base_unit_id"
-    t.index ["ingredient_id"], name: "index_ingredient_shopping_profiles_on_ingredient_id", unique: true
-    t.index ["shopping_unit_id"], name: "index_ingredient_shopping_profiles_on_shopping_unit_id"
-  end
-
-  create_table "ingredient_unit_equivalences", force: :cascade do |t|
-    t.integer "ingredient_shopping_profile_id", null: false
-    t.integer "unit_id", null: false
+    t.string "kind", null: false
     t.decimal "quantity", precision: 18, scale: 6, null: false
     t.string "source", null: false
     t.string "description", null: false
-    t.boolean "approximate", default: false, null: false
+    t.boolean "approximate", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["ingredient_shopping_profile_id", "unit_id"], name: "index_equivalences_on_profile_and_unit", unique: true
-    t.index ["ingredient_shopping_profile_id"], name: "index_equivalences_on_shopping_profile"
-    t.index ["unit_id"], name: "index_ingredient_unit_equivalences_on_unit_id"
-    t.check_constraint "quantity > 0", name: "equivalence_positive_quantity"
+    t.decimal "reference_quantity", precision: 18, scale: 6, default: "1.0", null: false
+    t.index ["ingredient_id", "kind"], name: "index_measurement_references_on_ingredient_and_kind", unique: true
+    t.index ["ingredient_id"], name: "index_ingredient_measurement_references_on_ingredient_id"
+    t.check_constraint "kind IN ('density', 'piece_weight')", name: "measurement_references_valid_kind"
+    t.check_constraint "quantity > 0 AND quantity <= 1000000000", name: "measurement_references_positive_quantity"
+    t.check_constraint "reference_quantity > 0 AND reference_quantity <= 1000000000", name: "measurement_references_positive_basis"
+  end
+
+  create_table "ingredient_shopping_profiles", force: :cascade do |t|
+    t.integer "ingredient_id", null: false
+    t.string "mode", null: false
+    t.integer "shopping_unit_id", null: false
+    t.decimal "package_quantity", precision: 18, scale: 6
+    t.integer "package_unit_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ingredient_id"], name: "index_ingredient_shopping_profiles_on_ingredient_id", unique: true
+    t.index ["package_unit_id"], name: "index_ingredient_shopping_profiles_on_package_unit_id"
+    t.index ["shopping_unit_id"], name: "index_ingredient_shopping_profiles_on_shopping_unit_id"
+    t.check_constraint "(mode = 'package' AND package_quantity IS NOT NULL AND package_quantity > 0 AND package_quantity <= 1000000000 AND package_unit_id IS NOT NULL) OR (mode <> 'package' AND package_quantity IS NULL AND package_unit_id IS NULL)", name: "shopping_profiles_valid_contents"
+    t.check_constraint "mode IN ('bulk', 'piece', 'package')", name: "shopping_profiles_valid_mode"
   end
 
   create_table "ingredients", force: :cascade do |t|
@@ -69,20 +74,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
     t.check_constraint "shopping_category IN ('produce', 'meat', 'deli', 'dairy_eggs', 'bakery_tortillas', 'pantry', 'frozen', 'uncategorized')", name: "ingredients_valid_shopping_category"
   end
 
-  create_table "meal_ingredients", id: :integer, default: nil, force: :cascade do |t|
+  create_table "meal_ingredients", force: :cascade do |t|
     t.integer "meal_id", null: false
     t.integer "ingredient_id", null: false
-    t.decimal "quantity", precision: 12, scale: 3, null: false
+    t.decimal "quantity", precision: 18, scale: 6, null: false
     t.string "preparation_note"
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "unit_id", null: false
+    t.decimal "package_quantity", precision: 18, scale: 6
+    t.integer "package_unit_id"
     t.index ["ingredient_id"], name: "index_meal_ingredients_on_ingredient_id"
-    t.index ["meal_id", "ingredient_id"], name: "index_meal_ingredients_on_meal_id_and_ingredient_id", unique: true
+    t.index ["meal_id", "ingredient_id"], name: "index_meal_ingredients_on_meal_id_and_ingredient_id"
     t.index ["meal_id", "position"], name: "index_meal_ingredients_on_meal_id_and_position"
     t.index ["meal_id"], name: "index_meal_ingredients_on_meal_id"
+    t.index ["package_unit_id"], name: "index_meal_ingredients_on_package_unit_id"
     t.index ["unit_id"], name: "index_meal_ingredients_on_unit_id"
+    t.check_constraint "(package_quantity IS NULL AND package_unit_id IS NULL) OR (package_quantity IS NOT NULL AND package_quantity > 0 AND package_quantity <= 1000000000 AND package_unit_id IS NOT NULL)", name: "meal_ingredients_valid_contents"
+    t.check_constraint "quantity > 0 AND quantity <= 1000000000", name: "meal_ingredients_positive_quantity"
   end
 
   create_table "meal_meal_types", force: :cascade do |t|
@@ -116,7 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
     t.string "description", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "servings", default: 1, null: false
+    t.integer "servings", null: false
     t.check_constraint "servings > 0 AND typeof(servings) = 'integer'", name: "meals_positive_servings"
   end
 
@@ -135,7 +145,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
     t.string "name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "dimension", null: false
+    t.decimal "factor", precision: 18, scale: 6
     t.index ["code"], name: "index_units_on_code", unique: true
+    t.check_constraint "(dimension = 'package' AND factor IS NULL) OR (dimension <> 'package' AND factor IS NOT NULL AND factor > 0)", name: "units_valid_factor"
+    t.check_constraint "dimension IN ('mass', 'volume', 'count', 'package')", name: "units_valid_dimension"
   end
 
   create_table "weekdays", force: :cascade do |t|
@@ -149,14 +163,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
   add_foreign_key "daily_meals", "meals"
   add_foreign_key "days", "menus"
   add_foreign_key "days", "weekdays"
+  add_foreign_key "ingredient_measurement_references", "ingredients"
   add_foreign_key "ingredient_shopping_profiles", "ingredients"
-  add_foreign_key "ingredient_shopping_profiles", "units", column: "base_unit_id"
+  add_foreign_key "ingredient_shopping_profiles", "units", column: "package_unit_id"
   add_foreign_key "ingredient_shopping_profiles", "units", column: "shopping_unit_id"
-  add_foreign_key "ingredient_unit_equivalences", "ingredient_shopping_profiles"
-  add_foreign_key "ingredient_unit_equivalences", "units"
   add_foreign_key "meal_ingredients", "ingredients"
   add_foreign_key "meal_ingredients", "meals"
   add_foreign_key "meal_ingredients", "units"
+  add_foreign_key "meal_ingredients", "units", column: "package_unit_id"
   add_foreign_key "meal_meal_types", "meal_types"
   add_foreign_key "meal_meal_types", "meals"
   add_foreign_key "meal_preferred_days", "meals"
