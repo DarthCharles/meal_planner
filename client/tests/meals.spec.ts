@@ -159,7 +159,11 @@ test(
     for (const label of ["Ingredient name", "Quantity", "Unit", "Preparation note"]) {
       const field = page.getByLabel(label, { exact: true });
       await expect(field).toBeVisible();
+      await expect(dialog.locator("label").filter({ hasText: label })).toBeVisible();
       const bounds = await field.boundingBox();
+      expect(bounds!.height, `${label} should remain a usable touch target`).toBeGreaterThanOrEqual(
+        44,
+      );
       expect(bounds!.width, `${label} should have room for its value`).toBeGreaterThanOrEqual(60);
       if (label === "Ingredient name" || label === "Preparation note") {
         expect(bounds!.width, `${label} should have room for recipe text`).toBeGreaterThanOrEqual(
@@ -167,6 +171,12 @@ test(
         );
       }
     }
+    const quantityBounds = await page.getByLabel("Quantity", { exact: true }).boundingBox();
+    const unitBounds = await page.getByLabel("Unit", { exact: true }).boundingBox();
+    const noteBounds = await page.getByLabel("Preparation note", { exact: true }).boundingBox();
+    expect(Math.abs(quantityBounds!.y - unitBounds!.y)).toBeLessThanOrEqual(1);
+    expect(noteBounds!.y).toBeGreaterThanOrEqual(quantityBounds!.y + quantityBounds!.height);
+    expect(noteBounds!.width).toBeGreaterThan(quantityBounds!.width + unitBounds!.width);
     const removeBounds = await dialog
       .getByRole("button", { name: "Remove Potato", exact: true })
       .boundingBox();

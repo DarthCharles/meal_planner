@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import {
   Button,
@@ -30,18 +30,27 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
   return (
     <fieldset
       aria-labelledby="meal-ingredients-label"
-      className="grid min-w-0 gap-3 border-t border-border pt-6 text-xs font-bold text-foreground"
+      className="grid min-w-0 gap-4 border-t border-border pt-6 text-xs text-foreground"
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <span id="meal-ingredients-label">
-          {t("common.ingredients")}{" "}
-          <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
-        </span>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="grid min-w-0 flex-1 basis-48 gap-1">
+          <span id="meal-ingredients-label" className="font-bold">
+            {t("common.ingredients")}{" "}
+            <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
+          </span>
+          <p className="m-0 text-xs font-normal text-muted-foreground">
+            {t(
+              fields.length === 0
+                ? "meals.ingredient_manager.ingredient_help"
+                : "meals.ingredient_manager.choose_ingredient_help",
+            )}
+          </p>
+        </div>
         <Button
           type="button"
           variant="link"
           size="sm"
-          className="px-0 text-xs"
+          className="min-h-11 whitespace-normal px-0 text-left text-xs"
           onClick={() =>
             append(
               { name: "", quantity: "", unit: "", preparation_note: "" },
@@ -52,16 +61,6 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
           {t("meals.ingredient_manager.add_ingredient")}
         </Button>
       </div>
-      {fields.length === 0 && (
-        <p className="m-0 rounded-[10px] border border-dashed border-border p-3 text-xs font-normal text-muted-foreground">
-          {t("meals.ingredient_manager.ingredient_help")}
-        </p>
-      )}
-      {fields.length > 0 && (
-        <p className="m-0 text-xs font-normal text-muted-foreground">
-          {t("meals.ingredient_manager.choose_ingredient_help")}
-        </p>
-      )}
       {error && (
         <p role="alert" className="m-0 text-xs font-normal text-destructive">
           {t("meals.ingredient_manager.load_ingredients_error")}{" "}
@@ -112,10 +111,16 @@ function IngredientRow({
     control,
     name: `ingredients.${index}.ingredient_id`,
   });
+  const fieldId = useId();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-center gap-2 border-t border-border pt-4 @min-[26rem]:grid-cols-[5rem_6rem_minmax(0,1fr)_2.75rem]">
-      <div ref={setContainer} className="col-span-2 min-w-0 @min-[26rem]:col-span-3">
+    <div
+      className={`grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-end gap-3 @min-[40rem]:grid-cols-[minmax(0,1fr)_6rem_8rem_2.75rem] ${index > 0 ? "pt-4" : ""}`}
+    >
+      <div ref={setContainer} className="col-span-2 grid min-w-0 gap-2 @min-[40rem]:col-span-1">
+        <label htmlFor={`${fieldId}-name`} className="font-medium">
+          {t("meals.ingredient_manager.ingredient_name")}
+        </label>
         <Controller
           control={control}
           name={`ingredients.${index}.name`}
@@ -152,12 +157,13 @@ function IngredientRow({
               }}
             >
               <ComboboxInput
+                id={`${fieldId}-name`}
                 ref={field.ref}
                 onBlur={field.onBlur}
                 onChange={(event) =>
                   setValue(`ingredients.${index}.uncommitted`, !!event.target.value.trim())
                 }
-                className="h-auto min-w-0 rounded-[10px] bg-background px-2 py-[9px] text-[13px] md:text-[13px] font-normal shadow-none"
+                className="h-11 min-w-0 rounded-[10px] bg-background px-3 text-sm md:text-sm font-normal shadow-none"
                 aria-label={t("meals.ingredient_manager.ingredient_name")}
                 aria-invalid={!!errors.ingredients?.[index]?.name}
                 aria-describedby={errors.ingredients?.[index]?.name ? "meal-form-error" : undefined}
@@ -182,61 +188,79 @@ function IngredientRow({
           )}
         />
       </div>
-      <Input
-        aria-label={t("meals.ingredient_manager.quantity")}
-        className="h-auto min-w-0 rounded-[10px] bg-background px-2 py-[9px] text-[13px] md:text-[13px] font-normal shadow-none text-center"
-        type="number"
-        min="0.001"
-        step="any"
-        {...register(`ingredients.${index}.quantity`, {
-          validate: (value, values) =>
-            !values.ingredients[index]?.name.trim() ||
-            (Number.isFinite(Number(value)) && Number(value) >= 0.001),
-        })}
-        aria-invalid={!!errors.ingredients?.[index]?.quantity}
-        aria-describedby={errors.ingredients?.[index]?.quantity ? "meal-form-error" : undefined}
-        placeholder={t("meals.ingredient_manager.quantity_short")}
-      />
-      <Controller
-        control={control}
-        name={`ingredients.${index}.unit`}
-        rules={{
-          validate: (value, values) => !values.ingredients[index]?.name.trim() || !!value.trim(),
-        }}
-        render={({ field }) => (
-          <Select value={field.value} onValueChange={field.onChange}>
-            <SelectTrigger
-              ref={field.ref}
-              onBlur={field.onBlur}
-              type="button"
-              aria-label={t("meals.ingredient_manager.unit")}
-              className="h-auto min-w-0 w-full gap-1 rounded-[10px] bg-background px-2 py-[9px] text-[13px] font-normal shadow-none"
-              aria-invalid={!!errors.ingredients?.[index]?.unit}
-              aria-describedby={errors.ingredients?.[index]?.unit ? "meal-form-error" : undefined}
-            >
-              <SelectValue placeholder={t("meals.ingredient_manager.unit")} />
-            </SelectTrigger>
-            <SelectContent container={container}>
-              {units.map((unit) => (
-                <SelectItem key={unit.code} value={unit.code}>
-                  {unitLabel(unit.code)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      />
-      <Input
-        className="col-span-2 h-auto min-w-0 rounded-[10px] bg-background px-2 py-[9px] text-[13px] md:text-[13px] font-normal shadow-none @min-[26rem]:col-span-1"
-        aria-label={t("meals.ingredient_manager.preparation_note")}
-        {...register(`ingredients.${index}.preparation_note`)}
-        placeholder={t("meals.ingredient_manager.note_optional")}
-      />
+      <div className="grid min-w-0 gap-2">
+        <label htmlFor={`${fieldId}-quantity`} className="font-medium">
+          {t("meals.ingredient_manager.quantity")}
+        </label>
+        <Input
+          id={`${fieldId}-quantity`}
+          aria-label={t("meals.ingredient_manager.quantity")}
+          className="h-11 min-w-0 rounded-[10px] bg-background px-3 text-sm md:text-sm font-normal shadow-none tabular-nums"
+          type="number"
+          min="0.001"
+          step="any"
+          {...register(`ingredients.${index}.quantity`, {
+            validate: (value, values) =>
+              !values.ingredients[index]?.name.trim() ||
+              (Number.isFinite(Number(value)) && Number(value) >= 0.001),
+          })}
+          aria-invalid={!!errors.ingredients?.[index]?.quantity}
+          aria-describedby={errors.ingredients?.[index]?.quantity ? "meal-form-error" : undefined}
+          placeholder={t("meals.ingredient_manager.quantity_short")}
+        />
+      </div>
+      <div className="col-span-2 grid min-w-0 gap-2 @min-[40rem]:col-span-1">
+        <label htmlFor={`${fieldId}-unit`} className="font-medium">
+          {t("meals.ingredient_manager.unit")}
+        </label>
+        <Controller
+          control={control}
+          name={`ingredients.${index}.unit`}
+          rules={{
+            validate: (value, values) => !values.ingredients[index]?.name.trim() || !!value.trim(),
+          }}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger
+                id={`${fieldId}-unit`}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                type="button"
+                aria-label={t("meals.ingredient_manager.unit")}
+                className="h-11 min-w-0 w-full gap-2 rounded-[10px] bg-background px-3 text-sm font-normal shadow-none"
+                aria-invalid={!!errors.ingredients?.[index]?.unit}
+                aria-describedby={errors.ingredients?.[index]?.unit ? "meal-form-error" : undefined}
+              >
+                <SelectValue placeholder={t("meals.ingredient_manager.unit")} />
+              </SelectTrigger>
+              <SelectContent container={container}>
+                {units.map((unit) => (
+                  <SelectItem key={unit.code} value={unit.code}>
+                    {unitLabel(unit.code)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
+      <div className="col-span-3 grid min-w-0 gap-2">
+        <label htmlFor={`${fieldId}-note`} className="font-normal text-muted-foreground">
+          {t("meals.ingredient_manager.preparation_note")} {t("common.optional")}
+        </label>
+        <Input
+          id={`${fieldId}-note`}
+          className="h-11 min-w-0 rounded-[10px] bg-background px-3 text-sm md:text-sm font-normal shadow-none"
+          aria-label={t("meals.ingredient_manager.preparation_note")}
+          {...register(`ingredients.${index}.preparation_note`)}
+          placeholder={t("meals.ingredient_manager.note_optional")}
+        />
+      </div>
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        className="col-start-3 row-start-1 size-11 rounded-full @min-[26rem]:col-start-4"
+        className="col-start-3 row-start-1 size-11 rounded-full text-muted-foreground hover:text-foreground @min-[40rem]:col-start-4"
         onClick={onRemove}
         aria-label={t("meals.ingredient_manager.remove_ingredient", {
           name: name || t("meals.ingredient_manager.ingredient"),

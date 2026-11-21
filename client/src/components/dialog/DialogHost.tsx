@@ -90,8 +90,8 @@ export function DialogHost({
       }}
     >
       <section className="max-h-[calc(100dvh-30px)] w-full max-w-[520px] overflow-y-auto overscroll-contain rounded-[24px_24px_15px_15px] bg-card p-[25px] shadow-lg desktop:rounded-3xl">
-        <div className="mb-[22px] flex items-start justify-between">
-          <div>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
             {eyebrowText && (
               <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
                 {eyebrowText}
@@ -104,7 +104,7 @@ export function DialogHost({
               className={
                 hideTitle
                   ? "sr-only"
-                  : "mb-0 font-display text-[27px] font-semibold tracking-[-.04em] outline-none"
+                  : "mb-0 break-words font-display text-[27px] font-semibold leading-tight tracking-[-.04em] outline-none"
               }
             >
               {titleText}

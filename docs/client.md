@@ -480,11 +480,19 @@ without leaving the editor.
 `useFormContext` and `useFieldArray`. Rows use React Hook Form's generated IDs
 as React keys, so removing a row preserves the other rows' values. Each row
 watches its name for the accessible remove-button label. Generated IDs are not
-included in the submitted ingredients. Ingredient names occupy the first row
-beside a 44px remove target. Quantity and unit appear below; preparation notes
-follow them. At form-container widths of at least 26rem, the note shares the
-quantity/unit row; narrower forms put it on its own row. This uses the available
-editor content width rather than the viewport width. Ingredient and preferred-day
+included in the submitted ingredients. Every ingredient field has a persistent
+visible label and a 44px-tall control. On narrow forms, the ingredient name sits
+beside a 44px remove target, quantity and unit share the full width below, and
+the optional preparation note spans its own line. At form-container widths of
+at least 40rem, name, quantity, unit, and remove align across one row, with the
+note below spanning the three data columns. This uses the available editor
+content width rather than the viewport width. Whitespace separates ingredients
+without row dividers or enclosing cards, keeping the selection instructions
+connected to the first row. Only the section heading uses bold weight; field
+labels use medium weight, while optional notes and secondary actions use muted
+text. The ingredients heading and helper text share a tight text group,
+with the Add ingredient link button beside it or wrapping below on narrow screens.
+Ingredient and preferred-day
 headers allow their actions to wrap for narrow screens and translated labels.
 
 Validation requires a nonblank name and description and at least one meal time.
@@ -535,6 +543,8 @@ openDialog({
 ```
 
 `DialogHost` owns the native `<dialog>` shell and opens it with `showModal()`.
+Its shared header uses a 12px gap before content, centers the title beside the
+44px Close target, and allows long titles to wrap without crowding the button.
 It names the dialog using its title, focuses the title initially (including while
 content loads), makes the background inert, and locks page scrolling while the
 content panel can scroll. Escape, the close button, and a click that starts and

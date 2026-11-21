@@ -208,6 +208,19 @@ test(
     ).toHaveCount(0);
     const usage = ingredientDialog;
     await expect(usage.getByText("Meals using this ingredient", { exact: true })).toBeVisible();
+    const titleBounds = await usage.getByRole("heading", { name: "Meals with Egg" }).boundingBox();
+    const helpBounds = await usage
+      .getByText("Meals using this ingredient", { exact: true })
+      .boundingBox();
+    const closeBounds = await usage
+      .getByRole("button", { name: "Close", exact: true })
+      .boundingBox();
+    const titleToContentGap = helpBounds!.y - (titleBounds!.y + titleBounds!.height);
+    expect(titleToContentGap).toBeGreaterThanOrEqual(8);
+    expect(titleToContentGap).toBeLessThanOrEqual(24);
+    expect(titleBounds!.x + titleBounds!.width).toBeLessThanOrEqual(closeBounds!.x);
+    expect(closeBounds!.width).toBeGreaterThanOrEqual(44);
+    expect(closeBounds!.height).toBeGreaterThanOrEqual(44);
     await usage.getByRole("button", { name: "Huevos a la mexicana", exact: true }).click();
     const mealDialog = page.getByRole("dialog", { name: "Huevos a la mexicana", exact: true });
     await expect(mealDialog.getByText("Eggs with tomato, onion, and chile.")).toBeVisible();
