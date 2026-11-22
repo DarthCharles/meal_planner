@@ -140,7 +140,7 @@ export function MealForm({
           <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
             {t("meals.form.name")}
             <Input
-              className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              className="h-auto rounded-[10px] p-3 text-[13px] md:text-[13px] font-normal shadow-none"
               {...register("name", { validate: (value) => !!value.trim() })}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "meal-form-error" : undefined}
@@ -151,7 +151,11 @@ export function MealForm({
             <label className="grid min-w-0 gap-2 font-bold text-foreground">
               {t("recipe.servings")}
               <Input
+                className="text-[13px] md:text-[13px] font-normal"
+                type="number"
                 inputMode="numeric"
+                min="1"
+                step="1"
                 {...register("servings", {
                   validate: (value) =>
                     /^\d+$/.test(value) &&
@@ -171,7 +175,7 @@ export function MealForm({
           <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
             {t("meals.form.description")}
             <Textarea
-              className="h-auto resize-y rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              className="h-auto resize-y rounded-[10px] p-3 text-[13px] md:text-[13px] font-normal shadow-none"
               {...register("description", {
                 validate: (value) => !!value.trim(),
               })}
@@ -187,7 +191,7 @@ export function MealForm({
               <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
             </span>
             <Input
-              className="h-auto rounded-[10px] bg-background p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              className="h-auto rounded-[10px] p-3 text-[13px] md:text-[13px] font-normal shadow-none"
               {...register("recipe_url")}
               placeholder="https://..."
             />

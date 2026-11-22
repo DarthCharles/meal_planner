@@ -433,6 +433,7 @@ errors, and cache updates.
 Create and edit forms group name, description, and recipe URL together, followed
 by planning preferences, ingredients, and a wrapping action footer. Field labels
 use tight spacing; section dividers and larger gaps separate those groups.
+Meal and ingredient form controls use Greda's `surface-raised` fill.
 
 Ingredient units use Greda's `Select` through RHF `Controller`, with codes from
 `GET /units`. The trigger shows the saved unit when editing, supports keyboard
@@ -475,11 +476,11 @@ Ingredient and preferred-day
 headers allow their actions to wrap for narrow screens and translated labels.
 
 Validation requires a nonblank name and description, a positive whole serving
-count, and at least one meal time. New recipes have no implicit serving count;
-editing preserves the saved count. It describes the people served by the entered
-ingredient quantities, not a request to scale them.
-Named ingredient rows accept positive decimal and fraction drafts such as `1/2`,
-`½`, and `1 ½`, preserving their text in the request. The supported quantity range
+count, and at least one meal time. The servings number input starts blank for new
+recipes and shows the saved count when editing. The count describes how many
+people the entered ingredient quantities serve.
+Named ingredient rows use a number input for positive decimal quantities such as
+`0.5` and `1.5`, sending their input values as strings. The supported quantity range
 is positive after six-place storage rounding through 1,000,000,000; Rails remains
 the authoritative validator. Repeated ingredient selections have independent
 quantities and notes; catalog usage updates deduplicate recipe IDs. Each row
@@ -865,7 +866,7 @@ language controls. Planning remains beside Menu.
 
 Regression coverage describes nullable shopping amounts, one ingredient per line,
 optional package contents and piece weights, buying-profile validation/retries, dirty-draft protection,
-and checklist persistence. Recipe tests retain fraction capture, snapshots, and late
+and checklist persistence. Recipe tests cover decimal quantity entry, snapshots, and late
 response protection while allowing containers without known contents. Rails service
 and HTTP integration tests cover the actual calculation and request contracts;
 browser tests continue to use deterministic API mocks.

@@ -15,7 +15,7 @@ async function addEgg(page: Page) {
   await page.getByRole("option", { name: "Egg", exact: true }).click();
 }
 
-test("requires explicit servings and retains fractions and repeated ingredient rows", async ({
+test("requires explicit servings and retains decimal quantities and repeated ingredient rows", async ({
   page,
   api,
 }) => {
@@ -24,18 +24,24 @@ test("requires explicit servings and retains fractions and repeated ingredient r
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();
   const form = editorScreen(page);
-  await form.getByLabel("Meal name", { exact: true }).fill("Fraction recipe");
+  await form.getByLabel("Meal name", { exact: true }).fill("Decimal recipe");
   await form
     .getByLabel("Description", { exact: true })
     .fill("Repeated rows for separate preparations");
   await form.getByRole("button", { name: "Lunch", exact: true }).click();
   await form.getByRole("button", { name: "Save meal", exact: true }).click();
-  await expect(form.getByLabel("Recipe servings", { exact: true })).toBeFocused();
+  const servings = form.getByRole("spinbutton", { name: "Recipe servings", exact: true });
+  await expect(servings).toBeFocused();
   await expect(form.getByRole("alert")).toHaveText("Enter a positive whole number of servings.");
-  await form.getByLabel("Recipe servings", { exact: true }).fill("4");
-  for (const [index, quantity] of ["1/2", "½", "1 ½"].entries()) {
+  await servings.fill("1.5");
+  await form.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(form.getByRole("alert")).toHaveText("Enter a positive whole number of servings.");
+  expect(api.saves).toEqual([]);
+  await servings.fill("4");
+  const quantities = ["0.5", "0.125", "1.5"];
+  for (const [index, quantity] of quantities.entries()) {
     await addEgg(page);
-    await form.getByLabel("Quantity", { exact: true }).nth(index).fill(quantity);
+    await form.getByRole("spinbutton", { name: "Quantity", exact: true }).nth(index).fill(quantity);
     await chooseUnit(page, "pieces", index);
     await form
       .getByLabel("Preparation note", { exact: true })
@@ -45,11 +51,7 @@ test("requires explicit servings and retains fractions and repeated ingredient r
   await form.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(form).toHaveCount(0);
   expect(api.saves[0].body.servings).toBe("4");
-  expect(api.saves[0].body.ingredients.map(({ quantity }) => quantity)).toEqual([
-    "1/2",
-    "½",
-    "1 ½",
-  ]);
+  expect(api.saves[0].body.ingredients.map(({ quantity }) => quantity)).toEqual(quantities);
   await navigateTo(page, "My Ingredients");
   await expect(page.getByRole("button", { name: "Used in 2 meals", exact: true })).toBeVisible();
 });
@@ -75,7 +77,9 @@ test("recipe container contents survive editing and a habitual package change", 
     package_unit: "g",
   };
   await page.goto("/meals/1/edit");
-  await expect(editorScreen(page).getByLabel("Recipe servings", { exact: true })).toHaveValue("2");
+  await expect(
+    editorScreen(page).getByRole("spinbutton", { name: "Recipe servings", exact: true }),
+  ).toHaveValue("2");
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("140");
   expect(api.reads["/ingredients/1/shopping_profile"] ?? 0).toBe(0);
   await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();

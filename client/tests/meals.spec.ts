@@ -388,7 +388,7 @@ test("waits for edit options, prefills the meal, and saves ingredient removal", 
   );
   await expect(page.getByPlaceholder("https://...")).toHaveValue("https://example.com/huevos");
   await expect(page.getByLabel("Ingredient name")).toHaveValue("Egg");
-  await expect(page.getByLabel("Quantity")).toHaveValue("2");
+  await expect(dialog.getByRole("spinbutton", { name: "Quantity", exact: true })).toHaveValue("2");
   await expect(page.getByRole("combobox", { name: "Unit", exact: true })).toHaveText("pieces");
   await expect(page.getByLabel("Preparation note")).toHaveValue("beaten");
   for (let index = 0; index < 2; index++) {

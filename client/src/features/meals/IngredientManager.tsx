@@ -17,9 +17,9 @@ import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-
 
 import { unitLabel, useI18n } from "../../i18n";
 import type { IngredientOption, MealForm, UnitOption } from "../../types";
-import { RecipePackageFields } from "./RecipePackageFields";
 import { validQuantity } from "./quantity";
 import { useIngredients } from "./queries";
+import { RecipePackageFields } from "./RecipePackageFields";
 
 export function IngredientManager({ units }: { units: UnitOption[] }) {
   const { t } = useI18n();
@@ -174,7 +174,7 @@ function IngredientRow({
                 onChange={(event) =>
                   setValue(`ingredients.${index}.uncommitted`, !!event.target.value.trim())
                 }
-                className="h-11 min-w-0 rounded-[10px] bg-background px-3 text-sm md:text-sm font-normal shadow-none"
+                className="h-11 min-w-0 rounded-[10px] px-3 text-sm md:text-sm font-normal shadow-none"
                 aria-label={t("meals.ingredient_manager.ingredient_name")}
                 aria-invalid={!!errors.ingredients?.[index]?.name}
                 aria-describedby={errors.ingredients?.[index]?.name ? "meal-form-error" : undefined}
@@ -206,8 +206,10 @@ function IngredientRow({
         <Input
           id={`${fieldId}-quantity`}
           aria-label={t("meals.ingredient_manager.quantity")}
-          className="h-11 min-w-0 rounded-[10px] bg-background px-3 text-sm md:text-sm font-normal shadow-none tabular-nums"
-          type="text"
+          className="h-11 min-w-0 rounded-[10px] px-3 text-sm md:text-sm font-normal shadow-none tabular-nums"
+          type="number"
+          inputMode="decimal"
+          step="any"
           {...register(`ingredients.${index}.quantity`, {
             validate: (value, values) =>
               !values.ingredients[index]?.name.trim() || validQuantity(value),
@@ -241,7 +243,7 @@ function IngredientRow({
                 onBlur={field.onBlur}
                 type="button"
                 aria-label={t("meals.ingredient_manager.unit")}
-                className="h-11 min-w-0 w-full gap-2 rounded-[10px] bg-background px-3 text-sm font-normal shadow-none"
+                className="h-11 min-w-0 w-full gap-2 rounded-[10px] px-3 text-sm font-normal shadow-none"
                 aria-invalid={!!errors.ingredients?.[index]?.unit}
                 aria-describedby={errors.ingredients?.[index]?.unit ? "meal-form-error" : undefined}
               >
@@ -272,7 +274,7 @@ function IngredientRow({
         </label>
         <Input
           id={`${fieldId}-note`}
-          className="h-11 min-w-0 rounded-[10px] bg-background px-3 text-sm md:text-sm font-normal shadow-none"
+          className="h-11 min-w-0 rounded-[10px] px-3 text-sm md:text-sm font-normal shadow-none"
           aria-label={t("meals.ingredient_manager.preparation_note")}
           {...register(`ingredients.${index}.preparation_note`)}
           placeholder={t("meals.ingredient_manager.note_optional")}
