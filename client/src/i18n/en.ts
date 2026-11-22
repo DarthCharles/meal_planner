@@ -170,7 +170,8 @@ export const en = {
       piece_result: "Whole pieces, rounded up when the amount can be calculated.",
       weight_result: "A total in grams, when recipe amounts can be combined.",
       volume_result: "A total in milliliters, when recipe amounts can be combined.",
-      package_result: "Whole packages, calculated from recipe counts or known package contents.",
+      package_result:
+        "Recipe quantities, with package counts rounded to the nearest whole number. Small amounts keep their measure.",
       piece_summary: "I buy individual pieces",
       bulk_summary: "I buy by %{measure}",
       package_summary: "I buy %{unit}",

@@ -18,7 +18,7 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_empty mayo.measurement_references
     # A density reference makes all recipe measures convertible to package contents.
     reference(mayo, "density", 13, basis: 15)
-    assert_equal ["jar", "2", "approximate"], result[:items].sole.values_at(:unit, :quantity, :status)
+    assert_equal ["jar", "1", "approximate"], result[:items].sole.values_at(:unit, :quantity, :status)
   end
 
   test "known package contents calculate a purchase count from recipe weight" do
@@ -132,6 +132,31 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_equal ["can", "2", "1.5"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
     tuna.shopping_profile.update!(shopping_unit: unit("jar"))
     assert_name_only result[:items].sole, tuna
+  end
+
+  test "package rounding uses the nearest integer and preserves small needs in grams" do
+    mayo = ingredient("Mayonnaise", mode: "package", shopping_unit: "jar", package_quantity: 390, package_unit: "g")
+    meal = recipe(mayo, [[1, "g"]])
+    @monday.daily_meals.create!(meal: meal)
+    row = meal.meal_ingredients.sole
+    { "36.67" => ["g", "36.67"], "194.999999" => ["g", "195.0"],
+      "195" => ["jar", "1"], "380" => ["jar", "1"], "390" => ["jar", "1"],
+      "400" => ["jar", "1"], "585" => ["jar", "2"] }.each do |quantity, expected|
+      row.update!(quantity: quantity)
+      assert_equal expected, result[:items].sole.values_at(:unit, :quantity), "Required grams: #{quantity}"
+    end
+  end
+
+  test "unconfigured recipe packages also preserve small needs and use nearest rounding" do
+    tuna = Ingredient.create!(name: "Tuna")
+    meal = recipe(tuna, [[0.1, "can", 140, "g"]])
+    @monday.daily_meals.create!(meal: meal)
+    row = meal.meal_ingredients.sole
+    assert_equal ["g", "14.0"], result[:items].sole.values_at(:unit, :quantity)
+    row.update!(package_quantity: nil, package_unit: nil)
+    assert_equal ["can", "0.1"], result[:items].sole.values_at(:unit, :quantity)
+    row.update!(quantity: 1.1)
+    assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
   end
 
   test "metric display preserves positive tiny needs and rounds only the total" do

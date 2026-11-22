@@ -448,7 +448,11 @@ Display rules:
   contents: one recipe can produces one shopping can. If both recipe and buying
   contents are known, convert the recipe snapshot to the current buying size.
 - Known buying contents also convert compatible recipe weights, volumes, and
-  pieces to containers. Sum all occurrences before rounding up to whole containers.
+  pieces to containers. Sum all occurrences before rounding to the nearest whole
+  container (half rounds up). If that would give zero, retain the required canonical
+  amount using known contents, or the fractional container count without contents.
+  For a 390 g jar: 36.67 g stays 36.67 g, 195 g and 380 g display 1 jar,
+  and 585 g displays 2 jars. This display rule can round below the exact need.
 - Without a profile, identical recipe container units and content snapshots are
   summed as container counts. Different known sizes fall back to canonical amounts.
 - Unknown contents do not erase a usable matching container count. If mixed

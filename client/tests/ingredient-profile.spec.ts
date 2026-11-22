@@ -117,7 +117,9 @@ test("keeps known package contents editable and validates optional values withou
   await expect(setup.getByText(/Each jar contains 850 g/)).toBeVisible();
   await expect(setup.getByText("I buy jars", { exact: true })).toBeVisible();
   await expect(
-    setup.getByText("Whole packages, calculated from recipe counts or known package contents."),
+    setup.getByText(
+      "Recipe quantities, with package counts rounded to the nearest whole number. Small amounts keep their measure.",
+    ),
   ).toBeVisible();
   await setup.getByRole("button", { name: "Edit shopping setup" }).click();
   await setup.getByLabel("Package contents", { exact: true }).fill("");

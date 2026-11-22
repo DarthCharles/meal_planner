@@ -49,7 +49,9 @@ class MenuShoppingListService
       signatures = entry[:rows].map { |row, _| [row.unit.code, row.package_quantity, row.package_unit_id] }.uniq
       if signatures.one?
         total = entry[:rows].sum { |row, scale| Rational(row.quantity.to_s) * scale }
-        return item(ingredient, total.ceil.to_s, signatures.first.first, required_quantity: quantity_string(total))
+        row = entry[:rows].first.first
+        size = Rational(row.package_quantity.to_s) * row.package_unit.canonical_factor if row.package_quantity && row.package_unit
+        return container_item(ingredient, total, row.unit.code, size: size, content_unit: row.package_unit&.canonical_code)
       end
     end
     return item(ingredient, nil, nil) if entry[:unknown]
@@ -96,8 +98,19 @@ class MenuShoppingListService
       total += result.first * scale / size
       approximate ||= result.last
     end
-    item(ingredient, total.ceil.to_s, profile.shopping_unit.code,
-      required_quantity: quantity_string(total), approximate: approximate)
+    container_item(ingredient, total, profile.shopping_unit.code,
+      size: size, content_unit: profile.package_unit&.canonical_code, approximate: approximate)
+  end
+
+  def container_item(ingredient, total, unit, size: nil, content_unit: nil, approximate: false)
+    rounded = total.round
+    if rounded.zero? && size
+      required = quantity_string(total * size)
+      return item(ingredient, required, content_unit, required_quantity: required, approximate: approximate)
+    end
+
+    quantity = rounded.zero? ? quantity_string(total) : rounded.to_s
+    item(ingredient, quantity, unit, required_quantity: quantity_string(total), approximate: approximate)
   end
 
   def item(ingredient, quantity, unit, required_quantity: nil, approximate: false)

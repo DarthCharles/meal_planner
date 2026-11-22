@@ -175,7 +175,7 @@ export const es: typeof en = {
       volume_result:
         "El total en mililitros, cuando se pueden sumar las cantidades de las recetas.",
       package_result:
-        "Envases completos, calculados con las cantidades de las recetas o el contenido conocido.",
+        "Cantidades de tus recetas, con envases redondeados al entero más cercano. Las cantidades pequeñas conservan su medida.",
       piece_summary: "Lo compro por pieza",
       bulk_summary: "Lo compro por %{measure}",
       package_summary: "Lo compro en %{unit}",

@@ -747,8 +747,9 @@ React Query. It displays the week's calendar range, saved people count, categori
 and one checkbox per ingredient. Rails scales and accumulates recipe quantities.
 Calculable weights, volumes, pieces, and container counts show an amount. Recipe
 container counts work without a known weight; known recipe and buying contents
-allow size conversion. Rails sums scaled requirements before rounding up to whole
-containers. Without a profile, matching container units and content snapshots also
+allow size conversion. Rails sums scaled requirements before rounding to the nearest
+whole container, with halves rounded up. If the result would be zero, it preserves
+canonical amounts using known contents or fractional counts without contents. Without a profile, matching container units and content snapshots also
 retain their counts. Requirements that cannot be fully combined have null
 quantity/unit and display only their name. Quantity-less checkbox
 labels are just the ingredient name, without null text or fabricated amounts.
