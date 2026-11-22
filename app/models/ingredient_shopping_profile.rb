@@ -5,7 +5,7 @@ class IngredientShoppingProfile < ApplicationRecord
 
   validates :ingredient_id, uniqueness: true
   validates :mode, inclusion: { in: %w[bulk piece package] }
-  validates :package_quantity, positive_quantity: true, if: -> { mode == "package" }
+  validates :package_quantity, positive_quantity: true, if: -> { mode == "package" && (package_quantity.present? || package_unit.present?) }
   validate :valid_units
 
   def requirement_unit
@@ -13,8 +13,11 @@ class IngredientShoppingProfile < ApplicationRecord
   end
 
   def configuration_json
-    { ingredient_id: ingredient_id, mode: mode, shopping_unit: shopping_unit.code,
+    result = { ingredient_id: ingredient_id, mode: mode, shopping_unit: shopping_unit.code,
       package_quantity: package_quantity, package_unit: package_unit&.code }
+    weight = ingredient.measurement_references.find { |reference| reference.kind == "piece_weight" }
+    result[:piece_weight] = { quantity: weight.quantity, reference_quantity: weight.reference_quantity } if weight
+    result
   end
 
   private
@@ -29,9 +32,9 @@ class IngredientShoppingProfile < ApplicationRecord
       end
       errors.add(:shopping_unit, :invalid) unless valid
     end
-    if mode == "package"
+    if mode == "package" && (package_quantity.present? || package_unit.present?)
       errors.add(:package_unit, :invalid) unless package_unit && %w[g kg ml l piece].include?(package_unit.code)
-    elsif package_unit || package_quantity
+    elsif mode != "package" && (package_unit || package_quantity)
       errors.add(:package_quantity, :unexpected_contents)
     end
   end

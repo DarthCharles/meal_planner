@@ -7,6 +7,10 @@ class IngredientShoppingProfilesController < ApplicationController
 
   def update
     attributes = %i[mode shopping_unit package_quantity package_unit].index_with { |key| params[key] }
+    if params.key?(:piece_weight)
+      weight = params[:piece_weight]
+      attributes[:piece_weight] = weight.is_a?(ActionController::Parameters) ? weight.permit(:quantity, :reference_quantity).to_h : weight
+    end
     profile = IngredientShoppingProfileSaveService.new.call(ingredient: @ingredient, attributes: attributes)
     render json: { data: profile.configuration_json }
   rescue ActiveRecord::RecordInvalid => error

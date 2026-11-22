@@ -17,7 +17,8 @@ function itemKey(item: ShoppingList["items"][number]) {
     item.presentation?.shopping_unit ?? null,
     item.presentation?.package_quantity ?? null,
     item.presentation?.package_unit ?? null,
-    item.status === "incomplete",
+    // Preserve the existing key shape for previously calculated purchases.
+    false,
   ]);
 }
 
@@ -63,9 +64,6 @@ export function ShoppingReceipt({
   }, [checked, list.items, storageKey]);
   const collator = new Intl.Collator(formatLocale(), { sensitivity: "base" });
   const number = new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 3 });
-  const unresolvedCount = new Set(
-    list.items.filter((item) => item.status === "incomplete").map((item) => item.ingredient_id),
-  ).size;
   const checkedCount = list.items.filter((item) => checked.has(itemKey(item))).length;
 
   const groups = [...list.categories]
@@ -77,7 +75,7 @@ export function ShoppingReceipt({
           (a, b) =>
             collator.compare(a.name, b.name) ||
             a.ingredient_id - b.ingredient_id ||
-            collator.compare(a.unit, b.unit),
+            collator.compare(a.unit ?? "", b.unit ?? ""),
         );
       return { code, items };
     })
@@ -102,11 +100,6 @@ export function ShoppingReceipt({
           <p role="status" className="m-0 text-center font-bold tabular-nums">
             {t("shopping_list.checked", { checked: checkedCount, count: list.items.length })}
           </p>
-          {!!unresolvedCount && (
-            <p className="mt-1 mb-0 text-center text-xs">
-              {t("shopping_details.unresolved", { count: unresolvedCount })}
-            </p>
-          )}
         </div>
       )}
       {!list.items.length && (
@@ -130,30 +123,25 @@ export function ShoppingReceipt({
               className="mt-3 flex justify-between gap-3 text-[10px] uppercase tracking-widest text-muted-foreground"
             >
               <span>{t("shopping_list.ingredient")}</span>
-              <span>{t("shopping_list.amount")}</span>
+              {items.some((item) => item.quantity !== null && item.unit !== null) && (
+                <span>{t("shopping_list.amount")}</span>
+              )}
             </div>
             <ul className="m-0 list-none p-0">
               {items.map((item) => {
                 const key = itemKey(item);
                 const isChecked = checked.has(key);
-                const quantity = `${number.format(Number(item.quantity))} ${unitLabel(item.unit, Number(item.quantity))}`;
+                const quantity =
+                  item.quantity !== null && item.unit !== null
+                    ? `${number.format(Number(item.quantity))} ${unitLabel(item.unit, Number(item.quantity))}`
+                    : null;
                 return (
-                  <li
-                    key={key}
-                    aria-describedby={
-                      item.status === "incomplete" &&
-                      list.conversion_warnings.some(
-                        (warning) => warning.ingredient_id === item.ingredient_id,
-                      )
-                        ? `conversion-warning-${item.ingredient_id}`
-                        : undefined
-                    }
-                  >
+                  <li key={key}>
                     <div className="flex min-h-14 min-w-0 items-start gap-1">
                       <label className="flex min-h-14 w-11 shrink-0 cursor-pointer items-start justify-center pt-4">
                         <Checkbox
                           className="shrink-0"
-                          aria-label={`${item.name}, ${quantity}`}
+                          aria-label={quantity ? `${item.name}, ${quantity}` : item.name}
                           checked={isChecked}
                           onCheckedChange={(value) =>
                             setChecked((previous) => {
@@ -183,53 +171,14 @@ export function ShoppingReceipt({
                             aria-hidden="true"
                             className="min-w-2 flex-1 border-b border-dashed border-border"
                           />
-                          <span
-                            className={`max-w-[45%] shrink-0 break-words text-right tabular-nums ${isChecked ? "line-through" : ""}`}
-                          >
-                            {quantity}
-                          </span>
-                        </span>
-                        {item.status === "incomplete" && (
-                          <span className="mt-1 block text-xs font-semibold">
-                            {t("shopping_details.incomplete")}
-                          </span>
-                        )}
-                        <details className="mt-1 text-xs text-muted-foreground">
-                          <summary className="min-h-8 cursor-pointer content-center rounded-sm focus-visible:outline-2 focus-visible:outline-ring">
-                            {t("shopping_details.details")}
-                          </summary>
-                          <p className="mt-1 mb-0">
-                            {t("shopping_details.need", {
-                              quantity: number.format(Number(item.required_quantity)),
-                              unit: unitLabel(item.required_unit, Number(item.required_quantity)),
-                            })}
-                          </p>
-                          {item.presentation && (
-                            <p className="mt-2 mb-0">
-                              {t("shopping_details.presentation", {
-                                unit: unitLabel(item.presentation.shopping_unit),
-                              })}
-                              {item.presentation.mode === "package" && (
-                                <>
-                                  {" "}
-                                  ·{" "}
-                                  {t("shopping_details.contents", {
-                                    quantity: item.presentation.package_quantity ?? "",
-                                    unit: unitLabel(
-                                      item.presentation.package_unit ?? "",
-                                      Number(item.presentation.package_quantity),
-                                    ),
-                                  })}
-                                </>
-                              )}
-                            </p>
+                          {quantity && (
+                            <span
+                              className={`max-w-[45%] shrink-0 break-words text-right tabular-nums ${isChecked ? "line-through" : ""}`}
+                            >
+                              {quantity}
+                            </span>
                           )}
-                        </details>
-                        {item.approximate && (
-                          <span className="mt-1 block text-[10px] text-muted-foreground tablet:text-xs">
-                            {t("shopping_list.approximate")}
-                          </span>
-                        )}
+                        </span>
                       </span>
                     </div>
                   </li>

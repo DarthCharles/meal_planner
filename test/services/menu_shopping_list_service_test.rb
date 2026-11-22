@@ -8,49 +8,41 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     @tuesday = @menu.days.create!(weekday: Weekday.find_or_create_by!(name: "tuesday"))
   end
 
-  test "combines all culinary measures using one reference before rounding jars" do
-    mayonnaise = ingredient("Mayonnaise", mode: "package", shopping_unit: "jar", package_quantity: 390, package_unit: "g")
-    reference(mayonnaise, "density", 13, basis: 15)
-    # 1 tbsp + 3 tsp + half a cup = 150 ml = 130 g, repeated three times = exactly 390 g.
-    meal = recipe(mayonnaise, [[1, "tablespoon"], [3, "teaspoon"], [0.5, "cup"]])
+  test "mixed recipe measures produce one packaged grocery without asking for conversions" do
+    mayo = ingredient("Mayonnaise", mode: "package", shopping_unit: "jar", package_quantity: 250, package_unit: "g")
+    meal = recipe(mayo, [[10, "g"], [1, "tablespoon"], [0.5, "cup"]])
     @monday.daily_meals.create!(meal: meal)
     @tuesday.daily_meals.create!(meal: meal)
-    @menu.days.create!(weekday: Weekday.find_or_create_by!(name: "wednesday")).daily_meals.create!(meal: meal)
-    item = result[:items].sole
-    assert_equal ["jar", "1", "390.0", "g", "approximate"], item.values_at(:unit, :quantity, :required_quantity, :required_unit, :status)
+    assert_name_only result[:items].sole, mayo
     assert_empty result[:conversion_warnings]
+    assert_empty mayo.measurement_references
+    # Existing reference data does not change how packaged groceries are displayed.
+    reference(mayo, "density", 13, basis: 15)
+    assert_name_only result[:items].sole, mayo
   end
 
-  test "pieces always round up including a fraction of one and only after accumulation" do
+  test "packages need no contents and changing package size never adds a purchase count" do
+    mayo = ingredient("Mayonnaise", mode: "package", shopping_unit: "jar")
+    meal = recipe(mayo, [[500, "g"]])
+    @monday.daily_meals.create!(meal: meal)
+    assert_name_only result[:items].sole, mayo
+    mayo.shopping_profile.update!(package_quantity: 250, package_unit: unit("g"))
+    assert_name_only result[:items].sole, mayo
+    assert_equal 500, meal.meal_ingredients.sole.quantity
+  end
+
+  test "pieces round up only after all scheduled recipe quantities are added" do
     onion = ingredient("Onion", mode: "piece", shopping_unit: "piece")
-    reference(onion, "piece_weight", 150)
-    meal = recipe(onion, [[30, "g"]])
+    meal = recipe(onion, [[0.25, "piece"]])
     @monday.daily_meals.create!(meal: meal)
-    assert_equal ["piece", "1", "0.2"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
-    meal.meal_ingredients.first.update!(quantity: 360)
-    assert_equal "3", result[:items].sole[:quantity]
-    meal.meal_ingredients.destroy_all
-    meal.meal_ingredients.create!(ingredient: onion, unit: unit("piece"), quantity: 0.25)
     @tuesday.daily_meals.create!(meal: meal)
-    item = result[:items].sole
-    assert_equal "1", item[:quantity]
-    assert_equal "calculated", item[:status]
-    assert_not item.key?(:approximate)
+    assert_equal ["piece", "1", "0.5"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
+    meal.meal_ingredients.sole.update!(quantity: 1.2)
+    assert_equal ["piece", "3", "2.4"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
   end
 
-  test "containers preserve small needs and use exact thresholds even beyond display precision" do
-    mayo = ingredient("Threshold mayo", mode: "package", shopping_unit: "jar", package_quantity: 390, package_unit: "g")
-    meal = recipe(mayo, [[20, "g"]])
-    @monday.daily_meals.create!(meal: meal)
-    { "20" => ["g", "20.0"], "389.999999" => ["g", "390.0"],
-      "390" => ["jar", "1"], "390.000001" => ["jar", "2"], "780" => ["jar", "2"] }.each do |quantity, expected|
-      meal.meal_ingredients.first.update!(quantity: quantity)
-      assert_equal expected, result[:items].sole.values_at(:unit, :quantity)
-    end
-  end
-
-  test "scales by recipe servings for every occurrence and excludes other menus" do
-    chicken = ingredient("Chicken", mode: "bulk", shopping_unit: "g")
+  test "scales compatible weights by servings and sums occurrences before display rounding" do
+    chicken = ingredient("Chicken", mode: "bulk", shopping_unit: "kg")
     meal = recipe(chicken, [[0.5, "kg"], [300, "g"]], servings: 4)
     @menu.update!(people_count: 2)
     @monday.daily_meals.create!(meal: meal)
@@ -60,55 +52,56 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_equal ["g", "800.0"], result[:items].sole.values_at(:unit, :quantity)
   end
 
-  test "recipe can contents are immutable when the shopping presentation changes" do
+  test "culinary volumes combine without requiring ingredient references" do
+    oil = Ingredient.create!(name: "Oil")
+    @monday.daily_meals.create!(meal: recipe(oil, [[1, "tablespoon"], [3, "teaspoon"], [0.5, "cup"]]))
+    assert_equal ["ml", "150.0"], result[:items].sole.values_at(:unit, :quantity)
+    assert_empty oil.measurement_references
+  end
+
+  test "unresolved mixed dimensions stay as one name instead of separate partial purchases" do
+    tomato = Ingredient.create!(name: "Tomato")
+    meal = recipe(tomato, [[200, "g"], [2, "piece"]])
+    @monday.daily_meals.create!(meal: meal)
+    assert_name_only result[:items].sole, tomato
+    assert_empty result[:conversion_warnings]
+    # Every source quantity is still present in its recipe.
+    assert_equal [200, 2], meal.meal_ingredients.ordered.pluck(:quantity)
+  end
+
+  test "a configured target with a missing bridge stays name only even for one source unit" do
+    onion = ingredient("Onion", mode: "piece", shopping_unit: "piece")
+    @monday.daily_meals.create!(meal: recipe(onion, [[30, "g"]]))
+    assert_name_only result[:items].sole, onion
+    reference(onion, "piece_weight", 150)
+    assert_equal ["piece", "1", "0.2", "approximate"], result[:items].sole.values_at(:unit, :quantity, :required_quantity, :status)
+  end
+
+  test "unknown recipe container contents do not fail or discard other ingredients" do
+    tuna = Ingredient.create!(name: "Tuna")
+    tomato = Ingredient.create!(name: "Tomato")
+    meal = recipe(tuna, [[1, "can"], [10, "g"]])
+    meal.meal_ingredients.create!(ingredient: tomato, unit: unit("piece"), quantity: 2)
+    @monday.daily_meals.create!(meal: meal)
+    items = result[:items].index_by { |item| item[:ingredient_id] }
+    assert_equal 2, items.size
+    assert_name_only items.fetch(tuna.id), tuna
+    assert_equal "2", items.fetch(tomato.id)[:quantity]
+  end
+
+  test "recipe package contents remain independent of the buying presentation" do
     tuna = ingredient("Tuna", mode: "package", shopping_unit: "can", package_quantity: 140, package_unit: "g")
     meal = recipe(tuna, [[1, "can", 140, "g"], [0.5, "can", 280, "g"]])
     @monday.daily_meals.create!(meal: meal)
-    assert_equal ["can", "2", "280.0"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
+    assert_name_only result[:items].sole, tuna
     tuna.shopping_profile.update!(package_quantity: 100)
-    assert_equal ["can", "3", "280.0"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
-    assert_equal [140, 280], meal.meal_ingredients.pluck(:package_quantity)
+    assert_name_only result[:items].sole, tuna
+    assert_equal [140, 280], meal.meal_ingredients.ordered.pluck(:package_quantity)
+    tuna.shopping_profile.destroy!
+    assert_name_only result[:items].sole, tuna
   end
 
-  test "missing conversions warn even for a single unit and never round partial needs" do
-    mayo = ingredient("Unresolved", mode: "package", shopping_unit: "jar", package_quantity: 390, package_unit: "g")
-    meal = recipe(mayo, [[1, "tablespoon"]])
-    @monday.daily_meals.create!(meal: meal)
-    assert_equal ["ml", "15.0", "incomplete"], result[:items].sole.values_at(:unit, :quantity, :status)
-    assert_equal ["ml"], result[:conversion_warnings].sole[:units]
-    meal.meal_ingredients.create!(ingredient: mayo, unit: unit("g"), quantity: 500)
-    assert_equal %w[g ml], result[:items].map { |item| item[:unit] }
-    assert result[:items].all? { |item| item[:status] == "incomplete" }
-    reference(mayo, "density", 13, basis: 15)
-    assert_empty result[:conversion_warnings]
-    assert_equal ["jar", "2"], result[:items].sole.values_at(:unit, :quantity)
-  end
-
-  test "eggs need no weight for pieces or packages containing pieces" do
-    egg = ingredient("Egg", mode: "piece", shopping_unit: "piece")
-    meal = recipe(egg, [[6, "piece"]])
-    @monday.daily_meals.create!(meal: meal)
-    assert_equal ["piece", "6"], result[:items].sole.values_at(:unit, :quantity)
-    egg.shopping_profile.update!(mode: "package", shopping_unit: unit("package"), package_quantity: 6, package_unit: unit("piece"))
-    assert_equal ["package", "1"], result[:items].sole.values_at(:unit, :quantity)
-    meal.meal_ingredients.first.update!(quantity: 0.5)
-    assert_equal ["piece", "1"], result[:items].sole.values_at(:unit, :quantity)
-    assert_empty egg.measurement_references
-  end
-
-  test "volume to pieces can use both references without borrowing another ingredient's data" do
-    onion = ingredient("Chopped onion", mode: "piece", shopping_unit: "piece")
-    reference(onion, "density", 1)
-    reference(onion, "piece_weight", 150)
-    other = ingredient("Other onion", mode: "piece", shopping_unit: "piece")
-    meal = recipe(onion, [[1, "cup"]])
-    meal.meal_ingredients.create!(ingredient: other, unit: unit("cup"), quantity: 1)
-    @monday.daily_meals.create!(meal: meal)
-    assert_equal ["piece", "2"], result[:items].first.values_at(:unit, :quantity)
-    assert_equal other.id, result[:conversion_warnings].sole[:ingredient_id]
-  end
-
-  test "unconfigured metric ingredients use standard units and tiny needs remain visible" do
+  test "metric display preserves positive tiny needs and rounds only the total" do
     flour = Ingredient.create!(name: "Flour")
     salt = Ingredient.create!(name: "Salt")
     meal = recipe(flour, [[1, "g"]], servings: 3)
@@ -116,7 +109,6 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     @monday.daily_meals.create!(meal: meal)
     @tuesday.daily_meals.create!(meal: meal)
     assert_equal ["0.667", "0.001"], result[:items].map { |item| item[:quantity] }
-    assert_empty result[:conversion_warnings]
   end
 
   test "empty menus and recipes without ingredient rows remain explicit" do
@@ -128,7 +120,7 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_empty result[:items]
   end
 
-  test "sorts by category and keeps ingredient identities separate" do
+  test "sorts categories and keeps different ingredient identities separate" do
     first = Ingredient.create!(name: "Zucchini", shopping_category: "produce")
     second = Ingredient.create!(name: "Apples", shopping_category: "frozen")
     meal = recipe(first, [[1, "g"]])
@@ -139,6 +131,16 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
   end
 
   private
+
+  def assert_name_only(item, ingredient)
+    assert_equal ingredient.id, item[:ingredient_id]
+    assert_equal ingredient.name, item[:name]
+    assert_equal "unquantified", item[:status]
+    assert_nil item[:quantity]
+    assert_nil item[:unit]
+    assert_nil item[:required_quantity]
+    assert_nil item[:required_unit]
+  end
 
   def unit(code)
     Unit.find_by!(code: code)

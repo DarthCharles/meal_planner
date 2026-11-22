@@ -15,7 +15,6 @@ import { Controller, useForm } from "react-hook-form";
 import { useI18n } from "../../i18n";
 import type { IngredientCatalogEntry, IngredientPayload, ShoppingCategory } from "../../types";
 import { useEditorDraft } from "../navigation/EditorDraftContext";
-import { IngredientMeasurements } from "./IngredientMeasurements";
 import { IngredientShoppingSummary } from "./IngredientShoppingSummary";
 import { useDeleteIngredient, useSaveIngredient, useShoppingCategories } from "./queries";
 
@@ -209,7 +208,6 @@ function IngredientFormContent({
           onEditingChange={setEditingShopping}
         />
       )}
-      {ingredient && <IngredientMeasurements ingredientId={ingredient.id} />}
       {deleteError && (
         <p role="alert" className="mb-4 text-sm text-destructive">
           {deleteError.message}

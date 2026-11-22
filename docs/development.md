@@ -154,15 +154,15 @@ The following unit-code migration replaces the Spanish codes with `jar`, `piece`
 `cup`, `tablespoon`, and `teaspoon`, preserving IDs and their relationships.
 
 The standard is g/kg, ml/l, a 240 ml cup, 15 ml tablespoon, 5 ml teaspoon, and
-whole pieces. Containers have no universal size. Recipe containers must include
-their contents, separately from the ingredient's habitual buying presentation.
+whole pieces. Containers have no universal size. Recipe container contents are
+optional and stay separate from the ingredient's habitual buying presentation.
 Recipes require explicit `servings` on creation.
 
-Ingredient measurement references are configured through
-`PUT /ingredients/:id/measurement_references`; the habitual presentation through
-`PUT /ingredients/:id/shopping_profile`. See `docs/api.md` for the full replacement
-payloads and the intentionally breaking client contract. Removing shopping setup
-does not remove the references.
+The client only configures how an ingredient is bought through
+`PUT /ingredients/:id/shopping_profile`. Package contents are optional. Apply the
+`AllowUnknownShoppingPackageContents` migration before using these profiles.
+Existing measurement references and their API remain supported, but the client
+no longer exposes a reference form. Removing shopping setup retains references.
 
 Seeds contain a sample mayonnaise reference of 13 g per 15 ml based on the linked
 Hellmann's product label and an approximate 148 g medium-onion edible weight from
@@ -173,11 +173,12 @@ The current-week sample menu includes a recipe with an explicit can size.
 Seeded recipe quantities are explicitly for one person; they are demonstration
 recipes rather than nutritional guidance.
 
-The list always rounds pieces up. Containers remain in base quantities below
-one package and become whole counts once that threshold is reached. Missing
-references keep all needs visible and mark that ingredient incomplete. Calculation
-is local and makes no external calls. Client adoption and browser coverage are a
-separate task; existing client shopping forms target the removed profile contract.
+The checklist contains one line per ingredient. Packages appear by name only;
+calculable pieces round upward and compatible mass/volume totals remain in g/ml.
+When a conversion is unavailable, the ingredient also appears by name only.
+Original recipe quantities remain stored. Calculation is local and makes no
+external calls. Nullable checklist amounts are shared by Rails and the client;
+conversion metadata is not displayed. There is no shopping-adjustment step.
 
 ## Scheduled generation
 

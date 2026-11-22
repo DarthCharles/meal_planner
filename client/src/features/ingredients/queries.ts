@@ -37,6 +37,7 @@ function useSyncShoppingProfile(id: number) {
       { queryKey: queryKeys.ingredientProfile(id) },
       () => profile,
     );
+    await client.invalidateQueries({ queryKey: queryKeys.ingredientReferences(id) });
     await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
   };
 }

@@ -44,62 +44,51 @@ test("opens a dedicated receipt page and returns to the originating menu", async
   await expect(selected).toHaveAttribute("aria-current", "true");
 });
 
-test("orders names within categories and shows fractional requirements, approximations, and incomplete-list warnings", async ({
+test("orders categories and keeps the receipt free of conversion details", async ({
   page,
   api,
 }) => {
-  const list = api.shoppingLists[1];
-  list.items = [
+  const base = api.shoppingLists[1].items[0];
+  api.shoppingLists[1].items = [
     {
+      ...base,
       ingredient_id: 30,
       name: "Zucchini",
       shopping_category: "produce",
       quantity: "2",
       unit: "piece",
-      status: "approximate",
-      required_quantity: "1.25",
-      required_unit: "piece",
-      approximate: true,
     },
     {
+      ...base,
       ingredient_id: 31,
       name: "Apple",
       shopping_category: "produce",
-      status: "calculated",
-      required_quantity: "250.5",
-      required_unit: "g",
       quantity: "250.5",
       unit: "g",
     },
     {
+      ...base,
       ingredient_id: 32,
-      name: "Unknown grocery",
-      shopping_category: "uncategorized",
-      quantity: "240",
-      unit: "ml",
-      status: "incomplete",
-      required_quantity: "240",
-      required_unit: "ml",
+      name: "Mayonnaise",
+      shopping_category: "pantry",
+      quantity: null,
+      unit: null,
+      status: "unquantified",
+      required_quantity: null,
+      required_unit: null,
     },
   ];
-  list.meals_without_ingredients = [{ id: 2, name: "Recipe without ingredients" }];
-  list.conversion_warnings = [
-    {
-      ingredient_id: 32,
-      name: "Unknown grocery",
-      units: ["ml"],
-      target_unit: "g",
-      reason: "measurement_reference_missing",
-    },
-  ];
+  api.shoppingLists[1].meals_without_ingredients = [{ id: 2, name: "Recipe without ingredients" }];
   await page.goto("/menus/1/shopping-list");
   const produce = page.getByRole("region", { name: "Fruit & vegetables", exact: true });
   await expect(produce.getByRole("listitem")).toContainText(["Apple", "Zucchini"]);
   await expect(produce.getByText("2 pieces", { exact: true })).toBeVisible();
-  await expect(produce.getByText("Approximate quantity")).toBeVisible();
+  await expect(produce.getByText("250.5 g", { exact: true })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Mayonnaise", exact: true })).toBeVisible();
   await expect(page.getByText("Recipe without ingredients", { exact: true })).toBeVisible();
-  await expect(page.getByText(/Missing relationship: ml → g/)).toBeVisible();
-  await expect(page.getByRole("region", { name: "Uncategorized", exact: true })).toBeVisible();
+  await expect(page.getByText("Calculation details", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Complete reference/ })).toHaveCount(0);
+  await expect(page.getByText("Approximate quantity", { exact: true })).toHaveCount(0);
 });
 
 test("shows loading, retry, and a genuine empty list", async ({ page, api }) => {
@@ -213,34 +202,25 @@ test("checks entries independently, supports keyboard toggling, and resets chang
       shopping_category: "pantry",
       quantity: "200",
       unit: "g",
-      status: "incomplete",
+      status: "calculated",
       required_quantity: "200",
       required_unit: "g",
     },
     {
-      ingredient_id: 30,
-      name: "Rice",
-      shopping_category: "pantry",
+      ingredient_id: 31,
+      name: "Milk",
+      shopping_category: "dairy_eggs",
       quantity: "240",
       unit: "ml",
-      status: "incomplete",
+      status: "calculated",
       required_quantity: "240",
       required_unit: "ml",
-    },
-  ];
-  api.shoppingLists[1].conversion_warnings = [
-    {
-      ingredient_id: 30,
-      name: "Rice",
-      units: ["ml"],
-      target_unit: "g",
-      reason: "measurement_reference_missing",
     },
   ];
   await page.goto("/menus/1/shopping-list");
   const receipt = page.getByRole("region", { name: /^(Shopping receipt|Ticket de compra)$/ });
   const grams = receipt.getByRole("checkbox", { name: /Rice.*200/ });
-  const cups = receipt.getByRole("checkbox", { name: /Rice.*240/ });
+  const cups = receipt.getByRole("checkbox", { name: /Milk.*240/ });
   await grams.check();
   await expect(grams).toBeChecked();
   await expect(cups).not.toBeChecked();
@@ -261,7 +241,7 @@ test("checks entries independently, supports keyboard toggling, and resets chang
   await expect(
     page
       .getByRole("region", { name: "Ticket de compra", exact: true })
-      .getByRole("checkbox", { name: /Rice.*240/ }),
+      .getByRole("checkbox", { name: /Milk.*240/ }),
   ).toBeChecked();
   await grams.check();
   api.shoppingLists[1].items[0].quantity = "400";
@@ -274,7 +254,7 @@ test("checks entries independently, supports keyboard toggling, and resets chang
   expect(api.saves).toEqual([]);
   await page.reload();
   await expect(page.getByRole("checkbox")).toHaveCount(2);
-  await expect(page.getByRole("checkbox", { name: /Rice.*240/ })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: /Milk.*240/ })).toBeChecked();
   await expect(page.getByRole("checkbox", { name: /Rice.*400/ })).not.toBeChecked();
 });
 
@@ -283,9 +263,16 @@ test("keeps saved checks separate for each menu and drops changed amounts after 
   api,
 }) => {
   api.shoppingLists[2] = { ...structuredClone(api.shoppingLists[1]), menu_id: 2 };
+  await page.addInitScript(() => {
+    const key = "comal.shopping-checks.v2.1";
+    if (!localStorage.getItem(key)) {
+      const previousPurchase = JSON.stringify([1, "piece", "12.0", null, null, null, null, false]);
+      localStorage.setItem(key, JSON.stringify([previousPurchase]));
+    }
+  });
   await page.goto("/menus/1/shopping-list");
   const egg = page.getByRole("checkbox", { name: /Egg/ });
-  await egg.check();
+  await expect(egg).toBeChecked();
   await page.getByRole("link", { name: "Back to menus", exact: true }).click();
   await page.goto("/menus/2/shopping-list");
   await expect(egg).not.toBeChecked();
@@ -637,210 +624,118 @@ test("ingredient usage lists only distinct meals from the selected menu", async 
   ).toHaveCount(0);
 });
 
-test("keeps incomplete notices after checking and repairs through the same editor origin", async ({
+test("unquantified products remain simple and checking them survives reload", async ({
   page,
   api,
 }) => {
-  const base = api.shoppingLists[1].items[0];
   api.shoppingLists[1].items = [
     {
-      ...base,
-      unit: "g",
-      quantity: "20",
-      required_quantity: "20",
-      required_unit: "g",
-      status: "incomplete",
-      approximate: true,
-    },
-    {
-      ...base,
-      unit: "ml",
-      quantity: "15",
-      required_quantity: "15",
-      required_unit: "ml",
-      status: "incomplete",
-    },
-  ];
-  api.shoppingLists[1].conversion_warnings = [
-    {
       ingredient_id: 1,
-      name: "Egg",
-      units: ["ml"],
-      target_unit: "piece",
-      reason: "measurement_reference_missing",
-    },
-  ];
-  api.ingredientReferences[1] = [
-    {
-      kind: "density",
-      quantity: "13",
-      reference_quantity: "15",
-      source: "Product label",
-      description: "Measured tablespoon",
-      approximate: true,
+      name: "Mayonnaise",
+      shopping_category: "pantry",
+      quantity: null,
+      unit: null,
+      status: "unquantified",
+      required_quantity: null,
+      required_unit: null,
+      presentation: {
+        ingredient_id: 1,
+        mode: "package",
+        shopping_unit: "jar",
+        package_quantity: "250",
+        package_unit: "g",
+      },
     },
   ];
   await page.goto("/menus/1/shopping-list");
   const receipt = page.getByRole("region", { name: "Shopping receipt", exact: true });
-  for (const checkbox of await receipt.getByRole("checkbox").all()) await checkbox.check();
-  await expect(receipt.getByRole("status")).toHaveText("2 of 2 checked");
-  await expect(
-    receipt.getByText("1 ingredient still needs measurement references", { exact: true }),
-  ).toBeVisible();
-  await expect(receipt.getByText("Incomplete calculation", { exact: true })).toHaveCount(2);
-  await expect(receipt.getByText("Approximate quantity", { exact: true })).toBeVisible();
-  const correct = page.getByRole("button", { name: "Complete reference · Egg", exact: true });
-  await expect(correct).toHaveCount(1);
-  await receipt.getByText("Adjust", { exact: true }).click();
-  await receipt.getByRole("spinbutton", { name: "People", exact: true }).fill("6");
-  await correct.click();
-  const references = editorScreen(page).getByRole("region", {
-    name: "Measurements used in recipes",
-  });
-  await expect(references.getByRole("heading")).toBeFocused();
-  await expect(references.getByText(/ml → pieces/)).toBeVisible();
-  const pieces = references.getByRole("group", { name: "Weight and pieces", exact: true });
-  await pieces.getByRole("checkbox", { name: "Use this reference" }).check();
-  await pieces.getByLabel("Measured quantity", { exact: true }).fill("1");
-  await pieces.getByLabel("Weighs (g)", { exact: true }).fill("60");
-  await pieces.getByRole("button", { name: "Personal measurement", exact: true }).click();
-  await pieces.getByLabel("Describe what you measured").fill("My measured egg");
-  api.readErrors["/menus/1/shopping_list"] = "Recalculation unavailable";
-  await references.getByRole("button", { name: "Save measurement references" }).click();
-  await expect(references.getByText(/Measurement references saved/)).toBeVisible();
-  await expect(references.getByRole("alert")).toHaveCount(0);
-  await editorScreen(page).getByRole("button", { name: "Done", exact: true }).click();
-  await expect(page).toHaveURL("/menus/1/shopping-list");
-  await expect(page.getByRole("alert")).toHaveText("Recalculation unavailable");
-  await expect(page.getByText(/The ticket shows the previous calculation/)).toBeVisible();
-  await expect(receipt.getByRole("spinbutton", { name: "People", exact: true })).toHaveValue("6");
-  delete api.readErrors["/menus/1/shopping_list"];
-  api.shoppingLists[1].items = [
-    { ...base, quantity: "1", status: "approximate", approximate: true, required_quantity: "0.55" },
-  ];
-  api.shoppingLists[1].conversion_warnings = [];
-  await page.getByRole("button", { name: "Try again", exact: true }).click();
-  await expect(receipt.getByText("1 piece", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Complete reference/ })).toHaveCount(0);
-  await expect(receipt.getByRole("checkbox")).not.toBeChecked();
-  expect(api.referenceSaves[0].body.references).toHaveLength(2);
+  const item = receipt.getByRole("checkbox", { name: "Mayonnaise", exact: true });
+  await expect(item).toBeVisible();
+  await expect(receipt.getByRole("listitem")).toHaveCount(1);
+  await expect(receipt.getByRole("listitem")).toHaveText("Mayonnaise");
+  await item.check();
+  await expect(receipt.getByRole("status")).toHaveText("1 of 1 checked");
+  await expect(receipt.getByText(/Incomplete|reference|250|Calculation details/)).toHaveCount(0);
+  await page.reload();
+  await expect(item).toBeChecked();
+  expect(api.referenceSaves).toEqual([]);
 });
 
-test("purchase identity tracks contents and completeness but retains checks for changed internal need", async ({
+test("purchase identity preserves unquantified checks and resets when a quantity becomes available", async ({
   page,
   api,
 }) => {
   const list = api.shoppingLists[1];
-  const presentation = {
-    ingredient_id: 1,
-    mode: "package" as const,
-    shopping_unit: "jar",
-    package_quantity: "390",
-    package_unit: "g",
-  };
   list.items = [
     {
       ...list.items[0],
-      quantity: "2",
-      unit: "jar",
-      required_quantity: "500",
-      required_unit: "g",
-      presentation,
+      quantity: null,
+      unit: null,
+      status: "unquantified",
+      required_quantity: null,
+      required_unit: null,
     },
   ];
   await page.addInitScript(() =>
-    localStorage.setItem("comal.shopping-checks.v1.1", JSON.stringify(["1-jar-1"])),
+    localStorage.setItem("comal.shopping-checks.v2.1", JSON.stringify(["old-check"])),
   );
   await page.goto("/menus/1/shopping-list");
-  const purchase = page.getByRole("checkbox", { name: /Egg/ });
+  const purchase = page.getByRole("checkbox", { name: "Egg", exact: true });
   await expect(purchase).not.toBeChecked();
   await purchase.check();
   await page.getByText("Adjust", { exact: true }).click();
-  list.items[0].required_quantity = "520";
   await page.getByRole("button", { name: "Refresh list", exact: true }).click();
   await expect(purchase).toBeChecked();
-  list.items[0].presentation = { ...presentation, package_quantity: "850" };
-  list.items[0].required_quantity = "1000";
-  await page.getByRole("button", { name: "Refresh list", exact: true }).click();
-  await expect(purchase).not.toBeChecked();
-  await page.getByText("Calculation details", { exact: true }).click();
-  await expect(page.getByText(/850 g per container/)).toBeVisible();
-  const bulk = {
-    ingredient_id: 1,
-    mode: "bulk" as const,
-    shopping_unit: "g",
-    package_quantity: null,
-    package_unit: null,
-  };
   list.items = [
-    { ...list.items[0], quantity: "20", unit: "g", required_quantity: "20", presentation: bulk },
-  ];
-  await page.getByRole("button", { name: "Refresh list", exact: true }).click();
-  const measured = page.getByRole("checkbox", { name: "Egg, 20 g", exact: true });
-  await measured.check();
-  list.items[0].status = "incomplete";
-  list.items.push({
-    ...list.items[0],
-    quantity: "15",
-    unit: "ml",
-    required_quantity: "15",
-    required_unit: "ml",
-  });
-  list.conversion_warnings = [
     {
-      ingredient_id: 1,
-      name: "Egg",
-      units: ["ml"],
-      target_unit: "g",
-      reason: "measurement_reference_missing",
+      ...list.items[0],
+      quantity: "6",
+      unit: "piece",
+      status: "calculated",
+      required_quantity: "6",
+      required_unit: "piece",
     },
   ];
   await page.getByRole("button", { name: "Refresh list", exact: true }).click();
+  const measured = page.getByRole("checkbox", { name: "Egg, 6 pieces", exact: true });
   await expect(measured).not.toBeChecked();
   await measured.check();
-  list.items = [{ ...list.items[0], status: "calculated" }];
-  list.conversion_warnings = [];
+  list.items[0].required_quantity = "5.5";
   await page.getByRole("button", { name: "Refresh list", exact: true }).click();
-  await expect(measured).not.toBeChecked();
+  await expect(measured).toBeChecked();
 });
 
-test("renders whole pieces, sub-container mass, and whole containers exactly as returned by Rails", async ({
+test("renders measured purchases and packaged groceries without fabricated amounts", async ({
   page,
   api,
 }) => {
   const base = api.shoppingLists[1].items[0];
-  const presentation = {
-    ingredient_id: 2,
-    mode: "package" as const,
-    shopping_unit: "jar",
-    package_quantity: "390",
-    package_unit: "g",
-  };
   api.shoppingLists[1].items = [
-    { ...base, quantity: "3", required_quantity: "2.4", unit: "piece", required_unit: "piece" },
+    { ...base, quantity: "3", unit: "piece" },
     {
       ...base,
       ingredient_id: 20,
       name: "Mayonnaise",
-      quantity: "20",
-      unit: "g",
-      required_quantity: "20",
-      required_unit: "g",
-      presentation: { ...presentation, ingredient_id: 20 },
+      quantity: null,
+      unit: null,
+      status: "unquantified",
+      required_quantity: null,
+      required_unit: null,
     },
     {
       ...base,
       ingredient_id: 21,
       name: "Jam",
-      quantity: "2",
-      unit: "jar",
-      required_quantity: "500",
-      required_unit: "g",
-      presentation: { ...presentation, ingredient_id: 21 },
+      quantity: null,
+      unit: null,
+      status: "unquantified",
+      required_quantity: null,
+      required_unit: null,
     },
   ];
   await page.goto("/menus/1/shopping-list");
   await expect(page.getByRole("checkbox", { name: "Egg, 3 pieces", exact: true })).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: "Mayonnaise, 20 g", exact: true })).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: "Jam, 2 jars", exact: true })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Mayonnaise", exact: true })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Jam", exact: true })).toBeVisible();
+  await expect(page.getByText(/null|NaN|undefined/)).toHaveCount(0);
 });

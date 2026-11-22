@@ -176,26 +176,32 @@ and three from 1100px; keep each category together. The compact header shows
 the week and people count, with serving controls inside an Adjust disclosure.
 Checked progress sticks below the header while scrolling. Grocery text is 14px,
 checkbox labels provide a 44px-wide touch target, and checked rows stay in place.
-Save checks per menu on the device, clearing checks for changed purchases,
-including container contents and transitions to/from incomplete calculations.
-Keep calculation completeness separate from cart progress. Partial lines share
-an ingredient explanation and one Complete reference action. Required amounts
-and presentations stay inside compact disclosures below the main purchase line.
+Save checks per menu on the device, clearing checks for changed displayed
+quantities or buying presentations. Each ingredient appears once. Packaged products
+show only their name; weights, volumes, and pieces show a quantity when calculable.
+Name-only entries are intentional, without conversion warnings or completeness
+badges. Keep the receipt limited to product, optional amount, and checkbox; no
+per-row calculation disclosures. Ingredient names still open recipe usage previews.
+There is no additional shopping-adjustment step.
 
-## Ingredient measurements and recipe containers
+## Buying choices and recipe containers
 
-Refine the existing Operate forms with Greda controls and Comal semantic tokens.
-Separate buying presentation from measured recipe relationships with section
-headings and full-width dividers. Each section has its own actions, status, and
-retry; use Done to return to the originating screen. Source details and derived
-equivalents remain supporting information. Correction links focus the measurement
-section on the dedicated ingredient page.
+Use Greda controls and Comal semantic tokens. Saved ingredient editors expose
+only How I buy it below name/category, with piece, bulk, and package choices.
+Package contents are optional supporting information behind a disclosure; known
+contents remain editable. Do not ask users to document measurement references.
+Piece and bulk choices include one optional weight field, normally grams per
+piece. Existing multi-piece bases stay visible in its label without rounding the
+stored ratio. No provenance fields or separate reference editor are exposed.
+Buying saves retain the name draft; Done returns to the originating screen.
 
-Recipe servings explain the entered quantities. Package units reveal their own
-content quantity and unit, with an explicit action to fill from the habitual
-presentation. Clearing a selection requires fresh contents. Inputs and unit
-selectors remain full-width on small screens and use existing tablet columns.
+Recipe servings explain the entered quantities. Package contents are optional and
+collapsed for new rows. Known snapshots remain visible, independently of buying
+setup. An explicit action may copy known habitual contents. Changing ingredient
+or unit clears the snapshot without requiring fresh entry. Preserve mobile-first
+full-width fields and existing tablet columns.
 
-The implementation and source/diff review are recorded in
-`docs/client-ingredient-shopping-plan.md`. Rendered review at 320 px, 800 px,
-and desktop remains pending under the repository opt-in verification policy.
+The current behavior is documented in `docs/client.md`. Source/diff review is
+complete. Before committing, the production build and browser-test TypeScript
+checks passed. Automated tests were explicitly skipped at the user's request;
+rendered review remains pending.

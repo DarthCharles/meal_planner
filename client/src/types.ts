@@ -78,11 +78,11 @@ export type ShoppingListItem = {
   ingredient_id: number;
   name: string;
   shopping_category: ShoppingCategoryCode;
-  quantity: string;
-  unit: string;
-  status: "calculated" | "approximate" | "incomplete";
-  required_quantity: string;
-  required_unit: string;
+  quantity: string | null;
+  unit: string | null;
+  status: "calculated" | "approximate" | "unquantified";
+  required_quantity: string | null;
+  required_unit: string | null;
   presentation?: IngredientShoppingProfile;
   approximate?: boolean;
 };
@@ -110,6 +110,7 @@ export type IngredientShoppingProfile = {
   shopping_unit: string;
   package_quantity: string | null;
   package_unit: string | null;
+  piece_weight?: { quantity: string; reference_quantity: string } | null;
 };
 
 export type IngredientShoppingProfilePayload = Omit<IngredientShoppingProfile, "ingredient_id">;

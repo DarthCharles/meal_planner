@@ -11,12 +11,15 @@ class MealIngredientTest < ActiveSupport::TestCase
     assert_includes meal_ingredient.errors[:quantity], "must be greater than 0"
   end
 
-  test "package ingredients require contents and ordinary measures reject them" do
+  test "package contents are optional but must be complete when supplied" do
     meal = Meal.create!(name: "Canned tuna", description: "Test", servings: 1)
     tuna = Ingredient.create!(name: "Tuna")
     can = Unit.find_or_create_by!(code: "can")
     grams = Unit.find_or_create_by!(code: "g")
     row = meal.meal_ingredients.build(ingredient: tuna, quantity: 1, unit: can)
+    assert row.valid?
+    assert_nil row.requirement
+    row.package_quantity = 140
     assert_not row.valid?
     row.assign_attributes(package_quantity: 140, package_unit: grams)
     assert row.valid?

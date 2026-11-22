@@ -40,6 +40,7 @@ export function RecipePackageFields({
       active.current = false;
     };
   }, []);
+  const [showContents] = useState(() => !!getValues(`ingredients.${index}.package_quantity`));
   const [unavailable, setUnavailable] = useState(false);
   const contentUnits = units.filter((unit) => ["g", "kg", "ml", "l", "piece"].includes(unit.code));
   const rowErrors = errors.ingredients?.[index];
@@ -48,7 +49,12 @@ export function RecipePackageFields({
     const result = await refetch();
     if (!active.current || result.error) return;
     const profile = result.data;
-    if (!profile || profile.mode !== "package") {
+    if (
+      !profile ||
+      profile.mode !== "package" ||
+      !profile.package_quantity ||
+      !profile.package_unit
+    ) {
       setUnavailable(true);
       return;
     }
@@ -67,61 +73,68 @@ export function RecipePackageFields({
     });
   };
   return (
-    <div className="col-span-full grid min-w-0 gap-3 border-t border-border pt-3">
-      <p className="m-0 text-xs text-muted-foreground">{t("recipe.snapshot_help")}</p>
-      <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
-        <label className="grid min-w-0 gap-2 font-medium">
-          {t("recipe.contents")}
-          <Input
-            className="h-11"
-            {...register(`ingredients.${index}.package_quantity`, {
+    <details open={showContents} className="col-span-full min-w-0 border-t border-border pt-3">
+      <summary className="min-h-11 cursor-pointer content-center text-sm text-primary">
+        {t("recipe.optional_contents")}
+      </summary>
+      <div className="grid min-w-0 gap-3 pt-3">
+        <p className="m-0 text-xs text-muted-foreground">{t("recipe.snapshot_help")}</p>
+        <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
+          <label className="grid min-w-0 gap-2 font-medium">
+            {t("recipe.contents")}
+            <Input
+              className="h-11"
+              {...register(`ingredients.${index}.package_quantity`, {
+                validate: (value, values) =>
+                  !values.ingredients[index]?.name.trim() ||
+                  units.find((unit) => unit.code === values.ingredients[index]?.unit)?.dimension !==
+                    "package" ||
+                  !(value ?? "").trim() ||
+                  validQuantity(value ?? ""),
+              })}
+              aria-invalid={!!rowErrors?.package_quantity}
+              aria-describedby={rowErrors?.package_quantity ? "meal-form-error" : undefined}
+            />
+          </label>
+          <Controller
+            control={control}
+            name={`ingredients.${index}.package_unit`}
+            rules={{
               validate: (value, values) =>
                 !values.ingredients[index]?.name.trim() ||
                 units.find((unit) => unit.code === values.ingredients[index]?.unit)?.dimension !==
                   "package" ||
-                validQuantity(value ?? ""),
-            })}
-            aria-invalid={!!rowErrors?.package_quantity}
-            aria-describedby={rowErrors?.package_quantity ? "meal-form-error" : undefined}
+                !values.ingredients[index]?.package_quantity?.trim() ||
+                !!value,
+            }}
+            render={({ field, fieldState }) => (
+              <UnitSelect
+                label={t("recipe.contents_unit")}
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                inputRef={field.ref}
+                onBlur={field.onBlur}
+                units={contentUnits}
+                invalid={fieldState.invalid}
+                describedBy={fieldState.invalid ? "meal-form-error" : undefined}
+              />
+            )}
           />
-        </label>
-        <Controller
-          control={control}
-          name={`ingredients.${index}.package_unit`}
-          rules={{
-            validate: (value, values) =>
-              !values.ingredients[index]?.name.trim() ||
-              units.find((unit) => unit.code === values.ingredients[index]?.unit)?.dimension !==
-                "package" ||
-              !!value,
-          }}
-          render={({ field, fieldState }) => (
-            <UnitSelect
-              label={t("recipe.contents_unit")}
-              value={field.value ?? ""}
-              onChange={field.onChange}
-              inputRef={field.ref}
-              onBlur={field.onBlur}
-              units={contentUnits}
-              invalid={fieldState.invalid}
-              describedBy={fieldState.invalid ? "meal-form-error" : undefined}
-            />
-          )}
-        />
+        </div>
+        {ingredientId && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isFetching}
+            className="h-auto min-h-11 whitespace-normal justify-self-start"
+            onClick={() => void applyPresentation()}
+          >
+            {t("recipe.use_presentation")}
+          </Button>
+        )}
+        {error && <p role="alert">{error.message}</p>}
+        {unavailable && <p role="status">{t("recipe.no_presentation")}</p>}
       </div>
-      {ingredientId && (
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isFetching}
-          className="h-auto min-h-11 whitespace-normal justify-self-start"
-          onClick={() => void applyPresentation()}
-        >
-          {t("recipe.use_presentation")}
-        </Button>
-      )}
-      {error && <p role="alert">{error.message}</p>}
-      {unavailable && <p role="status">{t("recipe.no_presentation")}</p>}
-    </div>
+    </details>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Button } from "@darthcharles/greda";
 
-import { unitLabel, useI18n } from "../../i18n";
+import { formatLocale, unitLabel, useI18n } from "../../i18n";
 import { IngredientShoppingEditor } from "./IngredientShoppingEditor";
 import { useIngredientShoppingProfile } from "./queries";
 
@@ -20,6 +20,7 @@ export function IngredientShoppingSummary({
   onEditingChange: (editing: boolean) => void;
 }) {
   const { t } = useI18n();
+  const number = new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 6 });
   const [saved, setSaved] = useState(false);
   const {
     data: profile,
@@ -66,20 +67,31 @@ export function IngredientShoppingSummary({
             </p>
           )}
           {profile && (
-            <p className="m-0 text-sm">
-              {unitLabel(profile.shopping_unit)}
-              {profile.mode === "package" && (
-                <>
-                  {" "}
-                  ·{" "}
-                  {t("ingredients.shopping.amount", {
-                    unit: unitLabel(profile.shopping_unit, 1),
-                    quantity: profile.package_quantity ?? "",
-                    base: unitLabel(profile.package_unit ?? "", Number(profile.package_quantity)),
+            <>
+              <p className="m-0 text-sm">
+                {unitLabel(profile.shopping_unit)}
+                {profile.mode === "package" && profile.package_quantity && profile.package_unit && (
+                  <>
+                    {" "}
+                    ·{" "}
+                    {t("ingredients.shopping.amount", {
+                      unit: unitLabel(profile.shopping_unit, 1),
+                      quantity: profile.package_quantity ?? "",
+                      base: unitLabel(profile.package_unit ?? "", Number(profile.package_quantity)),
+                    })}
+                  </>
+                )}
+              </p>
+              {profile.mode !== "package" && profile.piece_weight && (
+                <p className="m-0 text-sm text-muted-foreground">
+                  {t("ingredients.shopping.piece_weight_summary", {
+                    count: number.format(Number(profile.piece_weight.reference_quantity)),
+                    unit: unitLabel("piece", Number(profile.piece_weight.reference_quantity)),
+                    grams: number.format(Number(profile.piece_weight.quantity)),
                   })}
-                </>
+                </p>
               )}
-            </p>
+            </>
           )}
           {profile !== undefined && (
             <Button

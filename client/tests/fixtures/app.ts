@@ -7,8 +7,8 @@ import type {
   IngredientShoppingProfile,
   IngredientShoppingProfilePayload,
   Meal,
-  MeasurementReference,
   MealPayload,
+  MeasurementReference,
   Menu,
   ShoppingList,
 } from "../../src/types";
@@ -124,7 +124,21 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           }
           if (/^\/ingredients\/\d+\/shopping_profile$/.test(path)) {
             const id = Number(path.split("/")[2]);
-            return void (await respond(api.ingredientProfiles[id] ?? null));
+            const profile = api.ingredientProfiles[id];
+            const weight = api.ingredientReferences[id]?.find(
+              (reference) => reference.kind === "piece_weight",
+            );
+            return void (await respond(
+              profile && weight
+                ? {
+                    ...profile,
+                    piece_weight: {
+                      quantity: weight.quantity,
+                      reference_quantity: weight.reference_quantity,
+                    },
+                  }
+                : (profile ?? null),
+            ));
           }
           if (path === "/menus")
             return void (await respond(
@@ -213,7 +227,39 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           api.profileSaves.push({ id, body });
           await api.profileSaveBarrier;
           if (api.profileSaveError) return void (await fail(api.profileSaveError));
-          const profile = { ...body, ingredient_id: id };
+          if (body.piece_weight !== undefined) {
+            const previous = api.ingredientReferences[id]?.find(
+              (reference) => reference.kind === "piece_weight",
+            );
+            const references = (api.ingredientReferences[id] ?? []).filter(
+              (reference) => reference.kind !== "piece_weight",
+            );
+            if (body.piece_weight) {
+              references.push(
+                previous &&
+                  previous.quantity === body.piece_weight.quantity &&
+                  previous.reference_quantity === body.piece_weight.reference_quantity
+                  ? previous
+                  : {
+                      kind: "piece_weight",
+                      ...body.piece_weight,
+                      source: "User-provided buying weight",
+                      description: "Weight entered in buying setup",
+                      approximate: true,
+                    },
+              );
+            }
+            api.ingredientReferences[id] = references;
+          }
+          const profile = { ...api.ingredientProfiles[id], ...body, ingredient_id: id };
+          const weight = api.ingredientReferences[id]?.find(
+            (reference) => reference.kind === "piece_weight",
+          );
+          if (weight)
+            profile.piece_weight = {
+              quantity: weight.quantity,
+              reference_quantity: weight.reference_quantity,
+            };
           api.ingredientProfiles[id] = profile;
           return void (await respond(profile));
         }

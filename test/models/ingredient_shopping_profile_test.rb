@@ -19,6 +19,8 @@ class IngredientShoppingProfileTest < ActiveSupport::TestCase
       { mode: "package", shopping_unit: "g", package_quantity: 100, package_unit: "g" },
       { mode: "package", shopping_unit: "can", package_quantity: 100, package_unit: "can" },
       { mode: "package", shopping_unit: "can", package_quantity: 0, package_unit: "g" },
+      { mode: "package", shopping_unit: "can", package_quantity: 140 },
+      { mode: "package", shopping_unit: "can", package_unit: "g" },
       { mode: "bulk", shopping_unit: "g", package_quantity: 100, package_unit: "g" }
     ]
     invalid.each do |attributes|

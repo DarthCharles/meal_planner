@@ -314,7 +314,7 @@ positive after storage rounding, with a maximum of `1000000000`. Scientific-nota
 and malformed quantities are rejected. Responses serialize decimals
 as strings. Recipe ingredients can repeat, preserving their notes and order.
 
-A recipe that uses a container must record its contents explicitly:
+A recipe that uses a container can optionally record its contents:
 
 ```json
 {
@@ -333,8 +333,9 @@ culinary measures as package contents are rejected. Non-package rows must not
 include contents. The stored contents are independent of shopping setup:
 changing the habitual can from 140 g to 100 g never changes this recipe's need
 for 140 g. A recipe does not look up a mutable package size during calculation.
-Recipe responses include `package_quantity` and `package_unit` (null for normal
-measures). Invalid rows return `422` under `errors.ingredients`, atomically
+Both package content fields may be absent/null, including for containers. If one
+is supplied, both must be valid. Recipe responses include `package_quantity` and
+`package_unit` (null when contents are unknown or for normal measures). Invalid rows return `422` under `errors.ingredients`, atomically
 rolling back the recipe, references to ingredients, and newly drafted ingredients.
 
 ## Ingredient measurement references
@@ -343,6 +344,8 @@ rolling back the recipe, references to ingredients, and newly drafted ingredient
 references exist. `PUT` and `PATCH` replace the whole set atomically. `[]`
 clears it. These references belong to the ingredient independently of its
 shopping profile. Both endpoints return `404` for missing ingredients.
+These endpoints remain available for existing data and API consumers; the client
+no longer asks users to configure measurement references.
 
 ```json
 {
@@ -397,98 +400,101 @@ object in `data`, including `ingredient_id`:
 | --- | --- | --- |
 | `bulk` | `g`, `kg`, `ml`, `l` | Must be absent/null |
 | `piece` | `piece` | Must be absent/null |
-| `package` | `jar`, `bag`, `can`, `bottle`, `package` | Positive quantity and `g`, `kg`, `ml`, `l`, or `piece` |
+| `package` | `jar`, `bag`, `can`, `bottle`, `package` | Optional; when supplied, positive quantity and `g`, `kg`, `ml`, `l`, or `piece` |
 
-A six-egg package therefore needs no weight reference. Shopping setup may be
-saved before measurement references: missing bridges are reported when calculating
-an affected menu. Invalid combinations return `422` with field errors and
+Packages can be saved with only `mode` and `shopping_unit`. Both content fields
+must be absent/null together, or form a valid complete pair. Packages appear by
+name only on the shopping checklist, regardless of size or measurement references. Invalid combinations return `422` with field errors and
 preserve the previous presentation. `DELETE` returns `data: true`, retaining
 measurement references and recipe quantities. Removing an unused ingredient
 removes both its references and its shopping profile.
+
+Buying setup also accepts an optional `piece_weight` object, allowing users to
+record a habitual piece weight without a separate measurement form:
+
+```json
+{
+  "mode": "bulk",
+  "shopping_unit": "g",
+  "piece_weight": { "quantity": "272", "reference_quantity": "1" }
+}
+```
+
+The quantities mean grams for the specified number of pieces; `reference_quantity`
+defaults to 1. They use the existing positive-quantity validation and exact stored
+ratio. GET and successful saves include `piece_weight` when a reference exists.
+Omitting the property preserves it; explicit null removes only the piece-weight
+reference. Density references and recipe quantities remain unchanged. Unchanged
+ratios preserve their original source, description, approximation flag, and IDs.
+New or changed weights use internal provenance and are approximate; no source or
+description is requested from the user. The profile and optional weight update
+atomically; invalid nested data returns 422 under `errors.piece_weight` and rolls
+back both. This reuses measurement-reference storage and needs no migration.
 
 The old `base_unit`, `equivalences`, and `round_up` contract is removed. This is
 a breaking backend change; the client must adopt these contracts separately.
 
 ## Shopping lists
 
-`GET /menus/:id/shopping_list` computes live requirements for the whole menu.
-Each scheduled occurrence contributes `quantity × people_count ÷ servings`.
-Recipe packages first expand using their own saved contents. Standard measures
-normalize to g/ml/pieces, then ingredient references bridge dimensions as needed.
-All occurrences and repeated ingredient rows accumulate before any rounding.
-Different ingredient IDs never merge; other menus do not contribute.
+`GET /menus/:id/shopping_list` returns a live grocery checklist, with exactly one
+item per ingredient ID across the selected menu. Each scheduled occurrence
+contributes `quantity × people_count ÷ servings`; compatible quantities accumulate
+before display rounding. Other menus do not contribute.
 
 Display rules:
 
-- Pieces always round upward, including fractions below one: 0.2 onion → 1 piece.
-- Packages retain the canonical required quantity below one complete container:
-  20 g of mayonnaise stays 20 g. At/above the configured size, use whole packages
-  rounded up: with a 390 g jar, 390 g → 1 jar and 500 g → 2 jars.
-- Bulk requirements display canonical g or ml, without rounding to whole units.
-- Without a shopping profile, natural canonical units are used. Piece totals
-  still round upward. Mixed dimensions need the same ingredient references.
-- If any conversion fails, every line for that ingredient is `incomplete`.
-  Preserve converted and unresolved needs without rounding a partial purchase.
-  Warn even if only one unresolved unit remains.
+- A `package` shopping profile always produces a name-only item, regardless of
+  package size or recipe measures. No container count is inferred.
+- Without a profile, an ingredient used in recipe containers is also name-only.
+- Recipe containers with unknown contents remain valid. If any occurrence has
+  unknown contents, that ingredient is name-only; other ingredients still calculate.
+- Otherwise, configured buying units select the canonical target (g, ml, or piece).
+  Without a profile the target follows the existing g/ml/piece priority.
+- Standard units normalize automatically. Existing ingredient references may
+  bridge dimensions, but users do not have to supply references.
+- If any quantity cannot convert, the ingredient is returned once without a
+  quantity. No partial purchase totals or reference-correction warnings are emitted.
+- Fully calculated pieces round upward after accumulation. Mass and volume
+  display in canonical g/ml. Ingredient names and categories remain unchanged.
 
-Example item, with a synthetic 150 g-per-piece reference and 360 g needed:
-
-```json
-{
-  "ingredient_id": 3,
-  "name": "Onion",
-  "shopping_category": "produce",
-  "unit": "piece",
-  "quantity": "3",
-  "status": "approximate",
-  "required_unit": "piece",
-  "required_quantity": "2.4",
-  "approximate": true,
-  "presentation": {
-    "ingredient_id": 3,
-    "mode": "piece",
-    "shopping_unit": "piece",
-    "package_quantity": null,
-    "package_unit": null
-  }
-}
-```
-
-`status` is `calculated`, `approximate`, or `incomplete`. `required_quantity`
-and `required_unit` describe the unrounded need in the canonical unit used for
-calculation, not the rounded purchase. On incomplete items they describe that
-line's partial requirement only. `presentation` is present when configured,
-including below the package threshold. `approximate: true` means a reference
-used by that line was approximate; it is omitted otherwise. Direct piece counts
-do not inherit an unused approximate weight flag.
-
-The response retains `menu_id`, `from`, `to`, `people_count`, the ordered category
-catalog, `items`, `meals_without_ingredients`, and `conversion_warnings`. Missing
-recipes are listed once. The warning shape is:
+Example name-only grocery:
 
 ```json
 {
   "ingredient_id": 12,
   "name": "Mayonnaise",
-  "units": ["ml"],
-  "target_unit": "g",
-  "reason": "measurement_reference_missing"
+  "shopping_category": "pantry",
+  "quantity": null,
+  "unit": null,
+  "status": "unquantified",
+  "required_quantity": null,
+  "required_unit": null
 }
 ```
 
-`units` identifies unresolved canonical dimensions. No warnings means all entered
-quantities converted, but recipes listed in `meals_without_ingredients` still
-need ingredient data. Partially entered recipes cannot be detected automatically.
-Items sort by category position, lowercase name, ingredient ID, then unit.
-Empty menus return empty item/warning/missing-recipe arrays. Live recipe,
-reference, and presentation changes also affect historical menu lists.
+`quantity` and `unit` are either both populated or both null. `status` is
+`calculated`, `approximate`, or `unquantified`. `required_quantity` and
+`required_unit` remain as API metadata for calculated items (the unrounded need,
+with three-place display precision); they are null for name-only items.
+`presentation` is included when configured. `approximate: true` is present only
+when a used reference is approximate. The client displays no calculation metadata.
 
-Accumulation, reference ratios, and package thresholds use exact rational
-arithmetic. Only decimal display rounds to three places, halfway away from zero;
-positive values below that precision stay visible as `0.001`. Thus a value
-slightly below a package size may display the same rounded number without
-crossing the exact threshold. No pantry stock is subtracted and no purchase or
-check state is stored by Rails.
+The response retains `menu_id`, `from`, `to`, `people_count`, the ordered category
+catalog, `items`, and `meals_without_ingredients`. `conversion_warnings` is retained
+as an always-empty array for compatibility; its emptiness no longer promises all
+quantities converted. Recipes without ingredients remain listed once, since those
+recipes contribute no products. Partially entered recipes cannot be detected.
+Items sort by category position, lowercase name, then ingredient ID. Empty menus
+return empty item/warning/missing-recipe arrays. Calculations are live, including
+for saved menus.
+
+Accumulation and reference ratios use exact rational arithmetic. Decimal display
+rounds to three places, halfway away from zero; positive values below that
+precision stay visible as `0.001`. No pantry stock is subtracted and Rails stores
+no shopping checklist marks or manual shopping adjustments.
+
+This changes the checklist contract: clients must support null amounts and must
+not expect multiple partial lines or `incomplete` conversion warnings.
 
 ## Days
 

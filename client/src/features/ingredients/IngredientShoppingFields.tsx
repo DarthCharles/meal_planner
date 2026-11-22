@@ -104,9 +104,12 @@ export function IngredientShoppingFields({
   const {
     control,
     register,
+    getValues,
     formState: { errors },
   } = useFormContext<ShoppingDraft>();
   const how = useWatch({ control, name: "how" });
+  const pieceCount = useWatch({ control, name: "pieceCount" });
+  const [initialContentsOpen] = useState(() => !!getValues("packageSize"));
   const options = shoppingUnitOptions(units);
 
   return (
@@ -143,6 +146,33 @@ export function IngredientShoppingFields({
         </div>
       )}
 
+      {how !== "package" && (
+        <div className="grid gap-2 text-sm">
+          <label className="grid gap-2">
+            {Number(pieceCount) === 1
+              ? t("ingredients.shopping.piece_weight")
+              : t("ingredients.shopping.pieces_weight", { count: pieceCount })}
+            <Input
+              className="h-11"
+              inputMode="decimal"
+              disabled={busy}
+              {...register("pieceWeight", {
+                validate: (value, draft) =>
+                  draft.how === "package" ||
+                  !value.trim() ||
+                  validShoppingAmount(value) ||
+                  t("ingredients.shopping.piece_weight_error"),
+              })}
+              aria-invalid={!!errors.pieceWeight}
+              aria-describedby={errors.pieceWeight ? "shopping-setup-error" : "piece-weight-help"}
+            />
+          </label>
+          <p id="piece-weight-help" className="m-0 text-sm text-muted-foreground">
+            {t("ingredients.shopping.piece_weight_help")}
+          </p>
+        </div>
+      )}
+
       {how === "package" && (
         <div className="flex flex-col gap-3">
           <ShoppingSelect
@@ -155,34 +185,39 @@ export function IngredientShoppingFields({
               draft.how !== "package" || !!value || t("ingredients.shopping.choose_package")
             }
           />
-          <p className="m-0 text-sm font-semibold">{t("ingredients.shopping.package_contains")}</p>
-          <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
-            <Input
-              type="text"
-              disabled={busy}
-              className="h-11 min-w-0 flex-1"
-              aria-label={t("ingredients.shopping.package_size")}
-              {...register("packageSize", {
-                validate: (value, draft) =>
-                  draft.how !== "package" ||
-                  validShoppingAmount(value) ||
-                  t("ingredients.shopping.enter_size"),
-              })}
-              aria-invalid={!!errors.packageSize}
-              aria-describedby={errors.packageSize ? "shopping-setup-error" : undefined}
-            />
-            <div className="min-w-0">
-              <ShoppingSelect
-                name="packageMeasure"
-                label={t("ingredients.shopping.package_measure")}
-                options={unitOptions(options.measures)}
+          <details open={initialContentsOpen}>
+            <summary className="min-h-11 cursor-pointer content-center text-sm text-primary">
+              {t("ingredients.shopping.package_contains")}
+            </summary>
+            <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
+              <Input
+                type="text"
                 disabled={busy}
+                className="h-11 min-w-0 flex-1"
+                aria-label={t("ingredients.shopping.package_size")}
+                {...register("packageSize", {
+                  validate: (value, draft) =>
+                    draft.how !== "package" ||
+                    !value.trim() ||
+                    validShoppingAmount(value) ||
+                    t("ingredients.shopping.enter_size"),
+                })}
+                aria-invalid={!!errors.packageSize}
+                aria-describedby={errors.packageSize ? "shopping-setup-error" : undefined}
               />
+              <div className="min-w-0">
+                <ShoppingSelect
+                  name="packageMeasure"
+                  label={t("ingredients.shopping.package_measure")}
+                  options={unitOptions(options.measures)}
+                  disabled={busy}
+                />
+              </div>
             </div>
-          </div>
-          <p className="m-0 text-sm text-muted-foreground">
-            {t("ingredients.shopping.label_help")}
-          </p>
+            <p className="m-0 text-sm text-muted-foreground">
+              {t("ingredients.shopping.label_help")}
+            </p>
+          </details>
         </div>
       )}
     </>

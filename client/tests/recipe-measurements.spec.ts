@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+
 import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
 
 async function chooseUnit(page: Page, label: string, index = 0) {
@@ -125,12 +126,6 @@ test("ingredient and container changes clear snapshots, errors, and late suggest
   await page.getByRole("option", { name: "Tomato", exact: true }).click();
   release();
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
-  await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveAttribute(
-    "aria-invalid",
-    "true",
-  );
-  expect(api.saves).toEqual([]);
   await chooseUnit(page, "jars");
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
   await chooseUnit(page, "g");
@@ -142,7 +137,7 @@ test("ingredient and container changes clear snapshots, errors, and late suggest
 });
 
 test(
-  "returning to a container requires fresh manual contents for an unsaved ingredient",
+  "returning to a container clears optional contents for an unsaved ingredient",
   { tag: "@responsive" },
   async ({ page }) => {
     await page.goto("/meals/1/edit");
@@ -150,6 +145,7 @@ test(
     await ingredient.fill("Tuna");
     await page.getByRole("option", { name: "Create ingredient “Tuna”", exact: true }).click();
     await chooseUnit(page, "cans");
+    await page.getByText("Add container contents (optional)", { exact: true }).click();
     await page.getByLabel("Contents per container", { exact: true }).fill("140");
     await expect(page.getByRole("button", { name: "Fill from habitual presentation" })).toHaveCount(
       0,
@@ -201,9 +197,17 @@ test("a late presentation response cannot populate a removed row or replace cont
   release();
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
   await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveAttribute(
-    "aria-invalid",
-    "true",
-  );
-  expect(api.saves).toEqual([]);
+  await expect(editorScreen(page)).toHaveCount(0);
+  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("package_quantity");
+});
+
+test("saves a recipe container without asking for its contents", async ({ page, api }) => {
+  await page.goto("/meals/1/edit");
+  await chooseUnit(page, "cans");
+  await expect(page.getByLabel("Contents per container", { exact: true })).toBeHidden();
+  await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(editorScreen(page)).toHaveCount(0);
+  expect(api.saves[0].body.ingredients[0]).toMatchObject({ unit: "can" });
+  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("package_quantity");
+  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("package_unit");
 });

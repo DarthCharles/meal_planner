@@ -116,7 +116,8 @@ export function MealForm({
           quantity,
           unit,
           preparation_note,
-          ...(units.find((option) => option.code === unit)?.dimension === "package"
+          ...(units.find((option) => option.code === unit)?.dimension === "package" &&
+          package_quantity?.trim()
             ? { package_quantity, package_unit }
             : {}),
         }),

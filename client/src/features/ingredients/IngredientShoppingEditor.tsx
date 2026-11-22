@@ -99,6 +99,7 @@ function ShoppingForm({
     errors.root?.message ??
     errors.packageUnit?.message ??
     errors.packageSize?.message ??
+    errors.pieceWeight?.message ??
     saveError?.message ??
     clearError?.message;
 
@@ -165,8 +166,7 @@ function ShoppingForm({
             variant="ghost"
             disabled={busy}
             onClick={() => {
-              if (!methods.formState.isDirty || window.confirm(t("measurements.confirm_cancel")))
-                onDone();
+              if (!methods.formState.isDirty || window.confirm(t("editor.discard"))) onDone();
             }}
           >
             {t("common.cancel")}

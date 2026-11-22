@@ -13,11 +13,46 @@ class IngredientShoppingProfileSaveService
       profile.errors.add(:package_quantity, :invalid_quantity)
       raise ActiveRecord::RecordInvalid.new(profile)
     end
-    profile.save!
+    Ingredient.transaction do
+      profile.save!
+      save_piece_weight(ingredient, profile, attributes[:piece_weight]) if attributes.key?(:piece_weight)
+    end
+    ingredient.measurement_references.reset
+    profile.ingredient.measurement_references.reset
     profile
   end
 
   private
+
+  def save_piece_weight(ingredient, profile, attributes)
+    reference = ingredient.measurement_references.find_by(kind: "piece_weight")
+    if attributes.nil?
+      reference&.destroy!
+      return
+    end
+    unless attributes.is_a?(Hash)
+      profile.errors.add(:piece_weight, :invalid)
+      raise ActiveRecord::RecordInvalid.new(profile)
+    end
+
+    attributes = attributes.with_indifferent_access
+    quantity = MeasurementQuantity.parse(attributes[:quantity])
+    basis = MeasurementQuantity.parse(attributes.fetch(:reference_quantity, 1))
+    # Preserve the exact ratio, source, and approximation flag on unrelated saves.
+    return if reference && reference.quantity == quantity && reference.reference_quantity == basis
+
+    reference ||= ingredient.measurement_references.build(kind: "piece_weight")
+    reference.assign_attributes(
+      quantity: quantity, reference_quantity: basis, approximate: true,
+      source: "User-provided buying weight",
+      description: "Weight of #{basis} pieces entered in buying setup"
+    )
+    unless reference.valid?
+      profile.errors.add(:piece_weight, reference.errors.full_messages.to_sentence)
+      raise ActiveRecord::RecordInvalid.new(profile)
+    end
+    reference.save!
+  end
 
   def unit_for(code)
     Unit.find_by(code: code) if code.is_a?(String)

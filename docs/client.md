@@ -226,57 +226,49 @@ menus. Ingredient saves refresh the catalog. Meal saves also synchronize usage
 references in the catalog cache, including removed ingredients and renamed meals.
 The meal form still supports creating ingredients when saving a meal.
 
-Saved ingredient editors contain two independent configuration sections below
-name and category: **How I buy it** and **Measurements used in recipes**. Each
-loads its own endpoint only in its consuming editor. Catalog browsing and new
-unsaved ingredients do not fetch profiles or references. Units load in the saved
-editor to support measurement capture; ordinary recipe rows do not fetch profiles.
+Saved ingredient editors contain **How I buy it** below name and category. The
+measurement-reference form has been removed. Existing references remain in Rails;
+the client does not call their separate endpoints during ingredient editing.
+Catalog browsing and new unsaved ingredient editors do not fetch profiles. Units load only when
+opening the buying form.
 
 Buying setup uses `mode`, `shopping_unit`, `package_quantity`, and `package_unit`:
 
-- Pieces need no weight reference. Rails rounds the accumulated need upward.
-- Bulk accepts g, kg, ml, or l; Rails displays canonical g or ml.
-- Packages accept jar, bag, can, bottle, or package, with explicit contents in
-  g, kg, ml, l, or piece. No package type or size is invented.
+- Pieces require only the buying choice.
+- Bulk accepts g, kg, ml, or l; Rails displays calculable totals in canonical g/ml.
+- Packages accept jar, bag, can, bottle, or generic package. The generic package is
+  the initial selection, so no product type or size has to be documented.
+- Package contents are optional, initially collapsed unless existing contents are
+  present. A blank quantity submits both content fields as null. Entered content
+  quantities must be positive; existing sizes remain editable and can still fill
+  optional recipe container snapshots.
+
+Piece and bulk buying choices expose one optional **Weight of one piece (g)**
+field. This covers chicken breasts and other ingredients whose recipes mix grams
+and pieces. It saves alongside the buying choice through `piece_weight` on the
+shopping-profile endpoint, with internal provenance and no source/description form.
+The normal measured basis is one piece; an existing multi-piece ratio retains its
+exact basis, reflected in the field label. Blank new weights are omitted; clearing
+an existing weight sends null. Switching to package buying hides the field and
+preserves the stored reference. Positive-weight validation, API failures, and dirty
+navigation preserve the draft. The buying summary shows the saved weight and
+shopping calculations use it without adding technical details to the receipt.
+No schema migration or recipe rewrite is required.
 
 The profile section has its own Save, Cancel, Remove, loading, error, and retry
 states. It saves through `PUT /ingredients/:id/shopping_profile`; removal uses
 `DELETE` and retains measurement references. Successful responses synchronize
 profile caches and invalidate shopping lists. Profile changes never rewrite
-recipe containers.
-
-Measurement references load through `GET /ingredients/:id/measurement_references`.
-Editing requires a complete successful response; a failed load is never treated
-as an empty collection. The form edits the two optional measured relationships:
-weight/volume (`density`) and weight/pieces (`piece_weight`). Source choices include
-product label and personal measurement; source details accept text, not just URLs.
-Users must provide a description and explicitly choose whether the reference is
-approximate. No source or conversion is inferred from the ingredient's name.
-
-Culinary measures use `/units` dimension, canonical-unit, and factor metadata.
-For example, a measured tablespoon weighing 13 g saves numerator `13` and
-denominator `15` ml, without rounding to a density. Derived cup/spoon equivalents
-are read-only. Reopening shows the stored g/ml or g/piece relationship, since
-Rails does not retain the originally captured culinary unit. Unchanged measured
-numerators, denominators, and source information survive a replacement save.
-
-References save the complete collection through `PUT` with `{ references: [...] }`.
-Disabling one kind retains the other unchanged; disabling both submits `[]`.
-Background refreshes and refresh failures preserve initialized dirty drafts.
-First-load failures block editing and offer retry. This section has its own
-Save, Cancel, loading, retry, and error states, independent of the presentation.
-
-Section saves confirm locally and leave the editor open, retaining all other
-unsaved sections. **Done** returns to the origin and applies dirty-draft protection.
-Name/category saves also stay on the page. A newly created standalone ingredient
-continues on its persisted edit URL before either configuration can save, keeping
-the original return context. These endpoints are independent; there is no combined
-atomic save. Failed recalculation does not turn a successful reference/profile
-save into a failed save: the shopping list retains its old-result notice and retry.
+recipe containers. Saves confirm locally and leave the ingredient editor open,
+retaining the unsaved name/category draft. **Done** returns to the origin and
+applies dirty-draft protection. Name/category saves also stay on the page. New
+standalone ingredients continue on their persisted edit URL after creation.
+A failed recalculation does not turn a successful profile save into a failed save.
 
 `IngredientShoppingEditor`, `IngredientShoppingFields`, and
-`shoppingProfileForm.ts` own presentation capture. `IngredientMeasurements` owns
-reference capture. React Query hooks own all requests and cache synchronization.
+`shoppingProfileForm.ts` own buying capture. React Query hooks own requests and
+cache synchronization. No new shopping-adjustment step or manual purchase editor
+has been added.
 
 The ingredient editor shows a Delete ingredient action only for unused ingredients.
 It calls `DELETE /ingredients/:id`
@@ -509,9 +501,11 @@ rules display consistently through RHF, marking invalid controls and linking
 them to an alert summary. Cancel confirms any unsaved changes and unmounts the draft; reopening initializes
 a fresh form. Failed saves leave the current values intact.
 
-Package recipe units reveal explicit contents per container in g, kg, ml, l,
-or pieces. These are snapshots belonging to the recipe. Choosing a different
-ingredient or container clears contents and requires fresh entry; switching to
+Package recipe units offer optional contents per container in g, kg, ml, l,
+or pieces behind **Add container contents (optional)**, initially open only for
+known contents. Blank contents are omitted from submissions. Supplied contents
+remain snapshots belonging to the recipe. Choosing a different ingredient or
+container clears them; switching to
 an ordinary measure clears content validation errors and omits both package
 fields from the payload. Returning to a container does not restore old contents.
 An explicit button can load the saved ingredient's habitual presentation; manual
@@ -587,7 +581,7 @@ additional editor-specific width limit.
 `features/meals/useMealDialog.tsx` retains its existing feature entry points but
 now opens URL previews or editor routes through `useWorkspaceNavigation`.
 `MealDialogContent` remains the reference-data/form loader on the editor page.
-`EditorDraftContext` tracks dirty recipe, ingredient, presentation, and measurement-reference drafts;
+`EditorDraftContext` tracks dirty recipe, ingredient, and buying-presentation drafts;
 the data router's blocker protects navigation. Form and mutation logic stays in
 the feature components and query hooks. Navigating away does not cancel a pending
 mutation's cache updates, and callbacks from an unmounted form cannot leave a
@@ -733,28 +727,22 @@ without splitting long lists, repeating headings, or aligning to rigid grid rows
 Resizing preserves the checklist and people draft. Ingredient usage and recipe details
 use the single quick preview above the page.
 `ShoppingListContent` fetches `GET /menus/:id/shopping_list` only when opened, through
-React Query. It displays the full week's calendar range, saved people count,
-category sections, localized requirement quantities/units, and approximation
-indicators. Rails calculates accumulation, conversions, thresholds, and purchase
-rounding; the client displays the returned quantity/unit. Whole pieces always
-round upward. Package requirements below one configured container stay in canonical
-units; at or above it, Rails returns whole containers rounded upward. Bulk stays
-in canonical g/ml. A compact disclosure shows `required_quantity`/`required_unit`
-and the configured presentation. Required quantities have three-place display
-precision and are not exact rational totals.
+React Query. It displays the week's calendar range, saved people count, categories,
+and one checkbox per ingredient. Rails scales and accumulates recipe quantities.
+Calculable weights, volumes, and pieces show an amount; packaged products and
+unconvertible requirements have null quantity/unit and display only their name.
+A package profile always means name-only, even with a known size. Recipe container
+use also means name-only when no buying profile exists. Quantity-less checkbox
+labels are just the ingredient name, without null text or fabricated amounts.
 
-Incomplete lines retain every returned partial requirement. Incomplete and
-approximate labels can coexist. A separate persistent count of unresolved
-ingredients stays visible after all cart checks; checking means only that the
-displayed quantity is in the cart. Each warning offers one **Complete reference**
-action per ingredient, opening the existing ingredient editor with the measurement
-section expanded and focused. Source/target units explain the missing relationship;
-volume/pieces can require both reference kinds. **Done** returns to the same list,
-retaining unfinished people input and origin context. Pending/failed recalculation
-labels the cached receipt as previous data and offers retry. Missing recipes,
-loading, retry, empty, and missing-menu states remain visible.
-The list uses a centered supermarket receipt with monospace text, dotted leaders,
-category separators, and a decorative torn bottom edge. Each ingredient/unit entry
+There are no per-row calculation details, approximation badges, incomplete
+conversion counts, or **Complete reference** actions. Recipes with no ingredients
+retain their separate notice because their products are missing. Ingredient-name
+previews and recipe navigation remain available. Loading, retry, empty, missing-menu,
+and stale-calculation states remain supported.
+The list uses a centered supermarket receipt with monospace text, dotted leaders
+on every row (including products without quantities),
+category separators, and a decorative torn bottom edge. Each ingredient entry
 has an accessible checkbox: marking it strikes through its name and quantity,
 without changing the category order or hiding quantities. A sticky line beneath
 the compact receipt header shows checked progress while scrolling.
@@ -762,12 +750,14 @@ The receipt uses readable 14px grocery text and a 44px-wide checkbox label targe
 with ingredient names opening recipe usage separately. Checked rows remain in place.
 Marks are saved in local browser storage separately for each menu and survive
 leaving the screen and reloading. An editor round trip preserves them.
-Storage format `comal.shopping-checks.v2.<menu ID>` identifies purchases by
-ingredient, displayed quantity/unit, presentation mode/unit/contents, and incomplete
-state. Old-format checks are ignored. Recalculation unchecks changed purchases,
-including a changed jar size with the same displayed jar count or transitions
-to/from incomplete. A change only to the internal need retains a check when the
-physical purchase remains the same.
+Storage format `comal.shopping-checks.v2.<menu ID>` identifies checklist entries by
+ingredient, nullable displayed quantity/unit, configured presentation, and a
+legacy false slot. Existing calculated-item keys stay compatible; old incomplete
+partial purchases and changed packaged entries do not transfer their marks.
+Older v1 formats remain ignored. Changed displayed quantities or buying presentation reset a
+mark; unchanged name-only groceries retain their marks. A transition between a
+name-only and measured purchase resets its mark. Changes only to internal required
+quantity retain a mark when the displayed purchase remains the same.
 Refreshing an unchanged list or switching language preserves marks. They are not
 sent to the API or synchronized between devices. Unavailable or invalid browser
 storage falls back to an in-memory checklist. There are no pantry deductions,
@@ -792,7 +782,7 @@ and failures offer loading/retry UI. Labels live at
 `reference.shopping_categories.<code>` in both translation catalogs, while the API
 receives stable English codes. Ingredient names remain user content.
 
-Category/name edits, measurement-reference edits, shopping-profile edits, recipe saves, and menu generation
+Category/name edits, shopping-profile edits, recipe saves, and menu generation
 invalidate cached shopping lists. Lists also refresh when reopened or explicitly
 refreshed, so changes to saved people counts made through the API appear there.
 Recipe cache updates preserve existing ingredient categories. The responsive receipt
@@ -876,18 +866,21 @@ The existing header Menu popover and floating mobile bottom navigation retain
 their original styling. The Menu popover contains navigation, creation, and
 language controls. Planning remains beside Menu.
 
-### Measurement-contract implementation verification
+### Simple grocery checklist implementation
 
-Client fixtures and regression coverage now use recipe servings, English unit
-codes and `/units` metadata, recipe container snapshots, independent measurement
-references and presentations, and shopping completeness/required quantities.
-Coverage includes fraction capture, repeated rows, lazy profile requests, stale
-responses, independent section failures and retries, preserving complete reference
-collections, correction navigation, and purchase-check identity.
+Regression coverage describes nullable shopping amounts, one ingredient per line,
+optional package contents and piece weights, buying-profile validation/retries, dirty-draft protection,
+and checklist persistence. Recipe tests retain fraction capture, snapshots, and late
+response protection while allowing containers without known contents. Rails service
+and HTTP integration tests cover the actual calculation and request contracts;
+browser tests continue to use deterministic API mocks.
 
-Implementation received a source/diff review. Tests, builds, type checks, browser
-automation, verification servers, and rendered review at 320 px, 800 px, and
-desktop were not run during this change, following the repository opt-in policy.
-The updated browser tests use deterministic API mocks; actual Rails integration,
-visual quality, and PWA/offline behavior remain unverified. See
-[the implementation plan](client-ingredient-shopping-plan.md).
+Implementation received a source/diff review. Before committing, `npm run build`
+and `npx tsc -p tsconfig.tests.json` passed. The production build reported a
+bundle-size warning. Rails and browser tests were explicitly skipped at the user's
+request; actual Rails integration, rendered visual quality, and PWA/offline behavior
+remain unverified. No verification servers or browser automation were started.
+The requested `bundle exec rails db:migrate` completed successfully and applied
+`AllowUnknownShoppingPackageContents`. The previous
+[measurement implementation plan](client-ingredient-shopping-plan.md) is historical;
+its reference-entry and correction flows are superseded by this checklist design.

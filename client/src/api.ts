@@ -6,9 +6,9 @@ import type {
   IngredientShoppingProfile,
   IngredientShoppingProfilePayload,
   Meal,
-  MeasurementReference,
   MealPayload,
   MealTypeOption,
+  MeasurementReference,
   Menu,
   ShoppingCategory,
   ShoppingList,
@@ -21,6 +21,8 @@ function errorFieldLabel(field: string) {
     case "mode":
     case "shopping_unit":
       return t("ingredients.shopping.title");
+    case "piece_weight":
+      return t("ingredients.shopping.piece_weight");
     case "package_quantity":
       return t("recipe.contents");
     case "package_unit":

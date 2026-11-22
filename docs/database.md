@@ -141,8 +141,8 @@ erDiagram
   new recipes have no implicit serving count. Changing counts does not rewrite quantities.
 - Shopping lists use `quantity × people_count ÷ servings` for every scheduled
   occurrence, accumulate before rounding, and do not subtract pantry stock.
-  Pieces always round upward; packages display their canonical need below one
-  configured container and whole counts at/above it. Bulk quantities stay in g/ml.
+  Calculable pieces round upward and bulk quantities stay in g/ml. Packages and
+  ingredients whose totals cannot be fully converted appear once by name only.
   There are no persisted shopping lists or checked-item records.
 - `Day` belongs to a `Menu` and a `Weekday`.
 - `Day` has many `Meal` records through `DailyMeal`.
@@ -171,16 +171,22 @@ erDiagram
   `reference_quantity` is ml for density or whole pieces for piece weight.
   Ratios use exact rational division during calculation, not a rounded density.
   Sources, descriptions, and approximation flags document each reference.
+  The buying-profile API can update the piece-weight reference atomically with
+  the profile. New weights get internal provenance; unchanged ratios retain
+  existing metadata. No duplicate weight column is added to shopping profiles.
 - `IngredientShoppingProfile` independently selects bulk, piece, or package
-  buying. A package stores its content quantity and mass/volume/count unit.
+  buying. A package may store a content quantity and mass/volume/count unit;
+  both fields may be null. When supplied they must form a valid pair.
   It is not a cooking conversion. Deleting a profile retains the ingredient's
   measurement references; deleting an unused ingredient removes both.
 - Recipe containers store their own content snapshot on `MealIngredient`.
   Updating a shopping presentation never changes recipe contents. Package rows
-  require contents; ordinary recipe measures reject them.
-- Missing dimension bridges preserve every quantity and mark the ingredient
-  incomplete, with a warning even when only one unresolved measure remains.
-  Preparation notes do not automatically apply cooking or peeling yields.
+  allow unknown contents; ordinary recipe measures reject content fields.
+- Missing dimension bridges produce one name-only checklist item. Original
+  quantities remain stored in recipe rows; no conversion is invented and no
+  reference configuration is required. Existing reference records are retained,
+  but the client has no measurement-reference form. Preparation notes do not
+  automatically apply cooking or peeling yields.
 - The measurement rebuild removes legacy equivalences, base units, and `round_up`.
   It clears disposable recipe ingredient rows and installs the standard catalog.
   Seeds recreate sample recipe rows and documented example references.

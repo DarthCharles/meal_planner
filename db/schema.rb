@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_21_122000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_21_123000) do
   create_table "daily_meals", id: :integer, default: nil, force: :cascade do |t|
     t.integer "day_id", null: false
     t.integer "meal_id", null: false
@@ -60,7 +60,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_21_122000) do
     t.index ["ingredient_id"], name: "index_ingredient_shopping_profiles_on_ingredient_id", unique: true
     t.index ["package_unit_id"], name: "index_ingredient_shopping_profiles_on_package_unit_id"
     t.index ["shopping_unit_id"], name: "index_ingredient_shopping_profiles_on_shopping_unit_id"
-    t.check_constraint "(mode = 'package' AND package_quantity IS NOT NULL AND package_quantity > 0 AND package_quantity <= 1000000000 AND package_unit_id IS NOT NULL) OR (mode <> 'package' AND package_quantity IS NULL AND package_unit_id IS NULL)", name: "shopping_profiles_valid_contents"
+    t.check_constraint "(package_quantity IS NULL AND package_unit_id IS NULL) OR (mode = 'package' AND package_quantity IS NOT NULL AND package_quantity > 0 AND package_quantity <= 1000000000 AND package_unit_id IS NOT NULL)", name: "shopping_profiles_valid_contents"
     t.check_constraint "mode IN ('bulk', 'piece', 'package')", name: "shopping_profiles_valid_mode"
   end
 
