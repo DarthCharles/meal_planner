@@ -64,8 +64,6 @@ export const es: typeof en = {
   },
   app_header: {
     home: "Inicio de Comal",
-    planning: "Planeando",
-    plan_week: "Planear semana",
     menu: "Menú",
     navigation_menu: "Menú de navegación",
     add_meal_action: "Agregar una comida",
@@ -278,17 +276,22 @@ export const es: typeof en = {
       add_recipe: "Agregar una receta",
       recipe_help:
         "Guarda las comidas que te gusta preparar. Comal usa tus recetas para crear menús semanales y listas de compras.",
-      next_menu: "Tu próximo menú",
       finding_menu: "Buscando tu menú…",
-      menu_intro:
-        "Un poco de orden y mucho sabor. Planea una semana de desayunos, comidas y cenas con tus recetas.",
       today: "Menú de hoy",
       no_today: "No hay un plan para hoy.",
-      week_planned: "Tu semana, planeada.",
-      fresh_week: "Planea una nueva semana para llevar algo delicioso a la mesa.",
-      browse_or_plan: "Consulta tu menú guardado abajo o planea una nueva semana.",
-      make_week: "Haz que esta semana",
-      delicious: "sea deliciosa.",
+      next_day: "El siguiente día con menú es el %{day}.",
+    },
+    next_week: {
+      title: "Próxima semana",
+      view: "Ver menú de la próxima semana",
+      plan: "Planear próxima semana",
+      planning: "Planeando…",
+      regenerate: "Volver a generar menú",
+      replace_title: "¿Reemplazar el menú de la próxima semana?",
+      replace_help: "Se reemplazarán las comidas planeadas para %{dates}.",
+      replace: "Reemplazar menú",
+      date_changed:
+        "Cambiaron las fechas de planificación. Revisa las nuevas fechas e inténtalo de nuevo.",
     },
     notices: {
       preference_fallback: "Fue necesario ajustar algunas preferencias de días.",
@@ -308,9 +311,8 @@ export const es: typeof en = {
       refresh_error: "No pudimos actualizar tu menú. Tu último plan cargado sigue aquí.",
       retrying: "Intentando de nuevo…",
       no_current_week: "No hay un plan para esta semana.",
-      browse_plans_help: "Consulta tus planes próximos y anteriores en Menús guardados.",
       browse_saved: "Ver menús guardados",
-      weekly_menu: "Menú semanal",
+      this_week: "Esta semana",
     },
   },
   navigation: {

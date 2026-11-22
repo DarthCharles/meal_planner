@@ -117,9 +117,9 @@ language behavior still need separate verification.
 
 ## Current flows
 
-- View the current menu.
-- Reorder the weekly grid so the current day appears first.
-- Generate a weekly menu.
+- Open today's recipes and the current week's shopping list from Home.
+- Browse the full current week directly from Home using the existing day cards.
+- View, generate, or replace the next weekly menu from Home.
 - Browse upcoming, current, and past weeks through Saved Menus and open their meals.
 - Browse and filter meals.
 - Browse, search, create, and rename shared ingredients through My Ingredients.
@@ -155,7 +155,7 @@ Back and register a before-unload warning. Successful saves bypass that prompt.
 `App.tsx` supplies the shared header, content area, and navigation. Non-index
 routes use a nested `PageLayout` with a consistent 12px top inset; My Meals,
 Saved Menus, My Ingredients, and the not-found screen do not add their own top spacing.
-The index menu keeps its hero and weekly-grid spacing.
+The index lays out the today, current-week, and next-week sections.
 
 Production hosting must serve `client/dist/index.html` for client navigation
 paths (including unknown page paths), while serving static assets normally.
@@ -265,33 +265,26 @@ deletion is pending, saving and repeated deletion are disabled. Success returns 
 and the creation page have no Delete button;
 the backend also rejects deletion if an ingredient becomes used after loading.
 
-The single “Plan my week” action has a plus icon and sits beside Menu in the header on mobile and
-desktop, including while browsing the meal library. It is disabled while menus
-load or generation is pending, and shows “Planning” during generation. Failures
-appear below the header and allow retrying without discarding the saved menu.
+Home opens with today’s meals and a Shopping list link labeled with the current
+menu’s date range. The link sits below the meals on mobile and beside the heading
+on tablet and desktop. The menu’s calendar dates are compared with the browser’s
+local date. If today has no meals, Home shows the next scheduled date when one
+exists.
 
-The menu screen owns the menu hero. Before a menu exists, it explains weekly
-planning. While menus load, the hero shows a loading message. Once a menu exists,
-the hero becomes a compact overview of today's breakfast, lunch, and dinner,
-on a continuous raised cream menu-board surface, using the same ordered meal
-slots as the day cards. Meal names use DM Sans in both the overview and day
-cards, with larger type in the overview. It checks the menu's calendar
-date range against the local date before presenting meals as today's plan.
-My Menu uses the current week's menu for both the overview and weekly grid.
-If only upcoming or past menus exist, it shows an empty current-week state with
-a button to browse Saved Menus. On Monday, date selection picks the new current
-week on the next render or page load; no menu records need a status update.
-Current menus without today's meals show an unplanned-day message. Only days in the current menu receive the
-“Today” highlight, using an accent border, the standard card background, and
-the same subtle shadow as the other day cards. Other day cards have no border,
-keeping the weekly view quiet while today's accent remains distinct.
-The dated weekly grid appears below the overview. Its range preserves the API
-calendar dates across timezones. Card date numbers come from each weekday's date
-within the menu range, including month and year boundaries, rather than day IDs.
-This also applies to cards in Saved Menus.
-Generation failures preserve the current hero and allow retrying.
-Initial loading placeholders have space above the grid, equal heights, and use the weekly grid's
-responsive column layout.
+“This week” shows the full current week in Monday–Sunday order. It reuses the
+existing `DayCard` component and meal previews. Today has an accent border.
+The Saved Menus link selects the current week in the archive. Both views show
+generation notices and derive card dates from the menu range.
+
+“Next week” shows the Monday–Sunday range targeted by the generation API, which
+starts on the next strictly following Monday in UTC. A saved plan has a link
+that selects that week in Saved Menus. Regenerating requires confirmation with
+the affected dates. If the UTC target week changes during confirmation, Home
+refreshes the range and asks for a new planning action. While generation is
+pending, the action stays disabled even
+after leaving and returning to Home. A failure appears in the planning section and
+leaves saved menus available.
+
 The meal library has no hero, keeping its heading, search, filters, and add action
 at the top of the screen. Its Add action remains available during initial loading;
 skeletons represent the full-width search field, filters, and six meal cards using
@@ -300,23 +293,13 @@ announces loading once, hides decorative placeholders from assistive technology,
 and disables shimmer for reduced-motion preferences. Cached meals remain visible
 during background refreshes.
 
-Hero meals and weekly day cards reuse `MealRow`, with a meal-time label, meal
-name, and a `ChevronRight` icon. The hero uses transparent buttons, compact
-category badges, and larger Fraunces meal names. Sage is confined to the breakfast
-badge; lunch uses tan and dinner uses dark brown with cream text, matching the
-library categories.
-The heading uses 32px type on mobile and 36px on tablet, with the local date below
-it. Header and meal text share an inset. Meals stack with horizontal separators
-below 901px, then form three equal columns with vertical separators. At 1100px,
-the heading and date move into a left column beside the meals; the horizontal
-rule above the meals is removed. Buttons stretch to equal heights in the
-three-column layout, keep at least 44px touch targets, and center their chevrons
-without fixed offsets. Long names wrap without truncation. Weekly rows retain
-their compact styling and raised cream fill. Both variants declare
-`hover:bg-accent` in the app's utilities layer to retain hover feedback.
-Badges use Comal's surface roles: sage (`surface-tertiary`) for
-breakfast, tan (`surface-secondary`) for lunch, and cream (`surface-primary`)
-for dinner.
+Today’s meals and weekly day cards reuse `MealRow`. Today’s meals have labeled
+category badges and horizontal separators, with three equal columns and vertical
+separators from 901px. The meal
+name sits beside its badge on mobile and below the badge at larger widths.
+Buttons have at least 44px touch targets and long names wrap. Weekly day cards
+use their existing compact rows, with the meal type above each name and a
+trailing chevron. Both button variants use the existing accent interaction fill.
 Clicking a row or activating it with Enter or
 Space opens the meal card through `useMealDialog` and the shared dialog host.
 The card shows meal types, description, ingredient quantities and preparation
@@ -330,11 +313,12 @@ Meal previews lead with their title, without an eyebrow. The editor shows
 types, description, and preferred days together, followed by ingredients and a
 separate wrapping footer for the recipe link and Edit meal action.
 
-My Menu distinguishes empty data from load failures. Initial failures show a friendly
-message and Try again without demo meals. Failed refreshes preserve the last loaded
-plan. The empty home screen links directly to recipe creation; it checks the meal
-library only after successfully loading an empty menu collection, showing “Add your
-first recipe” only for a confirmed empty library and “Add a recipe” otherwise.
+Home distinguishes missing plans from load failures. Initial failures show
+a recovery message and Try again. Failed refreshes retain the last loaded plan.
+With neither a current menu nor a saved plan for the generation week, Home checks
+the recipe library. A confirmed empty library makes recipe creation the primary
+action. With recipes available, planning is the primary action and recipe creation
+is secondary. If next week is already saved, Home offers a link to that plan.
 The recipe library and recipe-option forms still label fallback examples explicitly;
 the library also provides Try again. Header and meal-row labels are larger on phones, and header
 and bottom-navigation controls have a minimum 44px touch height.
@@ -384,8 +368,9 @@ query's abort signal for cancellable reads.
 
 Query ownership follows the feature that consumes the data:
 
-- `AppHeader` mounts `useMenus` and `useGenerateMenu` for its planning action.
-- `MenuScreen` mounts `useMenus`, sharing the header's cached query.
+- `MenuScreen` and `SavedMenusScreen` share `useMenus`. Home checks `useMeals`
+  when it needs to distinguish an empty library from a missing plan.
+- `NextWeekPlan` mounts `useGenerateMenu` for Home’s planning action.
 - `MealsScreen` mounts `useMeals` when the library is opened.
 - `MealDialogContent` mounts `useMealTypes` and `useUnits` only while the editor is open.
   It waits for both queries before mounting `MealForm`, so an edit draft starts
@@ -397,9 +382,10 @@ API collections through props. Display components such as `MenuView`, `DayCard`,
 and `MealsView` receive data and callbacks through props. Nested ingredient
 inputs access their form through React Hook Form context.
 Adding an ingredient focuses the new row's ingredient-name field.
-Opening the app requests only `/menus`; opening the library adds `/meals`, and
-opening a form adds `/meal_types` and `/units`. Fresh cached data is reused when
-revisiting a screen or reopening a form. The menu planning action lives in the header; the library has its own heading and add/edit actions.
+Opening Home requests `/menus` first. It requests `/meals` if both planning periods
+lack a menu, and the library requests `/meals` when opened directly. The header
+handles navigation and language. Opening a form adds `/meal_types` and `/units`.
+Fresh cached data is reused when revisiting a screen or reopening a form.
 
 Successful mutations update the cache from the API response. Generating a menu
 puts it first in the menu list. Saving a meal updates the library and replaces
@@ -853,9 +839,9 @@ controls, so opening usage does not check an ingredient. Catalog usage links use
 the same single-preview pattern, with all meals using the ingredient rather than
 only the selected week's meals.
 
-The existing header Menu popover and floating mobile bottom navigation retain
-their original styling. The Menu popover contains navigation, creation, and
-language controls. Planning remains beside Menu.
+The header Menu popover contains navigation, recipe creation, and language
+controls. Mobile also has floating bottom navigation. Planning is available in
+Home’s “Next week” section.
 
 ### Simple grocery checklist implementation
 

@@ -1,9 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useIsMutating, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../../api";
-import { getLocale, useI18n } from "../../i18n";
+import { getLocale, t, useI18n } from "../../i18n";
 import { queryKeys } from "../../queryKeys";
 import type { Menu } from "../../types";
+import { nextGenerationWeek, startsWithinWeek } from "./menuDates";
 
 export function useShoppingList(id: number) {
   const { locale } = useI18n();
@@ -27,8 +28,16 @@ export function useMenus() {
 
 export function useGenerateMenu() {
   const client = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
+  const mutationKey = [...queryKeys.menus, "generate"];
+  const isPending = useIsMutating({ mutationKey }) > 0;
+  const { mutate, error } = useMutation({
+    mutationKey,
+    mutationFn: async (weekStart: string) => {
+      if (nextGenerationWeek(new Date()).from !== weekStart) {
+        // A confirmation opened before the UTC week changed cannot authorize the new range.
+        void client.invalidateQueries({ queryKey: queryKeys.menus });
+        throw new Error(t("menu.next_week.date_changed"));
+      }
       const locale = getLocale();
       return { menu: await api.generateMenu(), locale };
     },
@@ -37,9 +46,7 @@ export function useGenerateMenu() {
       await client.cancelQueries({ queryKey: queryKeys.menus });
       client.setQueryData<Menu[]>([...queryKeys.menus, locale], (menus = []) => [
         menu,
-        ...menus.filter(
-          (item) => item.id !== menu.id && item.from.slice(0, 10) !== menu.from.slice(0, 10),
-        ),
+        ...menus.filter((item) => item.id !== menu.id && !startsWithinWeek(item, menu)),
       ]);
       await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
       await client.invalidateQueries({
@@ -48,6 +55,7 @@ export function useGenerateMenu() {
       });
     },
   });
+  return { mutate, error, isPending };
 }
 
 export function useUpdateMenuPeople(menuId: number) {

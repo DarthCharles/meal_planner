@@ -63,7 +63,7 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
     if (lastSubmit.current === submitCount) return;
     lastSubmit.current = submitCount;
     if (errors.name || errors.servings || errors.description || errors.meal_type_ids) return;
-    const index = errors.ingredients?.findIndex((row) => !!row) ?? -1;
+    const index = errors.ingredients?.findIndex?.((row) => !!row) ?? -1;
     const row = errors.ingredients?.[index];
     const field = editableFields.find((key) => row?.[key]);
     if (field) openRow(index, field);

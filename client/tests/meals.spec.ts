@@ -4,7 +4,7 @@ import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures
 
 async function openLibrary(page: Page) {
   await page.goto("/");
-  await page.getByRole("heading", { name: "Wednesday" }).waitFor();
+  await page.getByRole("region", { name: "Today’s menu" }).waitFor();
   await navigateTo(page, "My meals");
   await page.getByRole("article").first().waitFor();
 }
@@ -640,7 +640,7 @@ test(
       release = resolve;
     });
     await page.goto("/");
-    await page.getByRole("heading", { name: "Wednesday" }).waitFor();
+    await page.getByRole("region", { name: "Today’s menu" }).waitFor();
     await navigateTo(page, "My meals");
     const loading = page.getByRole("status", { name: "Loading meals", exact: true });
     try {

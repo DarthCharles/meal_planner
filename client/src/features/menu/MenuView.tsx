@@ -1,4 +1,5 @@
 import type { Meal, Menu } from "../../types";
+import { weekdays } from "../meals/preferredDays";
 import { DayCard } from "./DayCard";
 import { isCurrentMenu, localWeekday, menuDayDate } from "./menuDates";
 
@@ -6,12 +7,10 @@ export function MenuView({
   menu,
   loading,
   onOpenMeal,
-  startFromToday = true,
 }: {
   menu: Menu | null;
   loading: boolean;
   onOpenMeal: (meal: Meal) => void;
-  startFromToday?: boolean;
 }) {
   if (loading)
     return (
@@ -21,9 +20,12 @@ export function MenuView({
         <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
       </div>
     );
-  if (!menu) return null;
-  const today = localWeekday(new Date());
-  const orderedDays = orderDaysFromToday(menu.days, startFromToday ? today : "monday");
+  if (!menu?.days.length) return null;
+  const now = new Date();
+  const today = isCurrentMenu(menu, now) ? localWeekday(now) : undefined;
+  const orderedDays = [...menu.days].sort(
+    (left, right) => weekdayIndex(left) - weekdayIndex(right),
+  );
   return (
     <div className="grid grid-cols-1 gap-4 tablet:grid-cols-2 wide:grid-cols-3">
       {orderedDays.map((day) => (
@@ -31,7 +33,7 @@ export function MenuView({
           day={day}
           date={menuDayDate(menu, day.weekday)}
           onOpenMeal={onOpenMeal}
-          featured={isCurrentMenu(menu, new Date()) && day.weekday.toLowerCase() === today}
+          featured={day.weekday.toLowerCase() === today}
           key={day.id}
         />
       ))}
@@ -39,22 +41,6 @@ export function MenuView({
   );
 }
 
-function orderDaysFromToday(days: Menu["days"], today: string) {
-  const weekdayOrder = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-  ];
-  const todayIndex = weekdayOrder.indexOf(today);
-  return [...days].sort((left, right) => {
-    const leftIndex = weekdayOrder.indexOf(left.weekday.toLowerCase());
-    const rightIndex = weekdayOrder.indexOf(right.weekday.toLowerCase());
-    const leftOffset = (leftIndex - todayIndex + 7) % 7;
-    const rightOffset = (rightIndex - todayIndex + 7) % 7;
-    return leftOffset - rightOffset;
-  });
+function weekdayIndex(day: Menu["days"][number]) {
+  return weekdays.findIndex((weekday) => weekday === day.weekday.toLowerCase());
 }

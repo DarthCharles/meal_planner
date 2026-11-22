@@ -67,9 +67,10 @@ test.describe("Spanish browser preference", () => {
     ];
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
-    await expect(page.getByRole("region", { name: "Menú de hoy" })).toBeVisible();
+    const today = page.getByRole("region", { name: "Menú de hoy" });
+    await expect(today.locator("time")).toHaveAttribute("datetime", "2026-12-28");
     const cards = page.getByRole("article");
-    await expect(cards.first().getByRole("heading", { name: "Lunes", exact: true })).toBeVisible();
+    await expect(cards.getByRole("heading")).toHaveText(["Lunes", "Domingo"]);
     await expect(cards.first().getByText("Hoy", { exact: true })).toBeVisible();
     await expect(cards.first().locator("time")).toHaveAttribute("datetime", "2026-12-28");
     await expect(cards.last().locator("time")).toHaveAttribute("datetime", "2027-01-03");
@@ -82,7 +83,9 @@ test.describe("Spanish browser preference", () => {
         }).format(new Date(date));
       return `${format("2026-12-28T00:00:00Z")} — ${format("2027-01-03T00:00:00Z")}`;
     });
-    await expect(page.getByRole("heading", { name: range, exact: true })).toBeVisible();
+    await expect(today.getByRole("link", { name: "Lista de compras" })).toHaveAccessibleDescription(
+      range,
+    );
   });
 
   test("translates form validation and units while submitting stable identifiers", async ({

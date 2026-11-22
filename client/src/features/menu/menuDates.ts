@@ -15,6 +15,21 @@ export function localDateKey(now: Date) {
   ].join("-");
 }
 
+export function nextGenerationWeek(now: Date) {
+  // Match the API's strictly following Monday on the UTC calendar.
+  const start = new Date(now);
+  const daysSinceMonday = (start.getUTCDay() + 6) % 7;
+  start.setUTCDate(start.getUTCDate() + 7 - daysSinceMonday);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 6);
+  return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) };
+}
+
+export function startsWithinWeek(menu: Menu, week: Pick<Menu, "from" | "to">) {
+  const start = menu.from.slice(0, 10);
+  return week.from.slice(0, 10) <= start && start <= week.to.slice(0, 10);
+}
+
 export function menuPeriod(menu: Menu, now: Date) {
   const today = localDateKey(now);
   if (menu.from.slice(0, 10) > today) return t("menu.saved.upcoming");

@@ -8,7 +8,6 @@ for (const week of [
     to: "2026-11-15",
     hero: "Monday, Nov 9",
     range: "Nov 9 — Nov 15",
-    monday: "09",
     sunday: "15",
   },
   {
@@ -16,7 +15,6 @@ for (const week of [
     to: "2027-01-03",
     hero: "Monday, Dec 28",
     range: "Dec 28 — Jan 3",
-    monday: "28",
     sunday: "03",
   },
 ]) {
@@ -37,7 +35,9 @@ for (const week of [
     await expect(
       page.getByRole("region", { name: "Today’s menu" }).getByText(week.hero),
     ).toBeVisible();
-    await expect(page.getByRole("heading", { name: week.range, exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Shopping list" })).toHaveAccessibleDescription(
+      week.range,
+    );
     const monday = page
       .getByRole("article")
       .filter({ has: page.getByRole("heading", { name: "Monday", exact: true }) });
@@ -45,7 +45,6 @@ for (const week of [
       .getByRole("article")
       .filter({ has: page.getByRole("heading", { name: "Sunday", exact: true }) });
     await expect(monday.getByText("Today", { exact: true })).toBeVisible();
-    await expect(monday.locator("time")).toHaveText(week.monday);
     await expect(monday.locator("time")).toHaveAttribute("datetime", week.from);
     await expect(sunday.locator("time")).toHaveText(week.sunday);
     await expect(sunday.locator("time")).toHaveAttribute("datetime", week.to);
@@ -56,3 +55,36 @@ for (const week of [
     await expect(sunday.locator("time")).toHaveAttribute("datetime", week.to);
   });
 }
+
+test("requires a new planning action if the UTC week changes during confirmation", async ({
+  page,
+  api,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-10-25T23:59:00Z"));
+  const currentMenu = api.menus[0];
+  currentMenu.days.push({ ...currentMenu.days[0], id: 7, weekday: "Sunday" });
+  api.menus.unshift({
+    ...structuredClone(currentMenu),
+    id: 2,
+    from: "2026-10-26T00:00:00Z",
+    to: "2026-11-01T23:59:59Z",
+  });
+  await page.goto("/");
+  const nextWeek = page.getByRole("region", { name: "Next week" });
+  await nextWeek.getByRole("button", { name: "Regenerate menu" }).click();
+  const dialog = page.getByRole("dialog", { name: "Replace next week’s menu?" });
+  await page.clock.setFixedTime(new Date("2026-10-26T00:01:00Z"));
+  await dialog.getByRole("button", { name: "Replace menu" }).click();
+
+  const hero = page.getByRole("region", { name: "Today’s menu" });
+  await expect(hero.locator("time")).toHaveAttribute("datetime", "2026-10-25");
+  const currentWeek = page.getByRole("region", { name: "This week" });
+  await expect(currentWeek.getByRole("article").first().getByRole("heading")).toHaveText("Monday");
+  await expect(
+    currentWeek.getByRole("article").last().getByText("Today", { exact: true }),
+  ).toBeVisible();
+  await expect(nextWeek.getByRole("status")).toContainText("The planning dates changed.");
+  await expect(nextWeek.getByText("Nov 2 — Nov 8", { exact: true })).toBeVisible();
+  await expect(nextWeek.getByRole("button", { name: "Plan next week" })).toBeEnabled();
+  expect(api.generationRequests).toBe(0);
+});

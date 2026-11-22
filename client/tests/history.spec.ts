@@ -138,7 +138,9 @@ test("moves an upcoming menu into My Menu when its week starts", async ({ page, 
   api.menus = [upcoming, current];
   await page.clock.setFixedTime(new Date("2026-10-25T23:59:00Z"));
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Oct 19 — Oct 25" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Shopping list" })).toHaveAccessibleDescription(
+    "Oct 19 — Oct 25",
+  );
   await navigateTo(page, "Saved Menus");
   const weeks = page.getByRole("navigation", { name: "Saved weeks" }).getByRole("button");
   await expect(weeks.first()).toContainText("Upcoming");
@@ -146,7 +148,9 @@ test("moves an upcoming menu into My Menu when its week starts", async ({ page, 
 
   await page.clock.setFixedTime(new Date("2026-10-26T00:01:00Z"));
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Oct 26 — Nov 1" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Shopping list" })).toHaveAccessibleDescription(
+    "Oct 26 — Nov 1",
+  );
   await expect(
     page.getByRole("region", { name: "Today’s menu" }).getByText("Next week's breakfast"),
   ).toBeVisible();
@@ -157,14 +161,19 @@ test("moves an upcoming menu into My Menu when its week starts", async ({ page, 
 });
 
 test("links from an empty current week to the upcoming saved plan", async ({ page, api }) => {
-  api.menus = [savedMenu(2, "2026-10-26", "2026-11-01", "Upcoming breakfast")];
+  api.menus = [
+    savedMenu(3, "2026-11-02", "2026-11-08", "Later breakfast"),
+    savedMenu(2, "2026-10-26", "2026-11-01", "Upcoming breakfast"),
+  ];
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Nothing planned for this week." })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
-  await page.getByRole("link", { name: "Browse saved menus" }).click();
+  await page.getByRole("link", { name: "View next week’s menu" }).click();
   await expect(page.getByRole("heading", { name: "Saved Menus", exact: true })).toBeVisible();
-  await expect(
-    page.getByRole("navigation", { name: "Saved weeks" }).getByRole("button"),
-  ).toContainText("Upcoming");
+  const weeks = page.getByRole("navigation", { name: "Saved weeks" });
+  await expect(weeks.getByRole("button", { name: /Oct 26/ })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
   await expect(page.getByRole("article").first().getByText("Upcoming breakfast")).toBeVisible();
 });

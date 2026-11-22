@@ -203,10 +203,30 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         }
         if (path === "/menus/generate" && request.method() === "POST") {
           api.generationRequests++;
+          const requestDate = new Date(await page.evaluate(() => Date.now()));
           await api.generationBarrier;
           if (api.generationError) return void (await fail(api.generationError));
-          const generated = { ...structuredClone(menu), generation_notices: api.generationNotices };
-          api.menus = [generated];
+          requestDate.setUTCHours(0, 0, 0, 0);
+          do {
+            requestDate.setUTCDate(requestDate.getUTCDate() + 1);
+          } while (requestDate.getUTCDay() !== 1);
+          const from = requestDate.toISOString();
+          requestDate.setUTCDate(requestDate.getUTCDate() + 6);
+          requestDate.setUTCHours(23, 59, 59, 999);
+          const to = requestDate.toISOString();
+          const existing = api.menus.find((item) => item.from >= from && item.from <= to);
+          const generated = {
+            ...structuredClone(menu),
+            id: Math.max(menu.id, ...api.menus.map((item) => item.id)) + 1,
+            from,
+            to,
+            people_count: existing?.people_count ?? 1,
+            generation_notices: api.generationNotices,
+          };
+          api.menus = [
+            generated,
+            ...api.menus.filter((item) => item.from < from || item.from > to),
+          ];
           return void (await respond(generated));
         }
         if (

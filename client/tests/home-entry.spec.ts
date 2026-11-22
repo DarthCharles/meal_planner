@@ -13,6 +13,13 @@ test(
   "keeps home entry states readable and actionable on a phone",
   { tag: "@responsive" },
   async ({ page, api }, testInfo) => {
+    const menu = api.menus[0];
+    menu.days.push(
+      { ...menu.days[0], id: 5, weekday: "Friday" },
+      { ...menu.days[0], id: 6, weekday: "Saturday" },
+      { ...menu.days[0], id: 7, weekday: "Sunday" },
+    );
+    await page.clock.setFixedTime(new Date("2026-10-23T12:00:00Z"));
     await page.goto("/");
     await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
     const controls = page.getByRole("banner").getByRole("button");

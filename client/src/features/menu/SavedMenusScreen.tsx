@@ -93,12 +93,7 @@ export function SavedMenusScreen() {
                   </div>
                 </Notice>
               )}
-              <MenuView
-                menu={selected}
-                loading={false}
-                onOpenMeal={openMeal}
-                startFromToday={false}
-              />
+              <MenuView menu={selected} loading={false} onOpenMeal={openMeal} />
             </section>
           )}
         </div>

@@ -1,5 +1,12 @@
 import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
 
+test.beforeEach(({ api }) => {
+  const menu = api.menus[0];
+  for (const [index, weekday] of ["Thursday", "Friday", "Saturday", "Sunday"].entries()) {
+    menu.days.push({ ...structuredClone(menu.days[0]), weekday, id: index + 4 });
+  }
+});
+
 test("returns to the menu through the Comal logo and name", async ({ page }) => {
   await page.goto("/");
   for (const target of ["logo", "name", "keyboard"]) {
@@ -60,7 +67,7 @@ test("hero and weekly meal rows highlight on hover", async ({ page }) => {
     .getByRole("button", { name: "View Breakfast: Huevos a la mexicana" });
   const weeklyRow = page
     .getByRole("article")
-    .filter({ has: page.getByRole("heading", { name: "Monday", exact: true }) })
+    .filter({ has: page.getByRole("heading", { name: "Thursday", exact: true }) })
     .getByRole("button", { name: "View Lunch: Calabacitas con queso" });
 
   for (const row of [heroRow, weeklyRow]) {
@@ -84,7 +91,7 @@ test("opens weekly meal rows with the keyboard and handles missing recipe detail
 }) => {
   await page.goto("/");
   const day = page.getByRole("article").filter({
-    has: page.getByRole("heading", { name: "Monday", exact: true }),
+    has: page.getByRole("heading", { name: "Thursday", exact: true }),
   });
   const row = day.getByRole("button", {
     name: "View Lunch: Calabacitas con queso",
@@ -139,7 +146,9 @@ test(
       if (page.viewportSize()!.width >= 1100) {
         const headingBox = await hero.getByRole("heading", { name: "Today’s menu" }).boundingBox();
         expect(headingBox).not.toBeNull();
-        expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(boxes[0].x);
+        const shoppingBox = await hero.getByRole("link", { name: "Shopping list" }).boundingBox();
+        expect(shoppingBox!.x).toBeGreaterThan(headingBox!.x);
+        expect(shoppingBox!.y).toBeLessThan(boxes[0].y);
       }
     } else {
       expect(boxes[1].y).toBeGreaterThanOrEqual(boxes[0].y + boxes[0].height);
@@ -151,9 +160,7 @@ test(
     await navigateTo(page, "My meals");
     await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
     await expect(hero).toHaveCount(0);
-    await expect(
-      page.getByRole("banner").getByRole("button", { name: "Plan my week" }),
-    ).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Plan next week" })).toHaveCount(0);
     await navigateTo(page, "My menu");
     await expect(hero).toBeVisible();
     expect(api.reads["/menus"]).toBe(initialMenuReads);
@@ -173,15 +180,20 @@ for (const [label, from, to] of [
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Today’s menu" })).toHaveCount(0);
     await expect(page.getByRole("article").getByText("Today", { exact: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Plan my week" })).toBeEnabled();
+    if (label === "future") {
+      await expect(page.getByRole("link", { name: "View next week’s menu" })).toBeVisible();
+    } else {
+      await expect(page.getByRole("button", { name: "Plan next week" })).toBeEnabled();
+    }
   });
 }
 
 test("handles a current menu without meals for today", async ({ page, api }) => {
   api.menus[0].days[2].meals = [];
   await page.goto("/");
-  await expect(page.getByRole("region", { name: "Nothing planned for today." })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Plan my week" })).toBeEnabled();
+  const hero = page.getByRole("region", { name: "Nothing planned for today." });
+  await expect(hero.getByText("Next on the menu: Thursday, Oct 22.")).toBeVisible();
+  await expect(hero.getByRole("link", { name: "Shopping list" })).toBeVisible();
 });
 
 test("keeps the current week visible when an upcoming plan exists", async ({ page, api }) => {
@@ -195,7 +207,10 @@ test("keeps the current week visible when an upcoming plan exists", async ({ pag
   const hero = page.getByRole("region", { name: "Today’s menu" });
   await expect(hero.getByText("Huevos a la mexicana")).toBeVisible();
   await expect(hero.getByText("Next week's breakfast")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Oct 19 — Oct 25" })).toBeVisible();
+  await expect(hero.getByRole("link", { name: "Shopping list" })).toHaveAccessibleDescription(
+    "Oct 19 — Oct 25",
+  );
+  await expect(page.getByRole("link", { name: "View next week’s menu" })).toBeVisible();
 });
 
 test(
@@ -217,16 +232,25 @@ test(
 );
 
 test(
-  "shows today's menu first and adapts the grid and navigation",
+  "shows the full current week in order and adapts the grid and navigation",
   { tag: "@responsive" },
   async ({ page }) => {
     await page.goto("/");
-    const cards = page.getByRole("article");
-    await expect(cards).toHaveCount(3);
-    await expect(cards.first().getByRole("heading")).toHaveText("Wednesday");
-    await expect(cards.first().getByText("Today", { exact: true })).toBeVisible();
-    await expect(cards.nth(1).getByRole("heading")).toHaveText("Monday");
-    await expect(cards.first().getByText("Huevos a la mexicana", { exact: true })).toBeVisible();
+    const cards = page.getByRole("region", { name: "This week" }).getByRole("article");
+    await expect(cards.getByRole("heading")).toHaveText([
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ]);
+    const wednesday = cards.filter({
+      has: page.getByRole("heading", { name: "Wednesday", exact: true }),
+    });
+    await expect(wednesday.getByText("Today", { exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
 
     const navigation = page.getByRole("navigation", {
       name: "Primary navigation",
@@ -270,57 +294,58 @@ test(
   },
 );
 
-test("disables planning while the initial menu is loading", async ({ page, api }) => {
+test("waits for the initial menu before offering planning", async ({ page, api }) => {
   let release!: () => void;
   api.initialBarrier = new Promise<void>((resolve) => {
     release = resolve;
   });
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Plan my week" })).toBeDisabled();
-  await expect(page.getByRole("heading", { name: "Your next menu" })).toBeVisible();
+  await expect(page.getByText("Finding your menu…")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Plan next week" })).toHaveCount(0);
   release();
-  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Plan my week" })).toBeEnabled();
+  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Plan next week" })).toBeEnabled();
 });
 
-test("retries failed empty-state planning and shows pending feedback before the menu", async ({
+test("retries failed empty-state planning and offers the generated upcoming plan", async ({
   page,
   api,
 }) => {
   api.menus = [];
   api.generationError = "Could not plan this week. Try again.";
   await page.goto("/");
-  const hero = page.getByRole("region", { name: "Make this week delicious." });
-  await expect(hero).toBeVisible();
-  await expect(page.getByRole("button", { name: "Plan my week" })).toHaveCount(1);
-  await page.getByRole("button", { name: "Plan my week" }).click();
+  const empty = page.getByRole("heading", { name: "Nothing planned for this week." });
+  const plan = page.getByRole("button", { name: "Plan next week" });
+  await expect(empty).toBeVisible();
+  await plan.click();
   await expect(page.getByText(api.generationError)).toBeVisible();
-  await expect(hero).toBeVisible();
-  await expect(page.getByRole("button", { name: "Plan my week" })).toBeEnabled();
+  await expect(plan).toBeEnabled();
   api.generationError = null;
   let release!: () => void;
   api.generationBarrier = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.getByRole("banner").getByRole("button", { name: "Plan my week" }).click();
-  await expect(page.getByRole("button", { name: "Planning" })).toBeDisabled();
+  await plan.click();
+  await expect(page.getByRole("button", { name: "Planning…" })).toBeDisabled();
   release();
-  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Make this week delicious." })).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View next week’s menu" })).toBeVisible();
+  await expect(empty).toBeVisible();
+  await expect(page.getByRole("region", { name: "Today’s menu" })).toHaveCount(0);
   expect(api.generationRequests).toBe(2);
 });
 
 test("keeps the current menu when generation fails and allows retrying", async ({ page, api }) => {
   api.generationError = "Could not plan this week. Try again.";
   await page.goto("/");
-  await page.getByRole("button", { name: "Plan my week" }).click();
+  const plan = page.getByRole("button", { name: "Plan next week" });
+  await plan.click();
   await expect(page.getByText(api.generationError)).toBeVisible();
-  await expect(page.getByRole("article")).toHaveCount(3);
+  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
   api.generationError = null;
-  await page.getByRole("button", { name: "Plan my week" }).click();
+  await plan.click();
+  await expect(page.getByRole("link", { name: "View next week’s menu" })).toBeVisible();
   await expect(page.getByText("Could not plan this week. Try again.")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Plan my week" })).toBeEnabled();
+  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
   expect(api.generationRequests).toBe(2);
 });
 
@@ -342,16 +367,15 @@ test("recovers the menu after a load failure without showing example meals", asy
   await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Finding your menu…" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Try again", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Plan my week" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Plan next week" })).toHaveCount(0);
   release();
   await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
   await expect(page.getByText("We couldn’t load your menu. Please try again.")).toHaveCount(0);
-  await expect(page.getByRole("article")).toHaveCount(3);
+  await expect(page.getByRole("article")).toHaveCount(7);
 });
 
 test("keeps reference query failures inside the modal", async ({ page, api }) => {
   api.readErrors["/units"] = "Units are unavailable.";
-  api.menus[0].days[0].weekday = "Thursday";
   api.meals[0].name = "Breakfast from the API";
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Thursday" })).toBeVisible();
@@ -372,7 +396,7 @@ test("keeps reference query failures inside the modal", async ({ page, api }) =>
 
 test("loads each resource only when its screen or form needs it", async ({ page, api }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
   expect(Object.keys(api.reads)).toEqual(["/menus"]);
   await navigateTo(page, "My meals");
   await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
@@ -397,7 +421,7 @@ test("loads each resource only when its screen or form needs it", async ({ page,
 
 test("creating a meal from the menu does not eagerly load the library", async ({ page, api }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
   await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = editorScreen(page);
@@ -415,51 +439,51 @@ test("creating a meal from the menu does not eagerly load the library", async ({
   await expect(page.getByRole("article")).toHaveCount(4);
 });
 
-test(
-  "keeps the planning action beside the labeled Menu button without overflow",
-  { tag: "@responsive" },
-  async ({ page, api }) => {
-    await page.goto("/");
-    await page.getByRole("heading", { name: "Wednesday" }).waitFor();
-    for (const view of ["My menu", "My meals"] as const) {
-      if (view === "My meals") await navigateTo(page, view);
-      const header = page.getByRole("banner");
-      const plan = header.getByRole("button", { name: "Plan my week" });
-      const menuTrigger = header.getByRole("button", { name: "Menu", exact: true });
-      await expect(plan).toBeEnabled();
-      await expect(
-        page.getByRole("main").getByRole("button", { name: "Plan my week" }),
-      ).toHaveCount(0);
-      const planBox = (await plan.boundingBox())!;
-      await expect(menuTrigger).toHaveText("Menu");
-      const menuBox = (await menuTrigger.boundingBox())!;
-      expect(planBox.x + planBox.width).toBeLessThanOrEqual(menuBox.x);
-      expect(
-        Math.abs(planBox.y + planBox.height / 2 - menuBox.y - menuBox.height / 2),
-      ).toBeLessThan(2);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-        true,
-      );
-    }
-    await page.getByRole("banner").getByRole("button", { name: "Plan my week" }).click();
-    await expect.poll(() => api.generationRequests).toBe(1);
-    await expect(
-      page.getByRole("banner").getByRole("button", { name: "Plan my week" }),
-    ).toBeEnabled();
-    await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
-    await navigateTo(page, "My menu");
-    await expect(page.getByRole("heading", { name: "Wednesday" })).toBeVisible();
-  },
-);
+test("keeps a pending plan from being submitted again after navigating home", async ({
+  page,
+  api,
+}) => {
+  let release!: () => void;
+  api.generationBarrier = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.goto("/");
+  const planning = page.getByRole("region", { name: "Next week" });
+  await planning.getByRole("button", { name: "Plan next week" }).click();
+  await expect.poll(() => api.generationRequests).toBe(1);
+  await navigateTo(page, "My meals");
+  await expect(planning).toHaveCount(0);
+  await navigateTo(page, "My menu");
+  await expect(planning.getByRole("button", { name: "Planning…" })).toBeDisabled();
+  release();
+  await expect(planning.getByRole("link", { name: "View next week’s menu" })).toBeVisible();
+  expect(api.generationRequests).toBe(1);
+});
 
-test("shows preference fallbacks after generation and on reload", async ({ page, api }) => {
+test("confirms the replacement week and shows the new plan’s notices after reload", async ({
+  page,
+  api,
+}) => {
   const notice =
     "Pizza was scheduled on Monday to complete the menu; its preferred days are Friday, Saturday, Sunday.";
   api.generationNotices = [notice];
   await page.goto("/");
-  await page.getByRole("button", { name: "Plan my week" }).click();
+  await page.getByRole("button", { name: "Plan next week" }).click();
+  const regenerate = page.getByRole("button", { name: "Regenerate menu" });
+  const confirm = page.getByRole("dialog", { name: "Replace next week’s menu?" });
+  await regenerate.click();
+  await expect(
+    confirm.getByText("This will replace the meals planned for Oct 26, 2026 — Nov 1, 2026."),
+  ).toBeVisible();
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(regenerate).toBeFocused();
+  expect(api.generationRequests).toBe(1);
+  await regenerate.click();
+  await confirm.getByRole("button", { name: "Replace menu" }).click();
+  await expect(regenerate).toBeEnabled();
+  expect(api.generationRequests).toBe(2);
+  await page.getByRole("link", { name: "View next week’s menu" }).click();
   await expect(page.getByText(notice, { exact: true })).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.reload();
   await expect(page.getByText(notice, { exact: true })).toBeVisible();
 });
