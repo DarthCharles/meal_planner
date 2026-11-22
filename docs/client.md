@@ -238,8 +238,8 @@ The form presents all three buying methods as a native radio group, stacked on
 phones and arranged in one row from the tablet breakpoint. Only the selected
 method's fields appear. A shared **On your shopping list** explanation appears
 in both the form and saved summary, describing whole pieces, grams, milliliters,
-or a name-only packaged item. Unconfigured ingredients explain that compatible
-recipe amounts can already be calculated. Saved summaries use sentences rather
+or whole packages when recipe counts or known contents allow calculation.
+Unconfigured ingredients explain that compatible recipe amounts can already be calculated. Saved summaries use sentences rather
 than bare unit codes.
 
 - Pieces require only the buying choice.
@@ -251,9 +251,8 @@ than bare unit codes.
 - Package contents are optional, initially collapsed unless existing contents are
   present. A blank quantity submits both content fields as null. Entered content
   quantities must be positive; existing sizes remain editable and can still fill
-  optional recipe container snapshots. The form explicitly explains that these
-  contents do not calculate how many packages to buy. Quantity and label unit
-  have visible labels; amount fields request a decimal keyboard. Invalid
+  optional recipe container snapshots. The form explains that label contents help
+  calculate how many packages to buy. Quantity and label unit have visible labels; amount fields request a decimal keyboard. Invalid
   collapsed contents reopen and focus their field, with errors beside the input.
 
 Piece and bulk buying choices expose one optional **Weight of one piece (g)**
@@ -746,10 +745,12 @@ use the single quick preview above the page.
 `ShoppingListContent` fetches `GET /menus/:id/shopping_list` only when opened, through
 React Query. It displays the week's calendar range, saved people count, categories,
 and one checkbox per ingredient. Rails scales and accumulates recipe quantities.
-Calculable weights, volumes, and pieces show an amount; packaged products and
-unconvertible requirements have null quantity/unit and display only their name.
-A package profile always means name-only, even with a known size. Recipe container
-use also means name-only when no buying profile exists. Quantity-less checkbox
+Calculable weights, volumes, pieces, and container counts show an amount. Recipe
+container counts work without a known weight; known recipe and buying contents
+allow size conversion. Rails sums scaled requirements before rounding up to whole
+containers. Without a profile, matching container units and content snapshots also
+retain their counts. Requirements that cannot be fully combined have null
+quantity/unit and display only their name. Quantity-less checkbox
 labels are just the ingredient name, without null text or fabricated amounts.
 
 There are no per-row calculation details, approximation badges, incomplete

@@ -91,6 +91,28 @@ test("orders categories and keeps the receipt free of conversion details", async
   await expect(page.getByText("Approximate quantity", { exact: true })).toHaveCount(0);
 });
 
+test("shows and checks a calculated can of tuna", async ({ page, api }) => {
+  api.shoppingLists[1].items = [
+    {
+      ...api.shoppingLists[1].items[0],
+      name: "Tuna",
+      shopping_category: "pantry",
+      quantity: "1",
+      unit: "can",
+      status: "calculated",
+      required_quantity: "1.0",
+      required_unit: "can",
+    },
+  ];
+  await page.goto("/menus/1/shopping-list");
+  const receipt = page.getByRole("region", { name: "Shopping receipt", exact: true });
+  await expect(receipt.getByText("1 can", { exact: true })).toBeVisible();
+  const item = receipt.getByRole("checkbox", { name: "Tuna, 1 can", exact: true });
+  await item.check();
+  await page.reload();
+  await expect(item).toBeChecked();
+});
+
 test("shows loading, retry, and a genuine empty list", async ({ page, api }) => {
   let release!: () => void;
   api.readBarriers["/menus/1/shopping_list"] = new Promise<void>((resolve) => {

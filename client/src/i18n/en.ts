@@ -170,7 +170,7 @@ export const en = {
       piece_result: "Whole pieces, rounded up when the amount can be calculated.",
       weight_result: "A total in grams, when recipe amounts can be combined.",
       volume_result: "A total in milliliters, when recipe amounts can be combined.",
-      package_result: "The ingredient name only. Comal does not calculate package counts.",
+      package_result: "Whole packages, calculated from recipe counts or known package contents.",
       piece_summary: "I buy individual pieces",
       bulk_summary: "I buy by %{measure}",
       package_summary: "I buy %{unit}",
@@ -209,7 +209,7 @@ export const en = {
       package_size: "Package contents",
       package_measure: "Label unit",
       label_help:
-        "Use the amount on the label. You can copy it into a recipe; it does not set a shopping quantity.",
+        "Use the amount on the label to calculate how many packages to buy from recipe quantities.",
       enter_size: "Enter a positive quantity or leave the contents blank.",
       choose_package: "Choose a package type",
     },

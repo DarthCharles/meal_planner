@@ -11,9 +11,9 @@ class MenuShoppingListService
       missing[meal.id] = { id: meal.id, name: meal.name } if meal.meal_ingredients.empty?
       meal.meal_ingredients.each do |row|
         entry = requirements[row.ingredient_id] ||= {
-          ingredient: row.ingredient, totals: Hash.new(Rational(0)), packaged: false, unknown: false
+          ingredient: row.ingredient, totals: Hash.new(Rational(0)), rows: [], unknown: false
         }
-        entry[:packaged] ||= row.unit.package?
+        entry[:rows] << [row, Rational(menu.people_count, meal.servings)]
         requirement = row.requirement
         unless requirement
           entry[:unknown] = true
@@ -43,9 +43,16 @@ class MenuShoppingListService
     ingredient = entry[:ingredient]
     profile = ingredient.shopping_profile
     totals = entry[:totals]
-    if profile&.mode == "package" || (!profile && entry[:packaged]) || entry[:unknown]
-      return item(ingredient, nil, nil)
+    if profile&.mode == "package"
+      return package_purchase(entry, profile)
+    elsif !profile && entry[:rows].all? { |row, _| row.unit.package? }
+      signatures = entry[:rows].map { |row, _| [row.unit.code, row.package_quantity, row.package_unit_id] }.uniq
+      if signatures.one?
+        total = entry[:rows].sum { |row, scale| Rational(row.quantity.to_s) * scale }
+        return item(ingredient, total.ceil.to_s, signatures.first.first, required_quantity: quantity_string(total))
+      end
     end
+    return item(ingredient, nil, nil) if entry[:unknown]
 
     target = profile&.requirement_unit&.canonical_code || %w[g ml piece].find { |code| totals.key?(code) }
     converter = IngredientMeasurementConverter.new(ingredient)
@@ -62,6 +69,35 @@ class MenuShoppingListService
 
     quantity = target == "piece" ? total.ceil.to_s : quantity_string(total)
     item(ingredient, quantity, target, required_quantity: quantity_string(total), approximate: approximate)
+  end
+
+  def package_purchase(entry, profile)
+    ingredient = entry[:ingredient]
+    converter = IngredientMeasurementConverter.new(ingredient)
+    size = if profile.package_quantity && profile.package_unit
+      Rational(profile.package_quantity.to_s) * profile.package_unit.canonical_factor
+    end
+    total = Rational(0)
+    approximate = false
+    entry[:rows].each do |row, scale|
+      # Preserve explicit recipe counts when no size conversion is needed or possible.
+      if row.unit == profile.shopping_unit && (!size || !row.requirement)
+        total += Rational(row.quantity.to_s) * scale
+        next
+      end
+
+      requirement = row.requirement
+      return item(ingredient, nil, nil) unless size && requirement
+
+      quantity, unit = requirement
+      result = converter.convert(quantity, from: unit, to: profile.package_unit.canonical_code)
+      return item(ingredient, nil, nil) unless result
+
+      total += result.first * scale / size
+      approximate ||= result.last
+    end
+    item(ingredient, total.ceil.to_s, profile.shopping_unit.code,
+      required_quantity: quantity_string(total), approximate: approximate)
   end
 
   def item(ingredient, quantity, unit, required_quantity: nil, approximate: false)

@@ -28,7 +28,7 @@ class IngredientShoppingFlowTest < ActionDispatch::IntegrationTest
     assert_response :ok
     items = response.parsed_body.dig("data", "items").index_by { |item| item["ingredient_id"] }
     assert_equal [nil, nil, "unquantified"], items[mayo.id].values_at("unit", "quantity", "status")
-    assert_equal [nil, nil, "unquantified"], items[tuna.id].values_at("unit", "quantity", "status")
+    assert_equal ["can", "3", "calculated"], items[tuna.id].values_at("unit", "quantity", "status")
     assert_equal 3, items.size
     assert_equal ["piece", "2"], items[onion.id].values_at("unit", "quantity")
     assert_empty response.parsed_body.dig("data", "conversion_warnings")
@@ -38,7 +38,7 @@ class IngredientShoppingFlowTest < ActionDispatch::IntegrationTest
     assert_response :ok
     get "/menus/#{menu.id}/shopping_list", as: :json
     item = response.parsed_body.dig("data", "items").find { |entry| entry["ingredient_id"] == tuna.id }
-    assert_equal [nil, nil, "unquantified"], item.values_at("unit", "quantity", "status")
+    assert_equal ["can", "3", "calculated"], item.values_at("unit", "quantity", "status")
     assert_nil meal.meal_ingredients.find_by!(ingredient: tuna).package_quantity
     get "/ingredients", as: :json
     assert_equal 1, response.parsed_body["data"].find { |entry| entry["id"] == mayo.id }["meals"].size

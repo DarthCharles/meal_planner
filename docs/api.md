@@ -403,8 +403,9 @@ object in `data`, including `ingredient_id`:
 | `package` | `jar`, `bag`, `can`, `bottle`, `package` | Optional; when supplied, positive quantity and `g`, `kg`, `ml`, `l`, or `piece` |
 
 Packages can be saved with only `mode` and `shopping_unit`. Both content fields
-must be absent/null together, or form a valid complete pair. Packages appear by
-name only on the shopping checklist, regardless of size or measurement references. Invalid combinations return `422` with field errors and
+must be absent/null together, or form a valid complete pair. Recipe container counts
+remain calculable without contents; known contents also allow conversion from
+recipe weights, volumes, or pieces. Invalid combinations return `422` with field errors and
 preserve the previous presentation. `DELETE` returns `data: true`, retaining
 measurement references and recipe quantities. Removing an unused ingredient
 removes both its references and its shopping profile.
@@ -443,11 +444,16 @@ before display rounding. Other menus do not contribute.
 
 Display rules:
 
-- A `package` shopping profile always produces a name-only item, regardless of
-  package size or recipe measures. No container count is inferred.
-- Without a profile, an ingredient used in recipe containers is also name-only.
-- Recipe containers with unknown contents remain valid. If any occurrence has
-  unknown contents, that ingredient is name-only; other ingredients still calculate.
+- Recipe counts in the configured shopping container remain usable without
+  contents: one recipe can produces one shopping can. If both recipe and buying
+  contents are known, convert the recipe snapshot to the current buying size.
+- Known buying contents also convert compatible recipe weights, volumes, and
+  pieces to containers. Sum all occurrences before rounding up to whole containers.
+- Without a profile, identical recipe container units and content snapshots are
+  summed as container counts. Different known sizes fall back to canonical amounts.
+- Unknown contents do not erase a usable matching container count. If mixed
+  measures cannot be combined completely, return one name-only item instead of
+  a partial purchase; other ingredients still calculate.
 - Otherwise, configured buying units select the canonical target (g, ml, or piece).
   Without a profile the target follows the existing g/ml/piece priority.
 - Standard units normalize automatically. Existing ingredient references may

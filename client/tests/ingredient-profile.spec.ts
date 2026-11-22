@@ -117,7 +117,7 @@ test("keeps known package contents editable and validates optional values withou
   await expect(setup.getByText(/Each jar contains 850 g/)).toBeVisible();
   await expect(setup.getByText("I buy jars", { exact: true })).toBeVisible();
   await expect(
-    setup.getByText("The ingredient name only. Comal does not calculate package counts."),
+    setup.getByText("Whole packages, calculated from recipe counts or known package contents."),
   ).toBeVisible();
   await setup.getByRole("button", { name: "Edit shopping setup" }).click();
   await setup.getByLabel("Package contents", { exact: true }).fill("");

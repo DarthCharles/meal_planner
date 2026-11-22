@@ -174,7 +174,8 @@ export const es: typeof en = {
       weight_result: "El total en gramos, cuando se pueden sumar las cantidades de las recetas.",
       volume_result:
         "El total en mililitros, cuando se pueden sumar las cantidades de las recetas.",
-      package_result: "Solo el nombre del ingrediente. Comal no calcula cuántos envases comprar.",
+      package_result:
+        "Envases completos, calculados con las cantidades de las recetas o el contenido conocido.",
       piece_summary: "Lo compro por pieza",
       bulk_summary: "Lo compro por %{measure}",
       package_summary: "Lo compro en %{unit}",
@@ -214,7 +215,7 @@ export const es: typeof en = {
       package_size: "Contenido del envase",
       package_measure: "Unidad de la etiqueta",
       label_help:
-        "Usa la cantidad de la etiqueta. Puedes copiarla a una receta; no determina cuánto comprar.",
+        "Usa la cantidad de la etiqueta para calcular cuántos envases comprar según tus recetas.",
       enter_size: "Ingresa una cantidad positiva o deja el contenido vacío.",
       choose_package: "Elige el tipo de envase",
     },

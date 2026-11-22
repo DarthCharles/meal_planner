@@ -16,18 +16,18 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_name_only result[:items].sole, mayo
     assert_empty result[:conversion_warnings]
     assert_empty mayo.measurement_references
-    # Existing reference data does not change how packaged groceries are displayed.
+    # A density reference makes all recipe measures convertible to package contents.
     reference(mayo, "density", 13, basis: 15)
-    assert_name_only result[:items].sole, mayo
+    assert_equal ["jar", "2", "approximate"], result[:items].sole.values_at(:unit, :quantity, :status)
   end
 
-  test "packages need no contents and changing package size never adds a purchase count" do
+  test "known package contents calculate a purchase count from recipe weight" do
     mayo = ingredient("Mayonnaise", mode: "package", shopping_unit: "jar")
     meal = recipe(mayo, [[500, "g"]])
     @monday.daily_meals.create!(meal: meal)
     assert_name_only result[:items].sole, mayo
     mayo.shopping_profile.update!(package_quantity: 250, package_unit: unit("g"))
-    assert_name_only result[:items].sole, mayo
+    assert_equal ["jar", "2"], result[:items].sole.values_at(:unit, :quantity)
     assert_equal 500, meal.meal_ingredients.sole.quantity
   end
 
@@ -93,11 +93,44 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     tuna = ingredient("Tuna", mode: "package", shopping_unit: "can", package_quantity: 140, package_unit: "g")
     meal = recipe(tuna, [[1, "can", 140, "g"], [0.5, "can", 280, "g"]])
     @monday.daily_meals.create!(meal: meal)
-    assert_name_only result[:items].sole, tuna
+    assert_equal ["can", "2"], result[:items].sole.values_at(:unit, :quantity)
     tuna.shopping_profile.update!(package_quantity: 100)
-    assert_name_only result[:items].sole, tuna
+    assert_equal ["can", "3"], result[:items].sole.values_at(:unit, :quantity)
     assert_equal [140, 280], meal.meal_ingredients.ordered.pluck(:package_quantity)
     tuna.shopping_profile.destroy!
+    assert_equal ["g", "280.0"], result[:items].sole.values_at(:unit, :quantity)
+  end
+
+  test "one recipe can stays one can with or without buying contents or a profile" do
+    tuna = ingredient("Tuna", mode: "package", shopping_unit: "can")
+    meal = recipe(tuna, [[1, "can"]])
+    @monday.daily_meals.create!(meal: meal)
+    assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
+    tuna.shopping_profile.update!(package_quantity: 140, package_unit: unit("g"))
+    assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
+    meal.meal_ingredients.sole.update!(package_quantity: 140, package_unit: unit("g"))
+    assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
+    tuna.shopping_profile.destroy!
+    assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
+  end
+
+  test "container counts scale by people and servings and round after all occurrences" do
+    tuna = ingredient("Tuna", mode: "package", shopping_unit: "can")
+    meal = recipe(tuna, [[1, "can"]], servings: 4)
+    @menu.update!(people_count: 2)
+    @monday.daily_meals.create!(meal: meal)
+    @tuesday.daily_meals.create!(meal: meal)
+    assert_equal ["can", "1", "1.0"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
+    tuna.shopping_profile.destroy!
+    assert_equal ["can", "1", "1.0"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
+  end
+
+  test "unknown counts combine with convertible weight but never imply a different container" do
+    tuna = ingredient("Tuna", mode: "package", shopping_unit: "can", package_quantity: 140, package_unit: "g")
+    meal = recipe(tuna, [[1, "can"], [70, "g"]])
+    @monday.daily_meals.create!(meal: meal)
+    assert_equal ["can", "2", "1.5"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
+    tuna.shopping_profile.update!(shopping_unit: unit("jar"))
     assert_name_only result[:items].sole, tuna
   end
 
