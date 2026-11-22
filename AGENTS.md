@@ -47,6 +47,9 @@ requires them.
 
 - Use English for identifiers, variables, comments, log messages, and other
   code-facing text.
+- Use Greda as the design system for client UI. Build with its primitives and
+  apply its semantic tokens and typography roles directly to components. See
+  [DESIGN.md](DESIGN.md) and the [client instructions](client/AGENTS.md).
 - Update the relevant file under `docs/` when changing routes, data models,
   setup, or client behavior.
 - Do not commit secrets, local `.env` files, generated `client/dist/` output,

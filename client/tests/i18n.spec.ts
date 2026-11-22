@@ -101,7 +101,7 @@ test.describe("Spanish browser preference", () => {
     await dialog.getByLabel("Porciones de la receta", { exact: true }).fill("2");
     await dialog.getByRole("button", { name: "Comida", exact: true }).click();
     await dialog.getByRole("button", { name: "Lunes", exact: true }).click();
-    await dialog.getByRole("button", { name: "+ Agregar ingrediente", exact: true }).click();
+    await dialog.getByRole("button", { name: "Agregar ingrediente", exact: true }).click();
     const name = dialog.getByRole("combobox", { name: "Nombre del ingrediente", exact: true });
     await name.fill("Tomato");
     await dialog.getByRole("option", { name: "Tomato", exact: true }).click();

@@ -40,6 +40,11 @@ typography:
     fontSize: "0.875rem"
     fontWeight: 500
     lineHeight: 1.5
+  caption:
+    fontFamily: '"DM Sans", sans-serif'
+    fontSize: "0.75rem"
+    fontWeight: 400
+    lineHeight: 1.5
   eyebrow:
     fontFamily: '"DM Sans", sans-serif'
     fontSize: "10px"
@@ -125,7 +130,7 @@ components:
 
 Name: Comal
 Colors: primary: terracotta hsl(18 68% 31%); secondary: warm-tan hsl(32 26% 88%); tertiary: garden-sage hsl(90 20.40816% 80.78431%); neutral: warm-cream hsl(32 32% 94%) (+9 more in the sidecar)
-Fonts: Fraunces (display, headline, day-title); DM Sans (body, label, eyebrow); ui-monospace (receipt)
+Fonts: Fraunces (display, headline, day-title); DM Sans (body, label, caption, eyebrow); ui-monospace (receipt)
 Spacing: unit 0.25rem, gap-2 0.5rem, gap-3 0.75rem, gap-4 1rem, gap-6 1.5rem, gap-8 2rem
 Radius: sm 0.375rem, md 0.75rem, lg 0.75rem, meal-card 17px, day-card 20px, dialog 24px, hero 30px, full 9999px
 North Star: "The Everyday Kitchen"
@@ -146,7 +151,11 @@ Rules:
 - Don't add a decorative illustration to the existing menu hero during refinement.
 - Don't replace Greda behavior with consumer overrides before investigating the library.
   Do:
-- Do import Greda primitives directly and use its Comal semantic roles.
+- Do import Greda primitives directly and use its Comal semantic roles. Apply
+  Greda typography utilities directly to controls and text. Use `text-label`
+  for field and group labels, `text-body` for field values, and `text-caption`
+  for hints, optional markers, and validation messages. Keep field values at
+  the body size across viewport widths.
 - Do preserve the mobile-first layout and allow translated labels and names to wrap.
 - Do retain labeled categories, visible keyboard focus, and explicit field errors.
 - Do use Fraunces for headings and DM Sans for general text and controls.

@@ -1,4 +1,4 @@
-import { Button, Input, Textarea } from "@darthcharles/greda";
+import { Button, Input, Label, Textarea } from "@darthcharles/greda";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 
 import { useI18n } from "../../i18n";
@@ -19,11 +19,9 @@ export function MealForm({
   types,
   units,
   initialMeal,
-  onClose,
   onSaved,
 }: {
   initialMeal: Meal | null;
-  onClose: () => void;
   onSaved: () => void;
   types: MealTypeOption[];
   units: UnitOption[];
@@ -53,6 +51,7 @@ export function MealForm({
             package_quantity: package_quantity ?? "",
             package_unit: package_unit ?? "",
             ingredient_id,
+            uncommitted: false,
             name,
             quantity: String(quantity),
             unit,
@@ -85,13 +84,7 @@ export function MealForm({
     ? t("recipe.servings_error")
     : errors.name || errors.description || errors.meal_type_ids
       ? t("meals.form.meal_required")
-      : errors.ingredients
-        ? errors.ingredients.some?.((row) => row?.name)
-          ? t("meals.form.ingredient_selection_required")
-          : errors.ingredients.some?.((row) => row?.package_quantity || row?.package_unit)
-            ? t("recipe.contents_required")
-            : t("meals.form.ingredient_amount_required")
-        : undefined;
+      : undefined;
   const error = validationError || createError?.message || updateError?.message;
   const clearSaveErrors = () => {
     resetCreateMeal();
@@ -100,28 +93,26 @@ export function MealForm({
   const submit = (form: MealFormValues) => {
     if (saving) return;
     clearSaveErrors();
-    const ingredients: MealPayload["ingredients"] = form.ingredients
-      .filter((ingredient) => ingredient.name.trim())
-      .map(
-        ({
-          ingredient_id,
-          name,
-          quantity,
-          unit,
-          preparation_note,
-          package_quantity,
-          package_unit,
-        }) => ({
-          ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
-          quantity,
-          unit,
-          preparation_note,
-          ...(units.find((option) => option.code === unit)?.dimension === "package" &&
-          package_quantity?.trim()
-            ? { package_quantity, package_unit }
-            : {}),
-        }),
-      );
+    const ingredients: MealPayload["ingredients"] = form.ingredients.map(
+      ({
+        ingredient_id,
+        name,
+        quantity,
+        unit,
+        preparation_note,
+        package_quantity,
+        package_unit,
+      }) => ({
+        ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
+        quantity,
+        unit,
+        preparation_note,
+        ...(units.find((option) => option.code === unit)?.dimension === "package" &&
+        package_quantity?.trim()
+          ? { package_quantity, package_unit }
+          : {}),
+      }),
+    );
     const values = { ...form, ingredients };
     if (initialMeal) {
       updateMeal({ id: initialMeal.id, form: values }, { onSuccess: onSaved });
@@ -132,26 +123,26 @@ export function MealForm({
   return (
     <FormProvider {...methods}>
       <form
-        className="@container grid min-w-0 gap-6"
+        className="@container grid min-w-0 gap-5 max-desktop:[&_:is(input,textarea,button)]:scroll-mb-36"
         noValidate
         onSubmit={handleSubmit(submit, clearSaveErrors)}
       >
         <div className="grid min-w-0 gap-4">
-          <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
+          <Label className="text-label grid min-w-0 gap-2">
             {t("meals.form.name")}
             <Input
-              className="h-auto rounded-[10px] p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              className="h-auto rounded-[10px] p-3 text-body shadow-none md:text-base"
               {...register("name", { validate: (value) => !!value.trim() })}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "meal-form-error" : undefined}
               placeholder={t("meals.form.meal_example")}
             />
-          </label>
-          <div className="grid min-w-0 gap-2 text-xs">
-            <label className="grid min-w-0 gap-2 font-bold text-foreground">
+          </Label>
+          <div className="grid min-w-0 gap-2">
+            <Label className="text-label grid min-w-0 gap-2">
               {t("recipe.servings")}
               <Input
-                className="text-[13px] md:text-[13px] font-normal"
+                className="text-body md:text-base"
                 type="number"
                 inputMode="numeric"
                 min="1"
@@ -167,15 +158,18 @@ export function MealForm({
                   errors.servings ? "meal-form-error servings-help" : "servings-help"
                 }
               />
-            </label>
-            <span id="servings-help" className="font-normal text-muted-foreground">
+            </Label>
+            <span id="servings-help" className="text-caption text-muted-foreground">
               {t("recipe.servings_help")}
             </span>
           </div>
-          <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
+        </div>
+        <IngredientManager units={units} />
+        <div className="grid min-w-0 gap-4 border-t border-border pt-4">
+          <Label className="text-label grid min-w-0 gap-2">
             {t("meals.form.description")}
             <Textarea
-              className="h-auto resize-y rounded-[10px] p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              className="h-auto resize-y rounded-[10px] p-3 text-body shadow-none md:text-base"
               {...register("description", {
                 validate: (value) => !!value.trim(),
               })}
@@ -184,21 +178,21 @@ export function MealForm({
               placeholder={t("meals.form.description_help")}
               rows={3}
             />
-          </label>
-          <label className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
+          </Label>
+          <Label className="text-label grid min-w-0 gap-2">
             <span>
               {t("meals.form.recipe_url")}{" "}
-              <span className="font-normal text-muted-foreground">{t("common.optional")}</span>
+              <span className="text-caption text-muted-foreground">{t("common.optional")}</span>
             </span>
             <Input
-              className="h-auto rounded-[10px] p-3 text-[13px] md:text-[13px] font-normal shadow-none"
+              className="h-auto rounded-[10px] p-3 text-body shadow-none md:text-base"
               {...register("recipe_url")}
               placeholder="https://..."
             />
-          </label>
+          </Label>
         </div>
         <div className="grid min-w-0 gap-4 border-t border-border pt-6">
-          <fieldset className="grid min-w-0 gap-2 text-xs font-bold text-foreground">
+          <fieldset className="text-label grid min-w-0 gap-2 text-foreground">
             <legend className="mb-2">{t("meals.form.meal_time")}</legend>
             <Controller
               name="meal_type_ids"
@@ -213,7 +207,7 @@ export function MealForm({
                         type="button"
                         variant={selected ? "secondary" : "outline"}
                         size="sm"
-                        className="capitalize"
+                        className="text-sm capitalize"
                         key={id}
                         ref={index === 0 ? field.ref : undefined}
                         onBlur={field.onBlur}
@@ -238,17 +232,17 @@ export function MealForm({
           </fieldset>
           <PreferredDaysField />
         </div>
-        <IngredientManager units={units} />
-        {error && (
-          <p id="meal-form-error" role="alert" className="text-xs text-destructive">
-            {error}
-          </p>
-        )}
-        <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            {t("common.cancel")}
-          </Button>
-          <Button type="submit" variant="default" loading={saving}>
+        <div className="sticky bottom-24 z-[5] flex flex-wrap items-center justify-end gap-x-4 gap-y-2 bg-background py-2 desktop:bottom-0 [@media(max-height:420px)]:static">
+          {error && (
+            <p
+              id="meal-form-error"
+              role="alert"
+              className="text-caption m-0 mr-auto text-destructive"
+            >
+              {error}
+            </p>
+          )}
+          <Button type="submit" variant="default" className="min-h-11" loading={saving}>
             {saving
               ? t("common.saving")
               : initialMeal

@@ -118,24 +118,22 @@ test("validates required fields and ingredient quantity/unit before saving", asy
   await fillMeal(page);
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await page.getByLabel("Ingredient name").fill("Potato");
-  await page.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
+  await page.getByRole("option", { name: "Add “Potato” as a new ingredient", exact: true }).click();
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
-  await expect(
-    dialog.getByText("Complete the quantity and unit for each ingredient."),
-  ).toBeVisible();
+  await expect(dialog.getByText("Enter a valid quantity for Potato.")).toBeVisible();
+  await expect(page.getByRole("spinbutton", { name: "Quantity", exact: true })).toBeFocused();
   await page.getByLabel("Quantity").fill("2");
+  await dialog.getByRole("button", { name: "Collapse Potato", exact: true }).click();
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
-  await expect(
-    dialog.getByText("Complete the quantity and unit for each ingredient."),
-  ).toBeVisible();
+  await expect(dialog.getByText("Choose a unit for Potato.")).toBeVisible();
+  await expect(dialog.getByRole("combobox", { name: "Unit", exact: true })).toBeFocused();
   await selectUnit(page, "piece");
   await page.getByLabel("Quantity").fill("0.0000001");
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
-  await expect(dialog.getByRole("alert")).toHaveText(
-    "Complete the quantity and unit for each ingredient.",
-  );
+  await expect(dialog.getByRole("alert")).toHaveText("Enter a valid quantity for Potato.");
   await expect(page.getByLabel("Quantity")).toHaveAttribute("aria-invalid", "true");
   expect(api.saves).toEqual([]);
+  await dialog.getByRole("button", { name: "Ingredient details", exact: true }).click();
   await dialog.getByRole("button", { name: "Remove Potato", exact: true }).click();
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
@@ -151,14 +149,17 @@ test(
     await fillMeal(page);
     await dialog.getByRole("button", { name: /Add ingredient/ }).click();
     await page.getByLabel("Ingredient name").fill("Potato");
-    await page.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
+    await page
+      .getByRole("option", { name: "Add “Potato” as a new ingredient", exact: true })
+      .click();
     await page.getByLabel("Quantity").fill("2");
     await selectUnit(page, "piece");
-    await page.getByLabel("Preparation note").fill("diced");
+    await dialog.getByRole("button", { name: "Ingredient details", exact: true }).click();
+    await page.getByLabel("Preparation note", { exact: true }).fill("diced");
     for (const label of ["Ingredient name", "Quantity", "Unit", "Preparation note"]) {
       const field = page.getByLabel(label, { exact: true });
       await expect(field).toBeVisible();
-      await expect(dialog.locator("label").filter({ hasText: label })).toBeVisible();
+      await expect(dialog.locator("label:visible").filter({ hasText: label })).toBeVisible();
       const bounds = await field.boundingBox();
       expect(bounds!.height, `${label} should remain a usable touch target`).toBeGreaterThanOrEqual(
         44,
@@ -181,11 +182,17 @@ test(
       .boundingBox();
     expect(removeBounds!.width).toBeGreaterThanOrEqual(44);
     expect(removeBounds!.height).toBeGreaterThanOrEqual(44);
-    // Empty ingredient rows are intentionally excluded from the submitted recipe.
-    await dialog.getByRole("button", { name: /Add ingredient/ }).click();
+    await dialog.getByRole("button", { name: "Add another", exact: true }).click();
     expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
       true,
     );
+    await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
+    await expect(dialog.getByText("Choose an ingredient or remove this row.")).toBeVisible();
+    await expect(
+      dialog.getByRole("combobox", { name: "Ingredient name", exact: true }),
+    ).toBeFocused();
+    expect(api.saves).toEqual([]);
+    await dialog.getByRole("button", { name: "Collapse ingredient", exact: true }).click();
     let release!: () => void;
     api.saveBarrier = new Promise<void>((resolve) => {
       release = resolve;
@@ -234,7 +241,7 @@ test(
     const suggestions = await dialog.getByRole("listbox", { name: "Ingredients" }).boundingBox();
     expect(suggestions!.x).toBeGreaterThanOrEqual(0);
     expect(suggestions!.x + suggestions!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
-    await expect(dialog.getByRole("option", { name: /Create ingredient/ })).toHaveCount(0);
+    await expect(dialog.getByRole("option", { name: /as a new ingredient/ })).toHaveCount(0);
     await ingredient.press("ArrowDown");
     await ingredient.press("Enter");
     await expect(ingredient).toHaveValue("Egg");
@@ -256,6 +263,21 @@ test(
     await openLibrary(page);
     await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
     const dialog = editorScreen(page);
+    const egg = dialog.getByRole("button", { name: "Edit Egg", exact: true });
+    await expect(egg).toContainText("2 pieces");
+    await expect(egg).toContainText("beaten");
+    await expect(dialog.getByRole("spinbutton", { name: "Quantity", exact: true })).toHaveCount(0);
+    await egg.click();
+    const openEgg = dialog.getByRole("button", { name: "Collapse Egg", exact: true });
+    await expect(openEgg).toHaveAttribute("aria-expanded", "true");
+    await expect(openEgg).toContainText("2 pieces");
+    await expect(dialog.getByRole("button", { name: "Remove Egg", exact: true })).toHaveCount(0);
+    await expect(
+      dialog.getByRole("textbox", { name: "Preparation note", exact: true }),
+    ).toHaveCount(0);
+    const amount = dialog.getByRole("spinbutton", { name: "Quantity", exact: true });
+    await expect(amount).toBeFocused();
+    await amount.fill("3");
     const unit = dialog.getByRole("combobox", { name: "Unit", exact: true });
     await expect(unit).toHaveText("pieces");
     await unit.focus();
@@ -280,7 +302,7 @@ test(
     await expect(unit).toHaveText("g");
     await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    expect(api.saves[0].body.ingredients[0].unit).toBe("g");
+    expect(api.saves[0].body.ingredients[0]).toMatchObject({ quantity: "3", unit: "g" });
   },
 );
 
@@ -291,6 +313,7 @@ test("requires explicit selection when replacing an ingredient and closes sugges
   await openLibrary(page);
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
   const dialog = editorScreen(page);
+  await dialog.getByRole("button", { name: "Edit Egg", exact: true }).click();
   const ingredient = dialog.getByRole("combobox", { name: "Ingredient name" });
   await ingredient.fill("Tom");
   await expect(dialog.getByRole("option", { name: "Tomato", exact: true })).toBeVisible();
@@ -300,7 +323,7 @@ test("requires explicit selection when replacing an ingredient and closes sugges
   await expect(dialog.getByRole("listbox")).toHaveCount(0);
   await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(dialog.getByRole("alert")).toHaveText(
-    "Choose an ingredient or select Create for each typed name.",
+    "Choose an ingredient from the list or add it as a new ingredient.",
   );
   expect(api.saves).toEqual([]);
   await ingredient.fill("Tom");
@@ -319,7 +342,9 @@ test("keeps created ingredients as drafts until save and reuses the saved catalo
   await fillMeal(page);
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
-  await dialog.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
+  await dialog
+    .getByRole("option", { name: "Add “Potato” as a new ingredient", exact: true })
+    .click();
   // StrictMode may abort and restart the initial request; reopening must reuse it.
   const initialReads = api.reads["/ingredients"];
   expect(api.ingredients.some((item) => item.name === "Potato")).toBe(false);
@@ -331,7 +356,9 @@ test("keeps created ingredients as drafts until save and reuses the saved catalo
   await fillMeal(page);
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
-  await dialog.getByRole("option", { name: "Create ingredient “Potato”", exact: true }).click();
+  await dialog
+    .getByRole("option", { name: "Add “Potato” as a new ingredient", exact: true })
+    .click();
   await dialog.getByLabel("Quantity").fill("1");
   await selectUnit(page, "piece");
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
@@ -340,7 +367,7 @@ test("keeps created ingredients as drafts until save and reuses the saved catalo
   await dialog.getByRole("button", { name: /Add ingredient/ }).click();
   await dialog.getByRole("combobox", { name: "Ingredient name" }).fill("potato");
   await expect(dialog.getByRole("option", { name: "Potato", exact: true })).toBeVisible();
-  await expect(dialog.getByRole("option", { name: /Create ingredient/ })).toHaveCount(0);
+  await expect(dialog.getByRole("option", { name: /as a new ingredient/ })).toHaveCount(0);
   expect(api.reads["/ingredients"]).toBe(initialReads);
 });
 
@@ -387,22 +414,22 @@ test("waits for edit options, prefills the meal, and saves ingredient removal", 
     "Eggs with tomato, onion, and chile.",
   );
   await expect(page.getByPlaceholder("https://...")).toHaveValue("https://example.com/huevos");
-  await expect(page.getByLabel("Ingredient name")).toHaveValue("Egg");
-  await expect(dialog.getByRole("spinbutton", { name: "Quantity", exact: true })).toHaveValue("2");
-  await expect(page.getByRole("combobox", { name: "Unit", exact: true })).toHaveText("pieces");
-  await expect(page.getByLabel("Preparation note")).toHaveValue("beaten");
-  for (let index = 0; index < 2; index++) {
-    await dialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
-    await expect(
-      dialog.getByRole("combobox", { name: "Ingredient name", exact: true }).last(),
-    ).toBeFocused();
-  }
-  for (let index = 0; index < 2; index++) {
-    await dialog.getByRole("button", { name: "Remove ingredient", exact: true }).first().click();
-  }
+  const egg = dialog.getByRole("button", { name: "Edit Egg", exact: true });
+  await expect(egg).toContainText("2 pieces");
+  await expect(egg).toContainText("beaten");
   await page.getByLabel("Meal name", { exact: true }).fill("Huevos con salsa");
+  await egg.click();
+  await dialog.getByRole("button", { name: "Ingredient details", exact: true }).click();
   await dialog.getByRole("button", { name: "Remove Egg", exact: true }).click();
-  await expect(dialog.getByText("Add what you need to cook this meal.")).toBeVisible();
+  await expect(egg).toHaveCount(0);
+  await expect(dialog.getByText("Removed Egg", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(egg).toContainText("2 pieces");
+  await expect(egg).toContainText("beaten");
+  await expect(egg).toBeFocused();
+  await egg.click();
+  await dialog.getByRole("button", { name: "Ingredient details", exact: true }).click();
+  await dialog.getByRole("button", { name: "Remove Egg", exact: true }).click();
   await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(
@@ -461,25 +488,30 @@ test("preserves ingredient values after removing a middle row", async ({ page, a
   await openLibrary(page);
   const dialog = await addMeal(page);
   await fillMeal(page);
-  for (const [index, name] of ["Potato", "Onion", "Garlic"].entries()) {
-    await dialog.getByRole("button", { name: /Add ingredient/ }).click();
-    await page.getByLabel("Ingredient name", { exact: true }).nth(index).fill(name);
-    await page.getByRole("option", { name: `Create ingredient “${name}”`, exact: true }).click();
-    await page
-      .getByLabel("Quantity", { exact: true })
-      .nth(index)
-      .fill(String(index + 1));
-    await selectUnit(page, "piece", index);
-    await page.getByLabel("Preparation note", { exact: true }).nth(index).fill(`${name} note`);
+  const ingredient = dialog.getByRole("combobox", { name: "Ingredient name", exact: true });
+  const quantity = dialog.getByRole("spinbutton", { name: "Quantity", exact: true });
+  await dialog.getByRole("button", { name: "Add ingredient", exact: true }).click();
+  for (const [index, name] of ["Potato", "Tomato", "Garlic"].entries()) {
+    await expect(ingredient).toBeFocused();
+    await ingredient.fill(name);
+    const option = name === "Tomato" ? name : `Add “${name}” as a new ingredient`;
+    await page.getByRole("option", { name: option, exact: true }).click();
+    await quantity.fill(String(index + 1));
+    await selectUnit(page, "piece");
+    await dialog.getByRole("button", { name: "Ingredient details", exact: true }).click();
+    await dialog
+      .getByRole("textbox", { name: "Preparation note", exact: true })
+      .fill(`${name} note`);
+    if (index < 2) await dialog.getByRole("button", { name: "Add another", exact: true }).click();
   }
-  await dialog.getByRole("button", { name: "Remove Onion", exact: true }).click();
-  await expect(page.getByLabel("Ingredient name", { exact: true })).toHaveCount(2);
-  await expect(page.getByLabel("Ingredient name", { exact: true }).nth(1)).toHaveValue("Garlic");
-  await expect(page.getByLabel("Quantity", { exact: true }).nth(1)).toHaveValue("3");
-  await expect(page.getByLabel("Preparation note", { exact: true }).nth(1)).toHaveValue(
-    "Garlic note",
-  );
-  await page.getByLabel("Quantity", { exact: true }).nth(1).fill("4");
+  await dialog.getByRole("button", { name: "Edit Tomato", exact: true }).click();
+  await dialog.getByRole("button", { name: "Ingredient details", exact: true }).click();
+  await dialog.getByRole("button", { name: "Remove Tomato", exact: true }).click();
+  const garlic = dialog.getByRole("button", { name: "Edit Garlic", exact: true });
+  await expect(garlic).toContainText("3 pieces");
+  await expect(garlic).toContainText("Garlic note");
+  await garlic.click();
+  await quantity.fill("4");
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(api.saves[0].body.ingredients).toEqual([

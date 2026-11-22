@@ -430,10 +430,14 @@ and edit. Native meal name, description, URL, quantity, and note fields use
 meal type IDs. React Query continues to own save requests, pending state, API
 errors, and cache updates.
 
-Create and edit forms group name, description, and recipe URL together, followed
-by planning preferences, ingredients, and a wrapping action footer. Field labels
-use tight spacing; section dividers and larger gaps separate those groups.
-Meal and ingredient form controls use Greda's `surface-raised` fill.
+The meal editor shows the name and servings first, followed by the ingredient
+list, description, recipe link, and planning preferences. Save stays at the
+bottom of the editor viewport while scrolling and returns to the page flow on
+short viewports. Back exits the editor and protects any unsaved draft. Meal
+and ingredient controls use Greda’s `surface-raised` fill.
+Fields and group labels use Greda’s label typography, with an 8px gap above
+field controls. Hints, optional markers, and validation messages use caption
+typography. Input values and select triggers use the body size at every width.
 
 Ingredient units use Greda's `Select` through RHF `Controller`, with codes from
 `GET /units`. The trigger shows the saved unit when editing, supports keyboard
@@ -442,7 +446,7 @@ container; Escape dismisses the unit list and restores focus to the trigger.
 
 Ingredient names use Greda's `Combobox` through RHF `Controller`. Opening the
 form fetches and caches `GET /ingredients`; filtering happens locally. Users
-select an existing ingredient or explicitly choose **Create ingredient**.
+select an existing ingredient or explicitly choose **Add “…” as a new ingredient**.
 Created options remain drafts until the meal saves, so cancelling does not
 create catalog entries. Existing options submit `ingredient_id`; new options
 submit `name`. Edit defaults preserve the saved ingredient identity. Successful
@@ -457,23 +461,19 @@ Enter select options without submitting the meal; Escape dismisses suggestions
 without leaving the editor.
 
 `FormProvider` shares the draft with `IngredientManager`, which uses
-`useFormContext` and `useFieldArray`. Rows use React Hook Form's generated IDs
-as React keys, so removing a row preserves the other rows' values. Each row
-watches its name for the accessible remove-button label. Generated IDs are not
-included in the submitted ingredients. Every ingredient field has a persistent
-visible label and a 44px-tall control. On narrow forms, the ingredient name sits
-beside a 44px remove target, quantity and unit share the full width below, and
-the optional preparation note spans its own line. At form-container widths of
-at least 40rem, name, quantity, unit, and remove align across one row, with the
-note below spanning the three data columns. This uses the available editor
-content width rather than the viewport width. Whitespace separates ingredients
-without row dividers or enclosing cards, keeping the selection instructions
-connected to the first row. Only the section heading uses bold weight; field
-labels use medium weight, while optional notes and secondary actions use muted
-text. The ingredients heading and helper text share a tight text group,
-with the Add ingredient link button beside it or wrapping below on narrow screens.
-Ingredient and preferred-day
-headers allow their actions to wrap for narrow screens and translated labels.
+`useFieldArray` with generated row IDs. The editor starts with compact rows that
+show the ingredient name, quantity, unit, and any preparation note or package
+size. Selecting a row opens Name, Quantity, and Unit beneath its summary and
+focuses Quantity. One row opens at a time. Ingredient details houses the note,
+package size when applicable, and Remove. The chevron in the summary row closes
+the editor and keeps draft changes. Undo restores the most recently removed
+ingredient in its original position.
+
+Add ingredient appears after the list and focuses ingredient search. Add another
+checks the current row before opening the next one. On phones, Quantity and Unit
+share a row beneath the ingredient name. At form widths of 40rem or more, the
+three controls fit side by side. The inputs retain visible labels and 44px
+targets. A single meal save sends the entire draft.
 
 Validation requires a nonblank name and description, a positive whole serving
 count, and at least one meal time. The servings number input starts blank for new
@@ -484,24 +484,19 @@ Named ingredient rows use a number input for positive decimal quantities such as
 is positive after six-place storage rounding through 1,000,000,000; Rails remains
 the authoritative validator. Repeated ingredient selections have independent
 quantities and notes; catalog usage updates deduplicate recipe IDs. Each row
-needs a unit; unnamed rows
-are excluded from the payload. The form disables native validation so these
-rules display consistently through RHF, marking invalid controls and linking
-them to an alert summary. Cancel confirms any unsaved changes and unmounts the draft; reopening initializes
-a fresh form. Failed saves leave the current values intact.
+needs a unit. Every added row needs a selected or newly created ingredient
+before saving. Closing a blank row discards it. Invalid fields show their own errors and a
+blocked save opens the first invalid ingredient after the required meal fields
+are complete. Cancel protects unsaved changes, and failed saves preserve the
+draft.
 
-Package recipe units offer optional contents per container in g, kg, ml, l,
-or pieces behind **Add container contents (optional)**, initially open only for
-known contents. Blank contents are omitted from submissions. Supplied contents
-remain snapshots belonging to the recipe. Choosing a different ingredient or
-container clears them; switching to
-an ordinary measure clears content validation errors and omits both package
-fields from the payload. Returning to a container does not restore old contents.
-An explicit button can load the saved ingredient's habitual presentation; manual
-entry also works for unsaved ingredients and missing presentations. Replacing
-existing contents requires confirmation. Late requests cannot populate a removed
-row or a replacement selection. Recipe details and previews display servings and
-container contents, using translated singular/plural labels for English unit codes.
+For package units, **Ingredient details** includes optional package size
+fields and a prompt that names the container. Opening Details on a saved
+ingredient with a package unit looks up its buying size. When available, **Use saved size** displays
+the amount and copies it into the recipe on selection. Replacing an entered
+size requires confirmation. Manual entry also works for a new ingredient.
+Blank sizes are omitted, and entered sizes are saved with the recipe. Changing
+the ingredient or package unit clears the old size and its validation errors.
 
 ## Day preferences
 

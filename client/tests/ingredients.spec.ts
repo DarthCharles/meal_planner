@@ -124,7 +124,7 @@ test("creates an ingredient with validation and makes it available in a meal for
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();
   const mealDialog = editorScreen(page);
-  await mealDialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
+  await mealDialog.getByRole("button", { name: "Add ingredient", exact: true }).click();
   await mealDialog.getByRole("combobox", { name: "Ingredient name" }).fill("Potato");
   await expect(mealDialog.getByRole("option", { name: "Potato", exact: true })).toBeVisible();
 });
@@ -150,9 +150,9 @@ test("renames ingredients in cached meals and menus", async ({ page, api }) => {
   const mealReads = api.reads["/meals"];
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
-  await expect(page.getByRole("combobox", { name: "Ingredient name" })).toHaveValue(
-    "Free range egg",
-  );
+  await expect(
+    editorScreen(page).getByRole("button", { name: "Edit Free range egg", exact: true }),
+  ).toBeVisible();
   await cancelEditor(page);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(api.reads["/meals"]).toBe(mealReads);
@@ -277,6 +277,7 @@ test("updates cached ingredient usage after changing a meal's ingredients", asyn
     .click();
   await page.getByRole("dialog").getByRole("button", { name: "Edit meal", exact: true }).click();
   const form = page.getByRole("region", { name: "Edit meal", exact: true });
+  await form.getByRole("button", { name: "Edit Egg", exact: true }).click();
   const ingredient = form.getByRole("combobox", { name: "Ingredient name" });
   await ingredient.fill("Tomato");
   await form.getByRole("option", { name: "Tomato", exact: true }).click();
@@ -317,11 +318,11 @@ test("deletes an unused ingredient from its dialog and updates the shared catalo
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();
   const mealDialog = editorScreen(page);
-  await mealDialog.getByRole("button", { name: "+ Add ingredient", exact: true }).click();
+  await mealDialog.getByRole("button", { name: "Add ingredient", exact: true }).click();
   await mealDialog.getByRole("combobox", { name: "Ingredient name" }).fill("Tomato");
   await expect(mealDialog.getByRole("option", { name: "Tomato", exact: true })).toHaveCount(0);
   await expect(
-    mealDialog.getByRole("option", { name: "Create ingredient “Tomato”", exact: true }),
+    mealDialog.getByRole("option", { name: "Add “Tomato” as a new ingredient", exact: true }),
   ).toBeVisible();
 });
 

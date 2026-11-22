@@ -15,7 +15,7 @@ export function PreferredDaysField() {
       render={({ field }) => (
         <fieldset
           aria-labelledby="preferred-days-label"
-          className="grid min-w-0 gap-2 text-xs font-bold text-foreground"
+          className="text-label grid min-w-0 gap-2 text-foreground"
         >
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <span id="preferred-days-label">{t("meals.preferred_days.preferred_days")}</span>
@@ -23,7 +23,7 @@ export function PreferredDaysField() {
               type="button"
               variant="link"
               size="sm"
-              className="px-0 text-xs"
+              className="px-0 text-sm"
               disabled={field.value.length === 0}
               onBlur={field.onBlur}
               onClick={() => field.onChange([])}
@@ -31,7 +31,7 @@ export function PreferredDaysField() {
               {t("meals.preferred_days.clear_all")}
             </Button>
           </div>
-          <p id="preferred-days-help" className="m-0 font-normal text-muted-foreground">
+          <p id="preferred-days-help" className="text-caption m-0 text-muted-foreground">
             {t("meals.preferred_days.preferred_days_help")}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -40,6 +40,7 @@ export function PreferredDaysField() {
                 key={day}
                 type="button"
                 size="sm"
+                className="text-sm"
                 variant={field.value.includes(day) ? "secondary" : "outline"}
                 aria-pressed={field.value.includes(day)}
                 aria-describedby="preferred-days-help"

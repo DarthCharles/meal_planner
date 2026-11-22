@@ -37,14 +37,16 @@ export function UnitSelect({
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   return (
     <div ref={setContainer} className="grid min-w-0 gap-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-label">
+        {label}
+      </Label>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger
           id={id}
           type="button"
           ref={inputRef}
           onBlur={onBlur}
-          className="h-11 w-full min-w-0"
+          className="text-body h-11 w-full min-w-0"
           aria-invalid={invalid}
           aria-describedby={describedBy}
         >

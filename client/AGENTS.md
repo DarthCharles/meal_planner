@@ -54,8 +54,11 @@ The client uses `VITE_API_URL` when set, and otherwise targets
   Use the instance-bound `close` supplied to dialog content for async completion,
   and keep form state and API hooks in the content. Cover keyboard/focus and
   replacement behavior when changing the shared dialog implementation.
-- Import UI primitives directly from Greda and use its existing Storybook Comal
-  palette through Greda's standard semantic tokens.
+- Import UI primitives directly from `@darthcharles/greda` and use Greda's Comal
+  theme and semantic tokens. Apply its typography utilities directly to
+  components, including `text-label` for labels, `text-body` for field values,
+  and `text-caption` for supporting text. Reserve custom CSS for requirements
+  that Greda's components and utilities cannot express.
   Keep illustration colors inside SVGs; discuss any additional UI colors with
   the user before adding them.
 - Delegate shared Greda component bugs and reusable component requests to the

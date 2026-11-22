@@ -2,17 +2,22 @@ import type { Page } from "@playwright/test";
 
 import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
 
-async function chooseUnit(page: Page, label: string, index = 0) {
-  await editorScreen(page).getByRole("combobox", { name: "Unit", exact: true }).nth(index).click();
+async function chooseUnit(page: Page, label: string) {
+  await editorScreen(page).getByRole("combobox", { name: "Unit", exact: true }).click();
   await page.getByRole("option", { name: label, exact: true }).click();
 }
-async function addEgg(page: Page) {
-  await editorScreen(page).getByRole("button", { name: "+ Add ingredient", exact: true }).click();
-  const input = editorScreen(page)
-    .getByRole("combobox", { name: "Ingredient name", exact: true })
-    .last();
+async function selectEgg(page: Page) {
+  const input = editorScreen(page).getByRole("combobox", { name: "Ingredient name", exact: true });
   await input.fill("Egg");
   await page.getByRole("option", { name: "Egg", exact: true }).click();
+}
+
+async function editEgg(page: Page) {
+  await editorScreen(page).getByRole("button", { name: "Edit Egg", exact: true }).click();
+}
+
+async function toggleIngredientDetails(page: Page) {
+  await editorScreen(page).getByRole("button", { name: "Ingredient details", exact: true }).click();
 }
 
 test("requires explicit servings and retains decimal quantities and repeated ingredient rows", async ({
@@ -39,14 +44,16 @@ test("requires explicit servings and retains decimal quantities and repeated ing
   expect(api.saves).toEqual([]);
   await servings.fill("4");
   const quantities = ["0.5", "0.125", "1.5"];
+  await form.getByRole("button", { name: "Add ingredient", exact: true }).click();
   for (const [index, quantity] of quantities.entries()) {
-    await addEgg(page);
-    await form.getByRole("spinbutton", { name: "Quantity", exact: true }).nth(index).fill(quantity);
-    await chooseUnit(page, "pieces", index);
+    await selectEgg(page);
+    await form.getByRole("spinbutton", { name: "Quantity", exact: true }).fill(quantity);
+    await chooseUnit(page, "pieces");
+    await form.getByRole("button", { name: "Ingredient details", exact: true }).click();
     await form
-      .getByLabel("Preparation note", { exact: true })
-      .nth(index)
+      .getByRole("textbox", { name: "Preparation note", exact: true })
       .fill(`Preparation ${index}`);
+    if (index < 2) await form.getByRole("button", { name: "Add another", exact: true }).click();
   }
   await form.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(form).toHaveCount(0);
@@ -80,7 +87,10 @@ test("recipe container contents survive editing and a habitual package change", 
   await expect(
     editorScreen(page).getByRole("spinbutton", { name: "Recipe servings", exact: true }),
   ).toHaveValue("2");
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("140");
+  await expect(page.getByRole("button", { name: "Edit Egg", exact: true })).toContainText(
+    "1 can of 140 g",
+  );
+  await expect(page.getByLabel("Contents per container", { exact: true })).toBeHidden();
   expect(api.reads["/ingredients/1/shopping_profile"] ?? 0).toBe(0);
   await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(editorScreen(page)).toHaveCount(0);
@@ -90,10 +100,11 @@ test("recipe container contents survive editing and a habitual package change", 
   });
   api.ingredientProfiles[1].package_quantity = "850";
   await page.goto("/meals/1/edit");
+  await editEgg(page);
+  await toggleIngredientDetails(page);
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("140");
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Fill from habitual presentation" }).click();
-  // The confirmation is shown after the profile response; wait for the saved text.
+  await page.getByRole("button", { name: "Use saved size · 850 g", exact: true }).click();
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("850");
 });
 
@@ -121,15 +132,15 @@ test("ingredient and container changes clear snapshots, errors, and late suggest
     release = resolve;
   });
   await page.goto("/meals/1/edit");
-  await page.getByRole("button", { name: "Fill from habitual presentation" }).click();
-  await expect(
-    page.getByRole("button", { name: "Fill from habitual presentation" }),
-  ).toBeDisabled();
+  await editEgg(page);
+  await toggleIngredientDetails(page);
+  await expect(page.getByText("Looking up your saved package size…")).toBeVisible();
   const ingredient = page.getByRole("combobox", { name: "Ingredient name" });
   await ingredient.fill("Tomato");
   await page.getByRole("option", { name: "Tomato", exact: true }).click();
   release();
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
+  await expect(page.getByRole("button", { name: /Use saved size/ })).toHaveCount(0);
   await chooseUnit(page, "jars");
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
   await chooseUnit(page, "g");
@@ -145,17 +156,14 @@ test(
   { tag: "@responsive" },
   async ({ page }) => {
     await page.goto("/meals/1/edit");
+    await editEgg(page);
     const ingredient = page.getByRole("combobox", { name: "Ingredient name" });
     await ingredient.fill("Tuna");
-    await page.getByRole("option", { name: "Create ingredient “Tuna”", exact: true }).click();
+    await page.getByRole("option", { name: "Add “Tuna” as a new ingredient", exact: true }).click();
     await chooseUnit(page, "cans");
-    await page
-      .getByRole("button", { name: "Add container contents (optional)", exact: true })
-      .click();
+    await toggleIngredientDetails(page);
     await page.getByLabel("Contents per container", { exact: true }).fill("140");
-    await expect(page.getByRole("button", { name: "Fill from habitual presentation" })).toHaveCount(
-      0,
-    );
+    await expect(page.getByRole("button", { name: /Use saved size/ })).toHaveCount(0);
     await chooseUnit(page, "g");
     await chooseUnit(page, "cans");
     await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
@@ -186,21 +194,25 @@ test("a late presentation response cannot populate a removed row or replace cont
     package_unit: "g",
   };
   await page.goto("/meals/1/edit");
+  await editEgg(page);
+  await toggleIngredientDetails(page);
   page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("button", { name: "Fill from habitual presentation" }).click();
+  await page.getByRole("button", { name: "Use saved size · 850 g", exact: true }).click();
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("140");
+  await toggleIngredientDetails(page);
   let release!: () => void;
   api.readBarriers["/ingredients/1/shopping_profile"] = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.getByRole("button", { name: "Fill from habitual presentation" }).click();
-  await expect(
-    page.getByRole("button", { name: "Fill from habitual presentation" }),
-  ).toBeDisabled();
+  await toggleIngredientDetails(page);
+  await expect(page.getByRole("button", { name: /Use saved size/ })).toBeDisabled();
   await page.getByRole("button", { name: "Remove Egg", exact: true }).click();
-  await addEgg(page);
+  await editorScreen(page).getByRole("button", { name: "Add ingredient", exact: true }).click();
+  await selectEgg(page);
+  await editorScreen(page).getByRole("spinbutton", { name: "Quantity", exact: true }).fill("1");
   await chooseUnit(page, "cans");
   release();
+  await toggleIngredientDetails(page);
   await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
   await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(editorScreen(page)).toHaveCount(0);
@@ -209,6 +221,7 @@ test("a late presentation response cannot populate a removed row or replace cont
 
 test("saves a recipe container without asking for its contents", async ({ page, api }) => {
   await page.goto("/meals/1/edit");
+  await editEgg(page);
   await chooseUnit(page, "cans");
   await expect(page.getByLabel("Contents per container", { exact: true })).toBeHidden();
   await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();

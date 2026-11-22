@@ -49,7 +49,6 @@ export function MealDialogContent({ initialMeal, onClose, onSaved }: MealDialogC
           types={types ?? demoMealTypes}
           units={units ?? demoUnits}
           initialMeal={initialMeal}
-          onClose={onClose}
           onSaved={onSaved}
         />
       )}
