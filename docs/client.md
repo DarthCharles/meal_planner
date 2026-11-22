@@ -234,14 +234,27 @@ opening the buying form.
 
 Buying setup uses `mode`, `shopping_unit`, `package_quantity`, and `package_unit`:
 
+The form presents all three buying methods as a native radio group, stacked on
+phones and arranged in one row from the tablet breakpoint. Only the selected
+method's fields appear. A shared **On your shopping list** explanation appears
+in both the form and saved summary, describing whole pieces, grams, milliliters,
+or a name-only packaged item. Unconfigured ingredients explain that compatible
+recipe amounts can already be calculated. Saved summaries use sentences rather
+than bare unit codes.
+
 - Pieces require only the buying choice.
-- Bulk accepts g, kg, ml, or l; Rails displays calculable totals in canonical g/ml.
+- Bulk presents **Weight** or **Volume**, with calculable totals in g or ml.
+  The API still accepts g, kg, ml, or l. Existing units remain unchanged on
+  unrelated saves; changing dimension selects kg or l internally.
 - Packages accept jar, bag, can, bottle, or generic package. The generic package is
   the initial selection, so no product type or size has to be documented.
 - Package contents are optional, initially collapsed unless existing contents are
   present. A blank quantity submits both content fields as null. Entered content
   quantities must be positive; existing sizes remain editable and can still fill
-  optional recipe container snapshots.
+  optional recipe container snapshots. The form explicitly explains that these
+  contents do not calculate how many packages to buy. Quantity and label unit
+  have visible labels; amount fields request a decimal keyboard. Invalid
+  collapsed contents reopen and focus their field, with errors beside the input.
 
 Piece and bulk buying choices expose one optional **Weight of one piece (g)**
 field. This covers chicken breasts and other ingredients whose recipes mix grams
@@ -256,7 +269,10 @@ shopping calculations use it without adding technical details to the receipt.
 No schema migration or recipe rewrite is required.
 
 The profile section has its own Save, Cancel, Remove, loading, error, and retry
-states. It saves through `PUT /ingredients/:id/shopping_profile`; removal uses
+states. Opening the form focuses the buying choices; saving, canceling, or
+removing returns focus to the section's setup/edit action. Removal lives in a
+secondary **Reset buying choice** disclosure that explains what is kept, and
+has a distinct completion message. It saves through `PUT /ingredients/:id/shopping_profile`; removal uses
 `DELETE` and retains measurement references. Successful responses synchronize
 profile caches and invalidate shopping lists. Profile changes never rewrite
 recipe containers. Saves confirm locally and leave the ingredient editor open,
@@ -267,7 +283,8 @@ A failed recalculation does not turn a successful profile save into a failed sav
 
 `IngredientShoppingEditor`, `IngredientShoppingFields`, and
 `shoppingProfileForm.ts` own buying capture. React Query hooks own requests and
-cache synchronization. No new shopping-adjustment step or manual purchase editor
+cache synchronization. `shoppingPresentation.ts` shares the receipt-outcome copy
+between editing and display. No new shopping-adjustment step or manual purchase editor
 has been added.
 
 The ingredient editor shows a Delete ingredient action only for unused ingredients.

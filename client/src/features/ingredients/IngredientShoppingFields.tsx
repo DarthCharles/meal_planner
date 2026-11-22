@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import {
   Input,
@@ -13,14 +13,18 @@ import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { unitLabel, useI18n } from "../../i18n";
 import type { UnitOption } from "../../types";
+import { shoppingListResult } from "./shoppingPresentation";
 import type { ShoppingDraft } from "./shoppingProfileForm";
 import { shoppingUnitOptions, validShoppingAmount } from "./shoppingProfileForm";
 
 type SelectOption = { value: string; label: string };
-type SelectField = "how" | "bulkUnit" | "packageUnit" | "packageMeasure";
+type SelectField = "bulkUnit" | "packageUnit" | "packageMeasure";
 
 function unitOptions(units: UnitOption[]): SelectOption[] {
-  return units.map((unit) => ({ value: unit.code, label: unitLabel(unit.code) }));
+  return units.map((unit) => ({
+    value: unit.code,
+    label: unitLabel(unit.code),
+  }));
 }
 
 function ShoppingSelect({
@@ -28,19 +32,13 @@ function ShoppingSelect({
   label,
   options,
   disabled,
-  hideLabel,
-  placeholder,
   validate,
-  onChange,
 }: {
   name: SelectField;
   label: string;
   options: SelectOption[];
   disabled: boolean;
-  hideLabel?: boolean;
-  placeholder?: string;
   validate?: (value: string, draft: ShoppingDraft) => boolean | string;
-  onChange?: () => void;
 }) {
   const { control } = useFormContext<ShoppingDraft>();
   const triggerId = useId();
@@ -53,27 +51,18 @@ function ShoppingSelect({
       rules={{ validate }}
       render={({ field, fieldState }) => (
         <div ref={setContainer} className="flex min-w-0 flex-col gap-2">
-          <Label htmlFor={triggerId} className={hideLabel ? "sr-only" : undefined}>
-            {label}
-          </Label>
-          <Select
-            value={field.value}
-            disabled={disabled}
-            onValueChange={(value) => {
-              field.onChange(value);
-              onChange?.();
-            }}
-          >
+          <Label htmlFor={triggerId}>{label}</Label>
+          <Select value={field.value} disabled={disabled} onValueChange={field.onChange}>
             <SelectTrigger
               id={triggerId}
               type="button"
               ref={field.ref}
               onBlur={field.onBlur}
               aria-invalid={fieldState.invalid}
-              aria-describedby={fieldState.invalid ? "shopping-setup-error" : undefined}
-              className="h-11 w-full min-w-0"
+              aria-describedby={fieldState.error ? `${triggerId}-error` : undefined}
+              className="h-auto min-h-11 w-full min-w-0 whitespace-normal text-left"
             >
-              <SelectValue placeholder={placeholder} />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent container={container}>
               {options.map((option) => (
@@ -83,6 +72,11 @@ function ShoppingSelect({
               ))}
             </SelectContent>
           </Select>
+          {fieldState.error && (
+            <p id={`${triggerId}-error`} role="alert" className="m-0 text-sm text-destructive">
+              {fieldState.error.message}
+            </p>
+          )}
         </div>
       )}
     />
@@ -105,107 +99,167 @@ export function IngredientShoppingFields({
     control,
     register,
     getValues,
+    setFocus,
     formState: { errors },
   } = useFormContext<ShoppingDraft>();
   const how = useWatch({ control, name: "how" });
+  const bulkUnit = useWatch({ control, name: "bulkUnit" });
   const pieceCount = useWatch({ control, name: "pieceCount" });
-  const [initialContentsOpen] = useState(() => !!getValues("packageSize"));
+  const [contentsOpen, setContentsOpen] = useState(() => !!getValues("packageSize"));
+  const fieldId = useId();
   const options = shoppingUnitOptions(units);
+
+  useEffect(() => {
+    if (errors.packageSize) setContentsOpen(true);
+  }, [errors.packageSize]);
+  useEffect(() => {
+    if (contentsOpen && errors.packageSize) setFocus("packageSize");
+  }, [contentsOpen, errors.packageSize, setFocus]);
 
   return (
     <>
-      <ShoppingSelect
-        name="how"
-        label={t("ingredients.shopping.how_buy", { name: ingredientName })}
-        disabled={busy}
-        onChange={onModeChange}
-        options={[
-          { value: "piece", label: t("ingredients.shopping.by_piece") },
-          { value: "bulk", label: t("ingredients.shopping.by_weight") },
-          { value: "package", label: t("ingredients.shopping.by_package") },
-        ]}
-      />
-
-      {how === "piece" && (
-        <div className="flex flex-col gap-3">
-          <p className="m-0 text-sm text-muted-foreground">
-            {t("ingredients.shopping.piece_help")}
-          </p>
+      <fieldset disabled={busy} className="m-0 min-w-0 border-0 p-0">
+        <legend className="mb-3 text-sm font-medium">
+          {t("ingredients.shopping.how_buy", { name: ingredientName })}
+        </legend>
+        <div className="grid gap-2 tablet:grid-cols-3">
+          {(
+            [
+              ["piece", t("ingredients.shopping.by_piece")],
+              ["bulk", t("ingredients.shopping.by_weight")],
+              ["package", t("ingredients.shopping.by_package")],
+            ] as const
+          ).map(([value, label]) => (
+            <label
+              key={value}
+              className={`flex min-h-12 min-w-0 items-center gap-3 rounded-lg border px-4 py-3 text-sm leading-snug ${busy ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-accent"} ${how === value ? "border-primary bg-accent text-accent-foreground" : "border-border"}`}
+            >
+              <input
+                type="radio"
+                value={value}
+                {...register("how", { onChange: onModeChange })}
+                className="size-4 shrink-0 accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              />
+              {label}
+            </label>
+          ))}
         </div>
-      )}
+      </fieldset>
 
       {how === "bulk" && (
-        <div className="flex flex-col gap-2">
+        <div className="tablet:max-w-sm">
           <ShoppingSelect
             name="bulkUnit"
             label={t("ingredients.shopping.show_in")}
-            options={unitOptions(options.bulk)}
+            options={[
+              {
+                value: ["g", "kg"].includes(bulkUnit) ? bulkUnit : "kg",
+                label: t("ingredients.shopping.weight"),
+              },
+              {
+                value: ["ml", "l"].includes(bulkUnit) ? bulkUnit : "l",
+                label: t("ingredients.shopping.volume"),
+              },
+            ]}
             disabled={busy}
           />
-          <p className="m-0 text-sm text-muted-foreground">{t("ingredients.shopping.bulk_help")}</p>
         </div>
       )}
 
+      <div className="grid gap-1 rounded-lg bg-muted p-4 text-sm leading-relaxed">
+        <p className="m-0 font-medium">{t("ingredients.shopping.list_result")}</p>
+        <p className="m-0 text-muted-foreground">{shoppingListResult(how, bulkUnit, t)}</p>
+      </div>
+
       {how !== "package" && (
-        <div className="grid gap-2 text-sm">
-          <label className="grid gap-2">
+        <div className="grid gap-2 border-t border-border pt-5 text-sm">
+          <Label htmlFor={`${fieldId}-weight`}>
             {Number(pieceCount) === 1
               ? t("ingredients.shopping.piece_weight")
               : t("ingredients.shopping.pieces_weight", { count: pieceCount })}
-            <Input
-              className="h-11"
-              inputMode="decimal"
-              disabled={busy}
-              {...register("pieceWeight", {
-                validate: (value, draft) =>
-                  draft.how === "package" ||
-                  !value.trim() ||
-                  validShoppingAmount(value) ||
-                  t("ingredients.shopping.piece_weight_error"),
-              })}
-              aria-invalid={!!errors.pieceWeight}
-              aria-describedby={errors.pieceWeight ? "shopping-setup-error" : "piece-weight-help"}
-            />
-          </label>
-          <p id="piece-weight-help" className="m-0 text-sm text-muted-foreground">
+          </Label>
+          <p id={`${fieldId}-weight-help`} className="m-0 text-muted-foreground">
             {t("ingredients.shopping.piece_weight_help")}
           </p>
+          <Input
+            id={`${fieldId}-weight`}
+            className="h-11 tablet:max-w-sm"
+            inputMode="decimal"
+            disabled={busy}
+            {...register("pieceWeight", {
+              validate: (value, draft) =>
+                draft.how === "package" ||
+                !value.trim() ||
+                validShoppingAmount(value) ||
+                t("ingredients.shopping.piece_weight_error"),
+            })}
+            aria-invalid={!!errors.pieceWeight}
+            aria-describedby={`${fieldId}-weight-help${errors.pieceWeight ? ` ${fieldId}-weight-error` : ""}`}
+          />
+          {errors.pieceWeight && (
+            <p id={`${fieldId}-weight-error`} role="alert" className="m-0 text-destructive">
+              {errors.pieceWeight.message}
+            </p>
+          )}
         </div>
       )}
 
       {how === "package" && (
-        <div className="flex flex-col gap-3">
-          <ShoppingSelect
-            name="packageUnit"
-            label={t("ingredients.shopping.package_type")}
-            options={unitOptions(options.packages)}
-            disabled={busy}
-            placeholder={t("ingredients.shopping.choose_package")}
-            validate={(value, draft) =>
-              draft.how !== "package" || !!value || t("ingredients.shopping.choose_package")
-            }
-          />
-          <details open={initialContentsOpen}>
-            <summary className="min-h-11 cursor-pointer content-center text-sm text-primary">
+        <div className="grid gap-5">
+          <div className="tablet:max-w-sm">
+            <ShoppingSelect
+              name="packageUnit"
+              label={t("ingredients.shopping.package_type")}
+              options={unitOptions(options.packages)}
+              disabled={busy}
+              validate={(value, draft) =>
+                draft.how !== "package" || !!value || t("ingredients.shopping.choose_package")
+              }
+            />
+          </div>
+          <details
+            open={contentsOpen}
+            onToggle={(event) => setContentsOpen(event.currentTarget.open)}
+            className="border-t border-border pt-2"
+          >
+            <summary className="min-h-11 cursor-pointer content-center text-sm font-medium text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
               {t("ingredients.shopping.package_contains")}
             </summary>
-            <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
-              <Input
-                type="text"
-                disabled={busy}
-                className="h-11 min-w-0 flex-1"
-                aria-label={t("ingredients.shopping.package_size")}
-                {...register("packageSize", {
-                  validate: (value, draft) =>
-                    draft.how !== "package" ||
-                    !value.trim() ||
-                    validShoppingAmount(value) ||
-                    t("ingredients.shopping.enter_size"),
-                })}
-                aria-invalid={!!errors.packageSize}
-                aria-describedby={errors.packageSize ? "shopping-setup-error" : undefined}
-              />
-              <div className="min-w-0">
+            <div className="grid gap-3 pt-2">
+              <p id={`${fieldId}-contents-help`} className="m-0 text-sm text-muted-foreground">
+                {t("ingredients.shopping.label_help")}
+              </p>
+              <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
+                <div className="grid content-start gap-2">
+                  <Label htmlFor={`${fieldId}-contents`}>
+                    {t("ingredients.shopping.package_size")}
+                  </Label>
+                  <Input
+                    id={`${fieldId}-contents`}
+                    type="text"
+                    inputMode="decimal"
+                    disabled={busy}
+                    className="h-11 min-w-0"
+                    {...register("packageSize", {
+                      validate: (value, draft) =>
+                        draft.how !== "package" ||
+                        !value.trim() ||
+                        validShoppingAmount(value) ||
+                        t("ingredients.shopping.enter_size"),
+                    })}
+                    aria-invalid={!!errors.packageSize}
+                    aria-describedby={`${fieldId}-contents-help${errors.packageSize ? ` ${fieldId}-contents-error` : ""}`}
+                  />
+                  {errors.packageSize && (
+                    <p
+                      id={`${fieldId}-contents-error`}
+                      role="alert"
+                      className="m-0 text-sm text-destructive"
+                    >
+                      {errors.packageSize.message}
+                    </p>
+                  )}
+                </div>
                 <ShoppingSelect
                   name="packageMeasure"
                   label={t("ingredients.shopping.package_measure")}
@@ -214,9 +268,6 @@ export function IngredientShoppingFields({
                 />
               </div>
             </div>
-            <p className="m-0 text-sm text-muted-foreground">
-              {t("ingredients.shopping.label_help")}
-            </p>
           </details>
         </div>
       )}

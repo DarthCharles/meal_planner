@@ -188,6 +188,14 @@ There is no additional shopping-adjustment step.
 
 Use Greda controls and Comal semantic tokens. Saved ingredient editors expose
 only How I buy it below name/category, with piece, bulk, and package choices.
+Present these as a native radio group with full-label touch targets: stacked on
+phones, three columns from tablet. Bulk asks Weight or Volume rather than a
+display-unit preference. Explain the actual receipt result in a quiet inset in
+the form and alongside the saved summary. Summaries use a buying sentence plus
+optional known contents or piece weight. Field errors sit beside their input;
+invalid hidden contents expand. Keep Save/Cancel together and reset options in
+a secondary disclosure with clear retained-data copy. Restore focus to the
+section action after editing. Preserve Comal tokens, typography, and page width.
 Package contents are optional supporting information behind a disclosure; known
 contents remain editable. Do not ask users to document measurement references.
 Piece and bulk choices include one optional weight field, normally grams per
@@ -201,7 +209,8 @@ setup. An explicit action may copy known habitual contents. Changing ingredient
 or unit clears the snapshot without requiring fresh entry. Preserve mobile-first
 full-width fields and existing tablet columns.
 
-The current behavior is documented in `docs/client.md`. Source/diff review is
-complete. Before committing, the production build and browser-test TypeScript
-checks passed. Automated tests were explicitly skipped at the user's request;
-rendered review remains pending.
+The current behavior is documented in `docs/client.md`. The buying-section
+refinement has been reviewed in source and diff, with browser regression coverage
+updated. Before committing, `npm run build` and `npx tsc -p tsconfig.tests.json`
+passed; the build reported a bundle-size warning. Tests were skipped at the
+user's explicit request. Rendered browser review remains pending.

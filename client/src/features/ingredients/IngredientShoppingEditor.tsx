@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { Button } from "@darthcharles/greda";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -15,7 +17,7 @@ type Props = {
   ingredientName: string;
   profile: IngredientShoppingProfile | null;
   onDone: () => void;
-  onSaved: () => void;
+  onSaved: (action: "saved" | "removed") => void;
 };
 
 export function IngredientShoppingEditor(props: Props) {
@@ -23,9 +25,14 @@ export function IngredientShoppingEditor(props: Props) {
   const { data: units, isPending, error, refetch, isFetching } = useUnits();
   if (isPending)
     return (
-      <p role="status" className="m-0 text-sm">
-        {t("ingredients.shopping.loading")}
-      </p>
+      <div className="grid justify-items-start gap-3">
+        <p role="status" className="m-0 text-sm">
+          {t("ingredients.shopping.loading")}
+        </p>
+        <Button type="button" variant="ghost" onClick={props.onDone}>
+          {t("common.cancel")}
+        </Button>
+      </div>
     );
   if (!units)
     return (
@@ -42,7 +49,7 @@ export function IngredientShoppingEditor(props: Props) {
           {t("ingredients.shopping.retry")}
         </Button>
         <Button type="button" variant="ghost" onClick={props.onDone}>
-          {t("ingredients.shopping.cancel")}
+          {t("common.cancel")}
         </Button>
       </div>
     );
@@ -75,7 +82,11 @@ function ShoppingForm({
   units,
 }: Props & { units: UnitOption[] }) {
   const { t } = useI18n();
-  const methods = useForm<ShoppingDraft>({ defaultValues: shoppingProfileToDraft(profile) });
+  const methods = useForm<ShoppingDraft>({
+    defaultValues: shoppingProfileToDraft(profile),
+  });
+  const { setFocus } = methods;
+  useEffect(() => setFocus("how"), [setFocus]);
   useEditorDraft(methods.formState.isDirty);
   const {
     handleSubmit,
@@ -95,13 +106,7 @@ function ShoppingForm({
     reset: resetClear,
   } = useClearIngredientShoppingProfile(ingredientId);
   const busy = saving || clearing;
-  const message =
-    errors.root?.message ??
-    errors.packageUnit?.message ??
-    errors.packageSize?.message ??
-    errors.pieceWeight?.message ??
-    saveError?.message ??
-    clearError?.message;
+  const message = errors.root?.message ?? saveError?.message ?? clearError?.message;
 
   const resetMutationErrors = () => {
     resetSave();
@@ -113,7 +118,7 @@ function ShoppingForm({
     save(shoppingDraftToProfile(draft), {
       onSuccess: () => {
         methods.reset(draft);
-        onSaved();
+        onSaved("saved");
         onDone();
       },
     });
@@ -123,7 +128,7 @@ function ShoppingForm({
     <FormProvider {...methods}>
       <form
         noValidate
-        className="flex flex-col gap-6"
+        className="flex flex-col gap-5"
         onSubmit={handleSubmit(submit, resetMutationErrors)}
       >
         <IngredientShoppingFields
@@ -140,30 +145,11 @@ function ShoppingForm({
             {message}
           </p>
         )}
-        <div className="flex flex-wrap justify-end gap-2">
-          {profile && (
-            <Button
-              type="button"
-              variant="ghost"
-              className="mr-auto text-destructive"
-              disabled={busy}
-              onClick={() => {
-                resetSave();
-                clear(undefined, {
-                  onSuccess: () => {
-                    methods.reset(shoppingProfileToDraft(null));
-                    onSaved();
-                    onDone();
-                  },
-                });
-              }}
-            >
-              {clearing ? t("ingredients.shopping.clearing") : t("ingredients.shopping.clear")}
-            </Button>
-          )}
+        <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
           <Button
             type="button"
             variant="ghost"
+            className="h-auto min-h-11 whitespace-normal"
             disabled={busy}
             onClick={() => {
               if (!methods.formState.isDirty || window.confirm(t("editor.discard"))) onDone();
@@ -171,10 +157,38 @@ function ShoppingForm({
           >
             {t("common.cancel")}
           </Button>
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" className="h-auto min-h-11 whitespace-normal" disabled={busy}>
             {saving ? t("common.saving") : t("ingredients.shopping.save")}
           </Button>
         </div>
+        {profile && (
+          <details className="text-sm">
+            <summary className="min-h-11 cursor-pointer content-center text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+              {t("ingredients.shopping.reset_options")}
+            </summary>
+            <p className="my-2 max-w-prose leading-relaxed text-muted-foreground">
+              {t("ingredients.shopping.remove_help")}
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto min-h-11 whitespace-normal text-destructive"
+              disabled={busy}
+              onClick={() => {
+                resetSave();
+                clear(undefined, {
+                  onSuccess: () => {
+                    methods.reset(shoppingProfileToDraft(null));
+                    onSaved("removed");
+                    onDone();
+                  },
+                });
+              }}
+            >
+              {clearing ? t("ingredients.shopping.clearing") : t("ingredients.shopping.clear")}
+            </Button>
+          </details>
+        )}
       </form>
     </FormProvider>
   );
