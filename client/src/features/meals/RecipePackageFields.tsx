@@ -1,6 +1,13 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
-import { Button, Input } from "@darthcharles/greda";
+import {
+  Button,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  Input,
+} from "@darthcharles/greda";
+import { ChevronRight } from "@darthcharles/greda/icons";
 import { Controller, useFormContext } from "react-hook-form";
 
 import { UnitSelect } from "../../components/UnitSelect";
@@ -40,7 +47,7 @@ export function RecipePackageFields({
       active.current = false;
     };
   }, []);
-  const [showContents] = useState(() => !!getValues(`ingredients.${index}.package_quantity`));
+  const showContents = !!getValues(`ingredients.${index}.package_quantity`);
   const [unavailable, setUnavailable] = useState(false);
   const contentUnits = units.filter((unit) => ["g", "kg", "ml", "l", "piece"].includes(unit.code));
   const rowErrors = errors.ingredients?.[index];
@@ -73,11 +80,18 @@ export function RecipePackageFields({
     });
   };
   return (
-    <details open={showContents} className="col-span-full min-w-0 border-t border-border pt-3">
-      <summary className="min-h-11 cursor-pointer content-center text-sm text-primary">
+    <Collapsible
+      defaultOpen={showContents}
+      className="col-span-full min-w-0 border-t border-border pt-3"
+    >
+      <CollapsibleTrigger className="group flex min-h-11 cursor-pointer items-center gap-1 text-left text-sm text-primary">
+        <ChevronRight
+          aria-hidden="true"
+          className="size-4 shrink-0 group-data-[state=open]:rotate-90"
+        />
         {t("recipe.optional_contents")}
-      </summary>
-      <div className="grid min-w-0 gap-3 pt-3">
+      </CollapsibleTrigger>
+      <CollapsibleContent forceMount className="grid min-w-0 gap-3 pt-3 data-[state=closed]:hidden">
         <p className="m-0 text-xs text-muted-foreground">{t("recipe.snapshot_help")}</p>
         <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
           <label className="grid min-w-0 gap-2 font-medium">
@@ -134,7 +148,7 @@ export function RecipePackageFields({
         )}
         {error && <p role="alert">{error.message}</p>}
         {unavailable && <p role="status">{t("recipe.no_presentation")}</p>}
-      </div>
-    </details>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

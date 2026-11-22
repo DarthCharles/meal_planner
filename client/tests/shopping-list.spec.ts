@@ -19,9 +19,16 @@ test("opens a dedicated receipt page and returns to the originating menu", async
   await expect(page).toHaveURL("/menus/1/shopping-list");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const receipt = page.getByRole("region", { name: "Shopping receipt", exact: true });
-  await expect(receipt.getByRole("spinbutton", { name: "People", exact: true })).toBeHidden();
-  await receipt.getByText("Adjust", { exact: true }).click();
-  await expect(receipt.getByRole("spinbutton", { name: "People", exact: true })).toHaveValue("4");
+  const people = receipt.getByRole("spinbutton", { name: "People", exact: true });
+  const adjust = receipt.getByRole("button", { name: "Adjust", exact: true });
+  await expect(people).toBeHidden();
+  await adjust.press("Enter");
+  await expect(people).toHaveValue("4");
+  await people.fill("6");
+  await adjust.press("Space");
+  await expect(people).toBeHidden();
+  await adjust.press("Enter");
+  await expect(people).toHaveValue("6");
   await page.getByRole("link", { name: "Back to menus", exact: true }).click();
   await expect(page).toHaveURL("/");
   api.menus.push({

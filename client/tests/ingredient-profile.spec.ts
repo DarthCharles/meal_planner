@@ -59,7 +59,7 @@ test("saves packages without contents and preserves independent name drafts and 
   const setup = await openEgg(page);
   await editorScreen(page).getByLabel("Ingredient name", { exact: true }).fill("Unsaved name");
   await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("radio", { name: "In a package", exact: true }).check();
+  await setup.getByRole("radio", { name: "In a package", exact: true }).click();
   await expect(setup.getByLabel("Package contents", { exact: true })).toBeHidden();
   await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
   await expect(setup.getByText(/Buying setup saved/)).toBeVisible();
@@ -74,7 +74,7 @@ test("saves packages without contents and preserves independent name drafts and 
   );
   await expect(setup.getByText(/Each .* contains/)).toHaveCount(0);
   await setup.getByRole("button", { name: "Edit shopping setup" }).click();
-  await setup.getByText("Reset buying choice", { exact: true }).click();
+  await setup.getByRole("button", { name: "Reset buying choice", exact: true }).click();
   await setup.getByRole("button", { name: "Remove shopping setup" }).click();
   await expect(setup.getByRole("status")).toHaveText(
     "Buying setup removed. Recipe measurements and saved piece weights are kept.",
@@ -101,9 +101,12 @@ test("keeps known package contents editable and validates optional values withou
   await setup.getByRole("button", { name: "Edit shopping setup" }).click();
   await expect(setup.getByLabel("Package contents", { exact: true })).toHaveValue("390");
   await setup.getByLabel("Package contents", { exact: true }).fill("0");
-  await setup.getByText("Package contents (optional)", { exact: true }).click();
+  const contents = setup.getByRole("button", { name: "Package contents (optional)", exact: true });
+  await contents.click();
+  await expect(contents).toHaveAttribute("aria-expanded", "false");
   await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
   await expect(setup.getByRole("alert")).toBeVisible();
+  await expect(contents).toHaveAttribute("aria-expanded", "true");
   await expect(setup.getByLabel("Package contents", { exact: true })).toBeVisible();
   await expect(setup.getByLabel("Package contents", { exact: true })).toBeFocused();
   expect(api.profileSaves).toEqual([]);
@@ -151,7 +154,7 @@ test("bulk buying keeps its own unit without creating measurement references", a
 }) => {
   const setup = await openEgg(page);
   await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("radio", { name: "By weight or volume", exact: true }).check();
+  await setup.getByRole("radio", { name: "By weight or volume", exact: true }).click();
   await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
   await expect(setup.getByText(/Buying setup saved/)).toBeVisible();
   expect(api.profileSaves[0].body).toEqual({
@@ -207,18 +210,25 @@ test("buying choices support arrow keys and retain values when switching modes",
   });
   await setup.getByLabel("Weight of one piece (g, optional)", { exact: true }).fill("60");
   await piece.focus();
-  await piece.press("ArrowRight");
   const bulk = setup.getByRole("radio", {
     name: "By weight or volume",
     exact: true,
   });
-  await expect(bulk).toBeChecked();
-  await bulk.press("ArrowRight");
-  await expect(setup.getByRole("radio", { name: "In a package", exact: true })).toBeChecked();
+  const packageOption = setup.getByRole("radio", { name: "In a package", exact: true });
+  for (const option of [bulk, packageOption]) {
+    // Radix moves focus asynchronously while the arrow key is down.
+    await page.keyboard.down("ArrowRight");
+    try {
+      await expect(option).toBeFocused();
+      await expect(option).toBeChecked();
+    } finally {
+      await page.keyboard.up("ArrowRight");
+    }
+  }
   await expect(setup.getByLabel("Weight of one piece (g, optional)", { exact: true })).toHaveCount(
     0,
   );
-  await piece.check();
+  await piece.click();
   await expect(setup.getByLabel("Weight of one piece (g, optional)", { exact: true })).toHaveValue(
     "60",
   );
@@ -233,7 +243,7 @@ test("buying choices support arrow keys and retain values when switching modes",
 test("protects unsaved buying choices when leaving the editor", async ({ page, api }) => {
   const setup = await openEgg(page);
   await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("radio", { name: "In a package", exact: true }).check();
+  await setup.getByRole("radio", { name: "In a package", exact: true }).click();
   page.once("dialog", (dialog) => dialog.dismiss());
   await editorScreen(page).getByRole("button", { name: "Done", exact: true }).click();
   await expect(page).toHaveURL("/ingredients/1/edit");
@@ -248,8 +258,8 @@ test("protects unsaved buying choices when leaving the editor", async ({ page, a
 test("optional package fields fit supported widths", { tag: "@responsive" }, async ({ page }) => {
   const setup = await openEgg(page);
   await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("radio", { name: "In a package", exact: true }).check();
-  await setup.getByText("Package contents (optional)", { exact: true }).click();
+  await setup.getByRole("radio", { name: "In a package", exact: true }).click();
+  await setup.getByRole("button", { name: "Package contents (optional)", exact: true }).click();
   await setup.getByLabel("Package contents", { exact: true }).fill("250");
   await expect(setup.getByRole("combobox", { name: "Label unit" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -274,7 +284,7 @@ test.describe("Spanish buying setup", () => {
       exact: true,
     });
     await setup.getByRole("button", { name: "Editar datos de compra" }).click();
-    await setup.getByRole("radio", { name: "Por pieza", exact: true }).check();
+    await setup.getByRole("radio", { name: "Por pieza", exact: true }).click();
     await expect(
       setup.getByLabel("Peso de una pieza (g, opcional)", { exact: true }),
     ).toBeVisible();
@@ -350,7 +360,7 @@ test("preserves the measured basis of existing weights and hides the field for p
     reference_quantity: "2.000001",
   });
   await setup.getByRole("button", { name: "Edit shopping setup" }).click();
-  await setup.getByRole("radio", { name: "In a package", exact: true }).check();
+  await setup.getByRole("radio", { name: "In a package", exact: true }).click();
   await expect(setup.getByRole("textbox", { name: /Weight of/ })).toHaveCount(0);
   await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
   await expect(setup.getByRole("button", { name: "Edit shopping setup" })).toBeVisible();

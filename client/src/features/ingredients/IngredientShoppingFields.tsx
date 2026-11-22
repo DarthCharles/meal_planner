@@ -1,14 +1,20 @@
 import { useEffect, useId, useState } from "react";
 
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Input,
   Label,
+  RadioGroup,
+  RadioGroupItem,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@darthcharles/greda";
+import { ChevronRight } from "@darthcharles/greda/icons";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { unitLabel, useI18n } from "../../i18n";
@@ -118,33 +124,50 @@ export function IngredientShoppingFields({
 
   return (
     <>
-      <fieldset disabled={busy} className="m-0 min-w-0 border-0 p-0">
-        <legend className="mb-3 text-sm font-medium">
+      <div className="min-w-0">
+        <p id={`${fieldId}-how`} className="mt-0 mb-3 text-sm font-medium">
           {t("ingredients.shopping.how_buy", { name: ingredientName })}
-        </legend>
-        <div className="grid gap-2 tablet:grid-cols-3">
-          {(
-            [
-              ["piece", t("ingredients.shopping.by_piece")],
-              ["bulk", t("ingredients.shopping.by_weight")],
-              ["package", t("ingredients.shopping.by_package")],
-            ] as const
-          ).map(([value, label]) => (
-            <label
-              key={value}
-              className={`flex min-h-12 min-w-0 items-center gap-3 rounded-lg border px-4 py-3 text-sm leading-snug ${busy ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-accent"} ${how === value ? "border-primary bg-accent text-accent-foreground" : "border-border"}`}
+        </p>
+        <Controller
+          name="how"
+          control={control}
+          render={({ field }) => (
+            <RadioGroup
+              name={field.name}
+              value={field.value}
+              disabled={busy}
+              aria-labelledby={`${fieldId}-how`}
+              className="tablet:grid-cols-3"
+              onBlur={field.onBlur}
+              onValueChange={(value) => {
+                field.onChange(value);
+                onModeChange();
+              }}
             >
-              <input
-                type="radio"
-                value={value}
-                {...register("how", { onChange: onModeChange })}
-                className="size-4 shrink-0 accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+              {(
+                [
+                  ["piece", t("ingredients.shopping.by_piece")],
+                  ["bulk", t("ingredients.shopping.by_weight")],
+                  ["package", t("ingredients.shopping.by_package")],
+                ] as const
+              ).map(([value, label]) => (
+                <label
+                  key={value}
+                  htmlFor={`${fieldId}-how-${value}`}
+                  className={`flex min-h-12 min-w-0 items-center gap-3 rounded-lg border px-4 py-3 text-sm leading-snug ${busy ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-accent"} ${field.value === value ? "border-primary bg-accent text-accent-foreground" : "border-border"}`}
+                >
+                  <RadioGroupItem
+                    id={`${fieldId}-how-${value}`}
+                    value={value}
+                    ref={field.value === value ? field.ref : undefined}
+                  />
+                  {label}
+                </label>
+              ))}
+            </RadioGroup>
+          )}
+        />
+      </div>
 
       {how === "bulk" && (
         <div className="tablet:max-w-sm">
@@ -217,15 +240,19 @@ export function IngredientShoppingFields({
               }
             />
           </div>
-          <details
+          <Collapsible
             open={contentsOpen}
-            onToggle={(event) => setContentsOpen(event.currentTarget.open)}
+            onOpenChange={setContentsOpen}
             className="border-t border-border pt-2"
           >
-            <summary className="min-h-11 cursor-pointer content-center text-sm font-medium text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+            <CollapsibleTrigger className="group flex min-h-11 cursor-pointer items-center gap-1 text-left text-sm font-medium text-primary">
+              <ChevronRight
+                aria-hidden="true"
+                className="size-4 shrink-0 group-data-[state=open]:rotate-90"
+              />
               {t("ingredients.shopping.package_contains")}
-            </summary>
-            <div className="grid gap-3 pt-2">
+            </CollapsibleTrigger>
+            <CollapsibleContent forceMount className="grid gap-3 pt-2 data-[state=closed]:hidden">
               <p id={`${fieldId}-contents-help`} className="m-0 text-sm text-muted-foreground">
                 {t("ingredients.shopping.label_help")}
               </p>
@@ -267,8 +294,8 @@ export function IngredientShoppingFields({
                   disabled={busy}
                 />
               </div>
-            </div>
-          </details>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       )}
     </>

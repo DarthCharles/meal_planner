@@ -234,7 +234,7 @@ opening the buying form.
 
 Buying setup uses `mode`, `shopping_unit`, `package_quantity`, and `package_unit`:
 
-The form presents all three buying methods as a native radio group, stacked on
+The form presents all three buying methods using Greda's `RadioGroup`, stacked on
 phones and arranged in one row from the tablet breakpoint. Only the selected
 method's fields appear. A shared **On your shopping list** explanation appears
 in both the form and saved summary, describing whole pieces, grams, milliliters,
@@ -616,10 +616,14 @@ Add complete utility class names directly to JSX, for example
 `className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.5.1. Lucide icons and their types are
+The client pins `@darthcharles/greda` 1.6.0. Lucide icons and their types are
 available through `@darthcharles/greda/icons` without a separate icon dependency.
 TypeScript uses `Bundler` module resolution to honor package subpath exports,
 including Greda's icons entry point, consistently with Vite.
+Greda's `Collapsible` powers buying setup reset options, ingredient package
+contents, recipe container contents, and the shopping receipt's Adjust controls.
+Editable sections keep their fields mounted while collapsed so draft values and
+validation remain available.
 Navigation uses `House`, `CalendarDays`, `Utensils`, and `Sprout`. Planning uses
 `Plus` or `Ellipsis` while pending; meal rows use `ChevronRight`, close/remove
 buttons use `X`, and notices use `Info`. Icons inherit the surrounding semantic
@@ -637,7 +641,7 @@ component styles.
 `data-color-scheme="light"` on `<html>`, so dialogs inherit it too. The dialog
 test fixture selects the same theme. Comal supplies the palette, font stacks,
 and base radii; the app loads DM Sans and Fraunces through the existing font
-import. Greda 1.5.1 supplies Comal's lighter warm ivory and tan stone neutrals,
+import. Greda supplies Comal's lighter warm ivory and tan stone neutrals,
 charcoal text, terracotta actions, pale sage tertiary surfaces, warm neutral
 secondary controls, and clay interaction fills. The neutral palette has a softer
 tan undertone and less of a brown cast in both color schemes. Noninteractive

@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 import { useEffect, useId, useState } from "react";
 
-import { Button, Checkbox } from "@darthcharles/greda";
+import {
+  Button,
+  Checkbox,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@darthcharles/greda";
+import { ChevronRight } from "@darthcharles/greda/icons";
 
 import { formatLocale, unitLabel, useI18n } from "../../i18n";
 import type { ShoppingList } from "../../types";
@@ -87,13 +94,19 @@ export function ShoppingReceipt({
         <p className="mt-0 mb-2 text-xl font-bold tracking-[.18em]">COMAL</p>
         <p className="m-0 text-muted-foreground">{formatMenuDateRange(list)}</p>
         <p className="mt-1 mb-0">{t("shopping_list.people", { count: list.people_count })}</p>
-        <details className="mt-2 font-sans">
-          <summary className="mx-auto min-h-11 w-fit cursor-pointer content-center rounded-sm px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <Collapsible className="mt-2 font-sans">
+          <CollapsibleTrigger className="group inline-flex min-h-11 cursor-pointer items-center gap-1 px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+            <ChevronRight
+              aria-hidden="true"
+              className="size-4 shrink-0 group-data-[state=open]:rotate-90"
+            />
             {t("shopping_list.adjust")}
-          </summary>
-          {controls}
-          <div className="mt-2 flex justify-center">{updateAction}</div>
-        </details>
+          </CollapsibleTrigger>
+          <CollapsibleContent forceMount className="data-[state=closed]:hidden">
+            {controls}
+            <div className="mt-2 flex justify-center">{updateAction}</div>
+          </CollapsibleContent>
+        </Collapsible>
       </header>
       {!!list.items.length && (
         <div className="sticky top-0 z-[1] border-b border-dashed border-border bg-card py-3">

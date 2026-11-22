@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
-import { Button } from "@darthcharles/greda";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "@darthcharles/greda";
+import { ChevronRight } from "@darthcharles/greda/icons";
 import { FormProvider, useForm } from "react-hook-form";
 
 import { useI18n } from "../../i18n";
@@ -162,32 +163,38 @@ function ShoppingForm({
           </Button>
         </div>
         {profile && (
-          <details className="text-sm">
-            <summary className="min-h-11 cursor-pointer content-center text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          <Collapsible className="text-sm">
+            <CollapsibleTrigger className="group flex min-h-11 cursor-pointer items-center gap-1 text-left text-muted-foreground">
+              <ChevronRight
+                aria-hidden="true"
+                className="size-4 shrink-0 group-data-[state=open]:rotate-90"
+              />
               {t("ingredients.shopping.reset_options")}
-            </summary>
-            <p className="my-2 max-w-prose leading-relaxed text-muted-foreground">
-              {t("ingredients.shopping.remove_help")}
-            </p>
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-auto min-h-11 whitespace-normal text-destructive"
-              disabled={busy}
-              onClick={() => {
-                resetSave();
-                clear(undefined, {
-                  onSuccess: () => {
-                    methods.reset(shoppingProfileToDraft(null));
-                    onSaved("removed");
-                    onDone();
-                  },
-                });
-              }}
-            >
-              {clearing ? t("ingredients.shopping.clearing") : t("ingredients.shopping.clear")}
-            </Button>
-          </details>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <p className="my-2 max-w-prose leading-relaxed text-muted-foreground">
+                {t("ingredients.shopping.remove_help")}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-auto min-h-11 whitespace-normal text-destructive"
+                disabled={busy}
+                onClick={() => {
+                  resetSave();
+                  clear(undefined, {
+                    onSuccess: () => {
+                      methods.reset(shoppingProfileToDraft(null));
+                      onSaved("removed");
+                      onDone();
+                    },
+                  });
+                }}
+              >
+                {clearing ? t("ingredients.shopping.clearing") : t("ingredients.shopping.clear")}
+              </Button>
+            </CollapsibleContent>
+          </Collapsible>
         )}
       </form>
     </FormProvider>

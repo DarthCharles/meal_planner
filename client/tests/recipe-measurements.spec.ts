@@ -145,7 +145,9 @@ test(
     await ingredient.fill("Tuna");
     await page.getByRole("option", { name: "Create ingredient “Tuna”", exact: true }).click();
     await chooseUnit(page, "cans");
-    await page.getByText("Add container contents (optional)", { exact: true }).click();
+    await page
+      .getByRole("button", { name: "Add container contents (optional)", exact: true })
+      .click();
     await page.getByLabel("Contents per container", { exact: true }).fill("140");
     await expect(page.getByRole("button", { name: "Fill from habitual presentation" })).toHaveCount(
       0,
