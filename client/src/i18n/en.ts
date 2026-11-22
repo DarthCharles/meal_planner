@@ -314,9 +314,7 @@ export const en = {
   navigation: {
     primary_navigation: "Primary navigation",
     my_menu: "My Menu",
-    my_menu_mobile: "My menu",
     my_meals: "My Meals",
-    my_meals_mobile: "My meals",
     my_ingredients: "My Ingredients",
     saved_menus: "Saved Menus",
   },

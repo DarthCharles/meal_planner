@@ -115,9 +115,6 @@ components:
     textColor: "{colors.dark-brown}"
     rounded: "{rounded.day-card}"
     padding: "19px"
-  navigation:
-    rounded: "19px"
-    padding: "7px"
   meal-row:
     backgroundColor: "{colors.raised-cream}"
     rounded: "{rounded.lg}"

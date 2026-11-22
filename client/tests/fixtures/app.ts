@@ -417,9 +417,7 @@ export async function navigateTo(
   page: Page,
   name: "My menu" | "My meals" | "My Ingredients" | "Saved Menus",
 ) {
-  if (page.viewportSize()!.width >= 760) {
-    await page.getByRole("button", { name: "Menu" }).click();
-  }
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
   const destination = {
     "My menu": "/",
     "My meals": "/meals",
@@ -427,7 +425,7 @@ export async function navigateTo(
     "Saved Menus": "/saved-menus",
   }[name];
   await page
-    .getByRole("navigation")
+    .getByRole("navigation", { name: "Primary navigation" })
     .getByRole("link", { name: new RegExp(name, "i") })
     .click();
   await expect(page).toHaveURL(destination);

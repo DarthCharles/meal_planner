@@ -4,7 +4,6 @@ import { Button } from "@darthcharles/greda";
 import { Link, Outlet, Route, Routes, useLocation } from "react-router";
 
 import { AppHeader } from "./components/AppHeader";
-import { Navigation } from "./components/Navigation";
 import { IngredientsScreen } from "./features/ingredients/IngredientsScreen";
 import { MealsScreen } from "./features/meals/MealsScreen";
 import { MenuScreen } from "./features/menu/MenuScreen";
@@ -50,7 +49,7 @@ function App() {
     }
   }, [background, location]);
   return (
-    <div className="mx-auto min-h-screen max-w-[1240px] px-[15px] pb-[105px] tablet:px-6 tablet:pb-[110px] desktop:pb-[50px]">
+    <div className="mx-auto min-h-screen max-w-[1240px] px-[15px] pb-[50px] tablet:px-6">
       <AppHeader />
 
       <main>
@@ -114,7 +113,6 @@ function App() {
         )}
       </main>
 
-      <Navigation />
       <PreviewController />
     </div>
   );

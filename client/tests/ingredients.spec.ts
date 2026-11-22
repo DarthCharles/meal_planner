@@ -30,13 +30,6 @@ test(
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    if (page.viewportSize()!.width < 760) {
-      const link = page.getByRole("navigation").getByRole("link", { name: "My Ingredients" });
-      await expect(link).toHaveAttribute("aria-current", "page");
-      const box = await link.boundingBox();
-      expect(box!.x).toBeGreaterThanOrEqual(0);
-      expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
-    }
   },
 );
 

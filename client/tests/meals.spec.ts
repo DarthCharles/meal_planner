@@ -392,6 +392,21 @@ test("shows ingredient catalog loading and supports retry after failure", async 
   await expect(dialog.getByRole("option", { name: "Egg", exact: true })).toBeVisible();
 });
 
+test(
+  "keeps Update meal at the bottom of the viewport on a long form",
+  { tag: "@responsive" },
+  async ({ page }) => {
+    await page.setViewportSize({ width: page.viewportSize()!.width, height: 600 });
+    await page.goto("/meals/1/edit");
+    const update = editorScreen(page).getByRole("button", { name: "Update meal", exact: true });
+    await expect(update).toBeInViewport({ ratio: 1 });
+    const gap = await update.evaluate(
+      (button) => innerHeight - button.getBoundingClientRect().bottom,
+    );
+    expect(gap).toBeLessThanOrEqual(16);
+  },
+);
+
 test("waits for edit options, prefills the meal, and saves ingredient removal", async ({
   page,
   api,

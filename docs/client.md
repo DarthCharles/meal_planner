@@ -131,7 +131,7 @@ The header's Comal logo and name link back to the index (the menu screen).
 React Router's data router provides `/`, `/meals`, `/ingredients`,
 `/saved-menus`, and `/menus/:menuId/shopping-list`. Creation and editing have
 standalone routes: `/meals/new`, `/meals/:id/edit`, `/ingredients/new`, and
-`/ingredients/:id/edit`. Header and bottom navigation use real links with an
+`/ingredients/:id/edit`. The header Menu uses real links with an
 active-page indication. Unknown paths show a page-not-found screen.
 
 Quick previews use the originating page's search parameters (`ingredient`,
@@ -164,8 +164,8 @@ Keep Rails API traffic on its configured API origin; do not rewrite API requests
 to the client entry point. The service worker caches the app shell and both language manifests; offline deep
 links and PWA installation require separate verification.
 
-Saved Menus is available in the mobile bottom navigation and Menu popover. It
-uses the shared `GET /menus` query and lists all saved weeks newest first,
+Saved Menus is available in the header Menu popover. It uses the shared
+`GET /menus` query and lists all saved weeks newest first,
 with Upcoming, Current, and Past labels based on calendar dates in the browser's
 timezone. Date labels preserve the API calendar dates and include the year.
 Selecting a week displays its meals Monday–Sunday and any generation notices;
@@ -183,14 +183,14 @@ keyboard layer cannot intercept Escape in a dialog on the destination screen. �
 closing the form returns focus to Menu. The popover is named Navigation menu /
 Menú de navegación. Its trigger uses
 Greda's standard rounded outline button, with a compact label and wordmark on
-narrow screens. Mobile also keeps its bottom navigation.
+narrow screens.
 The Menu popover uses Greda's primary (`default`) button variant for the current
 destination and selected language, with `ghost` for the other choices.
 All choices use `primary-hover` backgrounds and `primary-foreground` text on
 hover and visible keyboard focus.
 The library keeps its own add action.
 
-My Ingredients is available in the header actions and mobile bottom navigation.
+My Ingredients is available in the header Menu.
 It displays the shared catalog alphabetically, with case-insensitive local name
 search and a visible result count. My Meals and My Ingredients share a collection
 header with a 32px title and an Add action: stacked below the title on mobile,
@@ -321,7 +321,7 @@ action. With recipes available, planning is the primary action and recipe creati
 is secondary. If next week is already saved, Home offers a link to that plan.
 The recipe library and recipe-option forms still label fallback examples explicitly;
 the library also provides Try again. Header and meal-row labels are larger on phones, and header
-and bottom-navigation controls have a minimum 44px touch height.
+Menu controls have a minimum 44px touch height.
 
 ## Structure
 
@@ -417,10 +417,10 @@ meal type IDs. React Query continues to own save requests, pending state, API
 errors, and cache updates.
 
 The meal editor shows the name and servings first, followed by the ingredient
-list, description, recipe link, and planning preferences. Save stays at the
-bottom of the editor viewport while scrolling and returns to the page flow on
-short viewports. Back exits the editor and protects any unsaved draft. Meal
-and ingredient controls use Greda’s `surface-raised` fill.
+list, description, recipe link, and planning preferences. The save action sticks
+to the bottom edge of the viewport at every width and returns to the page flow
+at viewport heights of 420px or less. Back exits the editor and protects any
+unsaved draft. Meal and ingredient controls use Greda’s `surface-raised` fill.
 Fields and group labels use Greda’s label typography, with an 8px gap above
 field controls. Hints, optional markers, and validation messages use caption
 typography. Input values and select triggers use the body size at every width.
@@ -578,8 +578,7 @@ Greda's `Collapsible` powers buying setup reset options, ingredient package
 contents, recipe container contents, and the shopping receipt's Adjust controls.
 Editable sections keep their fields mounted while collapsed so draft values and
 validation remain available.
-Navigation uses `House`, `CalendarDays`, `Utensils`, and `Sprout`. Planning uses
-`Plus` or `Ellipsis` while pending; meal rows use `ChevronRight`, close/remove
+Planning uses `Plus` or `Ellipsis` while pending; meal rows use `ChevronRight`, close/remove
 buttons use `X`, and notices use `Info`. Icons inherit the surrounding semantic
 text color and are hidden from assistive technology; visible labels and existing
 button accessible names identify each action. The custom flower SVG remains part
@@ -840,8 +839,7 @@ the same single-preview pattern, with all meals using the ingredient rather than
 only the selected week's meals.
 
 The header Menu popover contains navigation, recipe creation, and language
-controls. Mobile also has floating bottom navigation. Planning is available in
-Home’s “Next week” section.
+controls across screen sizes. Planning is available in Home’s “Next week” section.
 
 ### Simple grocery checklist implementation
 

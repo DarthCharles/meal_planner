@@ -318,9 +318,7 @@ export const es: typeof en = {
   navigation: {
     primary_navigation: "Navegación principal",
     my_menu: "Mi menú",
-    my_menu_mobile: "Mi menú",
     my_meals: "Mis comidas",
-    my_meals_mobile: "Mis comidas",
     my_ingredients: "Mis ingredientes",
     saved_menus: "Menús guardados",
   },

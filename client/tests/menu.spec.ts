@@ -232,7 +232,7 @@ test(
 );
 
 test(
-  "shows the full current week in order and adapts the grid and navigation",
+  "shows the full current week in order and keeps navigation in the header menu",
   { tag: "@responsive" },
   async ({ page }) => {
     await page.goto("/");
@@ -255,22 +255,22 @@ test(
     const navigation = page.getByRole("navigation", {
       name: "Primary navigation",
     });
-    const width = page.viewportSize()!.width;
-    if (width < 760) {
-      await expect(navigation).toHaveCount(1);
-      const navBox = await navigation.boundingBox();
-      expect(navBox!.y).toBeGreaterThan(700);
-    } else {
-      await expect(navigation).toHaveCount(0);
-      await page.getByRole("button", { name: "Menu" }).click();
-      await expect(navigation).toBeVisible();
-      await expect(navigation.getByRole("link", { name: "My Menu" })).toHaveAttribute(
-        "aria-current",
-        "page",
-      );
-      await expect(navigation.getByRole("link", { name: "My Meals" })).toBeVisible();
-      await page.keyboard.press("Escape");
-    }
+    const menuButton = page.getByRole("button", { name: "Menu", exact: true });
+    await expect(navigation).toHaveCount(0);
+    await menuButton.click();
+    await expect(navigation.getByRole("link")).toHaveText([
+      "My Menu",
+      "My Meals",
+      "My Ingredients",
+      "Saved Menus",
+    ]);
+    await expect(navigation.getByRole("link", { name: "My Menu", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await page.keyboard.press("Escape");
+    await expect(navigation).toHaveCount(0);
+    await expect(menuButton).toBeFocused();
 
     const boxes = await cards.evaluateAll((elements) =>
       elements.map((element) => {
@@ -278,6 +278,7 @@ test(
         return { x, y };
       }),
     );
+    const width = page.viewportSize()!.width;
     if (width <= 640) {
       expect(boxes[1].x).toBe(boxes[0].x);
       expect(boxes[1].y).toBeGreaterThan(boxes[0].y);

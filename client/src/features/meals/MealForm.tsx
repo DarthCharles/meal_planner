@@ -232,7 +232,7 @@ export function MealForm({
           </fieldset>
           <PreferredDaysField />
         </div>
-        <div className="sticky bottom-24 z-[5] flex flex-wrap items-center justify-end gap-x-4 gap-y-2 bg-background py-2 desktop:bottom-0 [@media(max-height:420px)]:static">
+        <div className="sticky bottom-0 z-[5] flex flex-wrap items-center justify-end gap-x-4 gap-y-2 bg-background py-2 [@media(max-height:420px)]:static">
           {error && (
             <p
               id="meal-form-error"
