@@ -28,10 +28,11 @@ export function useMealTypes() {
   });
 }
 
-export function useUnits() {
+export function useUnits({ enabled = true } = {}) {
   return useQuery({
     queryKey: queryKeys.units,
     queryFn: ({ signal }) => api.getUnits(signal),
+    enabled,
     staleTime: 5 * 60_000,
   });
 }

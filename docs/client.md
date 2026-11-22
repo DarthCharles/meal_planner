@@ -143,7 +143,7 @@ local UI state.
 An editor opened inside the app retains its originating location in router state.
 `App.tsx` keeps that screen mounted but hidden, so library filters, saved-week
 selection, checklist progress, and an unfinished people-count input survive the
-editor visit. Recipe Save/Cancel and ingredient Done return to the origin, reopening its preview when
+editor visit. Recipe Save/Cancel and ingredient Back return to the origin, reopening its preview when
 applicable. Scroll position and connected trigger focus are restored. Direct
 editor visits return to the corresponding library. Reloading does not preserve
 unsaved inputs or checklist marks. Editors load the existing API resources and
@@ -226,65 +226,37 @@ menus. Ingredient saves refresh the catalog. Meal saves also synchronize usage
 references in the catalog cache, including removed ingredients and renamed meals.
 The meal form still supports creating ingredients when saving a meal.
 
-Saved ingredient editors contain **How I buy it** below name and category. The
-measurement-reference form has been removed. Existing references remain in Rails;
-the client does not call their separate endpoints during ingredient editing.
-Catalog browsing and new unsaved ingredient editors do not fetch profiles. Units load only when
-opening the buying form.
+Saved ingredient editors show **How do you buy this ingredient?** as a full-width
+section of the ingredient form. The saved preference is already selected and edits
+happen in place. **Save buying preference** stays visible and is enabled when the
+active choice has changes. It saves independently from name and category. Catalog
+browsing and new unsaved ingredients do not fetch shopping profiles. The client
+does not call the separate measurement-reference endpoints.
 
-Buying setup uses `mode`, `shopping_unit`, `package_quantity`, and `package_unit`:
+- **Use recipe measurements** needs no inputs and is the default without a
+  profile. Saving it over a custom preference deletes the profile and preserves
+  saved piece weights and recipe measurements.
+- **By the piece**, **By weight**, and **By volume** show an optional piece weight.
+  Existing ratios keep their exact measured basis. A blank new weight is omitted,
+  while clearing a saved weight sends null. Weight and volume use the existing
+  bulk profile and retain the original stored unit when its dimension matches.
+- **In a package** shows the type, optional contents amount, and label unit
+  together. The type defaults to a generic package. Reference units load when
+  this choice is selected, with loading and retry scoped to its fields. Blank
+  contents save both fields as null. Switching choices retains entered values
+  in the draft. Saving a different choice over a custom package clears its
+  package details.
 
-The form presents all three buying methods using Greda's `RadioGroup`, stacked on
-phones and arranged in one row from the tablet breakpoint. Only the selected
-method's fields appear. A shared **On your shopping list** explanation appears
-in both the form and saved summary, describing whole pieces, grams, milliliters,
-or whole packages when recipe counts or known contents allow calculation.
-Unconfigured ingredients explain that compatible recipe amounts can already be calculated. Saved summaries use sentences rather
-than bare unit codes.
+A successful save updates the section in place and preserves unsaved name and
+category edits. An error keeps the buying draft. **Back** returns to the origin
+and prompts before discarding either draft. Standalone ingredient creation
+continues on the persisted edit URL after saving.
 
-- Pieces require only the buying choice.
-- Bulk presents **Weight** or **Volume**, with calculable totals in g or ml.
-  The API still accepts g, kg, ml, or l. Existing units remain unchanged on
-  unrelated saves; changing dimension selects kg or l internally.
-- Packages accept jar, bag, can, bottle, or generic package. The generic package is
-  the initial selection, so no product type or size has to be documented.
-- Package contents are optional, initially collapsed unless existing contents are
-  present. A blank quantity submits both content fields as null. Entered content
-  quantities must be positive; existing sizes remain editable and can still fill
-  optional recipe container snapshots. The form explains that label contents help
-  calculate how many packages to buy. Quantity and label unit have visible labels; amount fields request a decimal keyboard. Invalid
-  collapsed contents reopen and focus their field, with errors beside the input.
-
-Piece and bulk buying choices expose one optional **Weight of one piece (g)**
-field. This covers chicken breasts and other ingredients whose recipes mix grams
-and pieces. It saves alongside the buying choice through `piece_weight` on the
-shopping-profile endpoint, with internal provenance and no source/description form.
-The normal measured basis is one piece; an existing multi-piece ratio retains its
-exact basis, reflected in the field label. Blank new weights are omitted; clearing
-an existing weight sends null. Switching to package buying hides the field and
-preserves the stored reference. Positive-weight validation, API failures, and dirty
-navigation preserve the draft. The buying summary shows the saved weight and
-shopping calculations use it without adding technical details to the receipt.
-No schema migration or recipe rewrite is required.
-
-The profile section has its own Save, Cancel, Remove, loading, error, and retry
-states. Opening the form focuses the buying choices; saving, canceling, or
-removing returns focus to the section's setup/edit action. Removal lives in a
-secondary **Reset buying choice** disclosure that explains what is kept, and
-has a distinct completion message. It saves through `PUT /ingredients/:id/shopping_profile`; removal uses
-`DELETE` and retains measurement references. Successful responses synchronize
-profile caches and invalidate shopping lists. Profile changes never rewrite
-recipe containers. Saves confirm locally and leave the ingredient editor open,
-retaining the unsaved name/category draft. **Done** returns to the origin and
-applies dirty-draft protection. Name/category saves also stay on the page. New
-standalone ingredients continue on their persisted edit URL after creation.
-A failed recalculation does not turn a successful profile save into a failed save.
-
-`IngredientShoppingEditor`, `IngredientShoppingFields`, and
-`shoppingProfileForm.ts` own buying capture. React Query hooks own requests and
-cache synchronization. `shoppingPresentation.ts` shares the receipt-outcome copy
-between editing and display. No new shopping-adjustment step or manual purchase editor
-has been added.
+React Query saves profiles with `PUT /ingredients/:id/shopping_profile` and
+restores recipe measurements with `DELETE`. It synchronizes profile caches and
+invalidates shopping lists after success. A failed recalculation does not turn
+a successful preference save into a failed save. Buying preferences do not
+rewrite recipe container snapshots.
 
 The ingredient editor shows a Delete ingredient action only for unused ingredients.
 It calls `DELETE /ingredients/:id`

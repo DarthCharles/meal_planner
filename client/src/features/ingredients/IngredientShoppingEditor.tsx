@@ -1,99 +1,108 @@
-import { useEffect } from "react";
+import { useEffect, useId, useState } from "react";
 
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "@darthcharles/greda";
-import { ChevronRight } from "@darthcharles/greda/icons";
-import { FormProvider, useForm } from "react-hook-form";
+import { Button } from "@darthcharles/greda";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 
 import { useI18n } from "../../i18n";
-import type { IngredientShoppingProfile, UnitOption } from "../../types";
-import { useUnits } from "../meals/queries";
+import type { IngredientShoppingProfile } from "../../types";
 import { useEditorDraft } from "../navigation/EditorDraftContext";
 import { IngredientShoppingFields } from "./IngredientShoppingFields";
-import { useClearIngredientShoppingProfile, useSaveIngredientShoppingProfile } from "./queries";
+import {
+  useClearIngredientShoppingProfile,
+  useIngredientShoppingProfile,
+  useSaveIngredientShoppingProfile,
+} from "./queries";
 import type { ShoppingDraft } from "./shoppingProfileForm";
 import { shoppingDraftToProfile, shoppingProfileToDraft } from "./shoppingProfileForm";
 
 type Props = {
   ingredientId: number;
-  ingredientName: string;
-  profile: IngredientShoppingProfile | null;
-  onDone: () => void;
-  onSaved: (action: "saved" | "removed") => void;
+  disabled: boolean;
+  onSavingChange: (saving: boolean) => void;
 };
 
-export function IngredientShoppingEditor(props: Props) {
+export function IngredientShoppingEditor({ ingredientId, disabled, onSavingChange }: Props) {
   const { t } = useI18n();
-  const { data: units, isPending, error, refetch, isFetching } = useUnits();
-  if (isPending)
-    return (
-      <div className="grid justify-items-start gap-3">
+  const headingId = useId();
+  const {
+    data: profile,
+    isFetching,
+    isPending,
+    error,
+    refetch,
+  } = useIngredientShoppingProfile(ingredientId);
+
+  return (
+    <section
+      aria-labelledby={headingId}
+      className="mb-6 grid min-w-0 gap-4 rounded-lg border border-border bg-muted/50 p-4 tablet:p-5"
+    >
+      <h3 id={headingId} className="m-0 font-display text-xl font-semibold">
+        {t("ingredients.shopping.title")}
+      </h3>
+      {isPending && (
         <p role="status" className="m-0 text-sm">
           {t("ingredients.shopping.loading")}
         </p>
-        <Button type="button" variant="ghost" onClick={props.onDone}>
-          {t("common.cancel")}
-        </Button>
-      </div>
-    );
-  if (!units)
-    return (
-      <div className="flex flex-col gap-3">
-        <p role="alert" className="m-0 text-sm">
-          {error?.message}
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isFetching}
-          onClick={() => void refetch()}
-        >
-          {t("ingredients.shopping.retry")}
-        </Button>
-        <Button type="button" variant="ghost" onClick={props.onDone}>
-          {t("common.cancel")}
-        </Button>
-      </div>
-    );
-  return (
-    <>
+      )}
       {error && (
-        <div>
-          <p role="alert">{error.message}</p>
+        <div className="grid justify-items-start gap-2 text-sm">
+          <p role="alert" className="m-0 text-destructive">
+            {error.message}
+          </p>
           <Button
             type="button"
             variant="outline"
-            disabled={isFetching}
+            disabled={disabled || isFetching}
             onClick={() => void refetch()}
           >
-            {t("common.try_again")}
+            {t("ingredients.shopping.retry")}
           </Button>
         </div>
       )}
-      <ShoppingForm {...props} units={units} />
-    </>
+      {profile !== undefined && (
+        <ShoppingForm
+          ingredientId={ingredientId}
+          headingId={headingId}
+          profile={profile}
+          disabled={disabled}
+          onSavingChange={onSavingChange}
+        />
+      )}
+    </section>
   );
 }
 
 function ShoppingForm({
   ingredientId,
-  ingredientName,
+  headingId,
   profile,
-  onDone,
-  onSaved,
-  units,
-}: Props & { units: UnitOption[] }) {
+  disabled,
+  onSavingChange,
+}: Props & { headingId: string; profile: IngredientShoppingProfile | null }) {
   const { t } = useI18n();
+  const [feedback, setFeedback] = useState<"saved" | "removed" | null>(null);
   const methods = useForm<ShoppingDraft>({
     defaultValues: shoppingProfileToDraft(profile),
   });
-  const { setFocus } = methods;
-  useEffect(() => setFocus("how"), [setFocus]);
-  useEditorDraft(methods.formState.isDirty);
   const {
     handleSubmit,
     clearErrors,
-    formState: { errors },
+    control,
+    reset,
+    formState: { dirtyFields },
   } = methods;
+  const how = useWatch({ control, name: "how" });
+  const packageSize = useWatch({ control, name: "packageSize" });
+  const hasChanges = !!(
+    dirtyFields.how ||
+    (how === "package" &&
+      (dirtyFields.packageUnit ||
+        dirtyFields.packageSize ||
+        (packageSize.trim() && dirtyFields.packageMeasure))) ||
+    (how !== "package" && how !== "recipe" && dirtyFields.pieceWeight)
+  );
+
   const {
     mutate: save,
     isPending: saving,
@@ -107,95 +116,76 @@ function ShoppingForm({
     reset: resetClear,
   } = useClearIngredientShoppingProfile(ingredientId);
   const busy = saving || clearing;
-  const message = errors.root?.message ?? saveError?.message ?? clearError?.message;
+  const message = saveError?.message ?? clearError?.message;
+  useEditorDraft(hasChanges);
+  useEffect(() => {
+    onSavingChange(busy);
+    return () => onSavingChange(false);
+  }, [busy, onSavingChange]);
 
   const resetMutationErrors = () => {
     resetSave();
     resetClear();
   };
+
   const submit = (draft: ShoppingDraft) => {
-    if (busy) return;
-    resetClear();
-    save(shoppingDraftToProfile(draft), {
-      onSuccess: () => {
-        methods.reset(draft);
-        onSaved("saved");
-        onDone();
-      },
-    });
+    if (busy || disabled || !hasChanges) return;
+    const payload = shoppingDraftToProfile(draft);
+    if (!payload && !profile) return;
+    resetMutationErrors();
+
+    const finish = (savedProfile: IngredientShoppingProfile | null) => {
+      reset(shoppingProfileToDraft(savedProfile));
+      setFeedback(savedProfile ? "saved" : "removed");
+    };
+    if (!payload) {
+      clear(undefined, { onSuccess: () => finish(null) });
+      return;
+    }
+    save(payload, { onSuccess: finish });
   };
 
   return (
     <FormProvider {...methods}>
       <form
         noValidate
-        className="flex flex-col gap-5"
+        className="grid min-w-0 gap-3"
         onSubmit={handleSubmit(submit, resetMutationErrors)}
+        onChange={() => setFeedback(null)}
       >
         <IngredientShoppingFields
-          ingredientName={ingredientName}
-          units={units}
-          busy={busy}
+          headingId={headingId}
+          busy={disabled || busy}
           onModeChange={() => {
+            setFeedback(null);
             clearErrors();
             resetMutationErrors();
           }}
         />
         {message && (
-          <p role="alert" id="shopping-setup-error" className="m-0 text-sm text-destructive">
+          <p role="alert" className="m-0 text-sm text-destructive">
             {message}
           </p>
         )}
-        <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <div role="status" className={feedback && !hasChanges ? "mr-auto text-sm" : "sr-only"}>
+            {feedback &&
+              !hasChanges &&
+              t(
+                feedback === "removed"
+                  ? "ingredients.shopping.removed"
+                  : "ingredients.shopping.saved",
+              )}
+          </div>
           <Button
-            type="button"
-            variant="ghost"
+            type="submit"
+            variant="outline"
             className="h-auto min-h-11 whitespace-normal"
-            disabled={busy}
-            onClick={() => {
-              if (!methods.formState.isDirty || window.confirm(t("editor.discard"))) onDone();
-            }}
+            disabled={disabled || busy || !hasChanges}
           >
-            {t("common.cancel")}
-          </Button>
-          <Button type="submit" className="h-auto min-h-11 whitespace-normal" disabled={busy}>
-            {saving ? t("common.saving") : t("ingredients.shopping.save")}
+            {busy ? t("common.saving") : t("ingredients.shopping.save")}
           </Button>
         </div>
-        {profile && (
-          <Collapsible className="text-sm">
-            <CollapsibleTrigger className="group flex min-h-11 cursor-pointer items-center gap-1 text-left text-muted-foreground">
-              <ChevronRight
-                aria-hidden="true"
-                className="size-4 shrink-0 group-data-[state=open]:rotate-90"
-              />
-              {t("ingredients.shopping.reset_options")}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <p className="my-2 max-w-prose leading-relaxed text-muted-foreground">
-                {t("ingredients.shopping.remove_help")}
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-auto min-h-11 whitespace-normal text-destructive"
-                disabled={busy}
-                onClick={() => {
-                  resetSave();
-                  clear(undefined, {
-                    onSuccess: () => {
-                      methods.reset(shoppingProfileToDraft(null));
-                      onSaved("removed");
-                      onDone();
-                    },
-                  });
-                }}
-              >
-                {clearing ? t("ingredients.shopping.clearing") : t("ingredients.shopping.clear")}
-              </Button>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
       </form>
     </FormProvider>
   );

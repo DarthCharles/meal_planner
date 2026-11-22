@@ -1,9 +1,24 @@
+import type { Locator } from "@playwright/test";
+
 import { cancelEditor, editorScreen, expect, test } from "./fixtures/app";
 
 async function openEgg(page: import("@playwright/test").Page) {
   await page.goto("/ingredients");
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
-  return page.getByRole("region", { name: "How I buy it", exact: true });
+  return page.getByRole("region", { name: "How do you buy this ingredient?", exact: true });
+}
+
+function formatControl(setup: Locator) {
+  return setup.getByRole("combobox", {
+    name: /^(How do you buy this ingredient\?|¿Cómo compras este producto\?)$/,
+  });
+}
+
+async function chooseFormat(setup: Locator, name: string) {
+  const format = formatControl(setup);
+  await format.click();
+  await setup.page().getByRole("option", { name, exact: true }).click();
+  await expect(format).toHaveText(name);
 }
 
 test("loads buying setup only in saved editors and never asks for measurement references", async ({
@@ -17,21 +32,16 @@ test("loads buying setup only in saved editors and never asks for measurement re
   ).toBe(false);
   await cancelEditor(page);
   await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
-  const setup = page.getByRole("region", { name: "How I buy it", exact: true });
-  await expect(setup.getByRole("button", { name: "Set up shopping amounts" })).toBeVisible();
+  const setup = page.getByRole("region", { name: "How do you buy this ingredient?", exact: true });
   expect(api.reads["/units"] ?? 0).toBe(0);
-  await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await expect(setup.getByRole("radio", { name: "Individual pieces", exact: true })).toBeFocused();
-  await expect(setup.getByRole("group", { name: "How do you buy Egg?" })).toBeVisible();
+  await expect(formatControl(setup)).toHaveText("Use recipe measurements");
+  await expect(setup.getByRole("button", { name: "Save buying preference" })).toBeDisabled();
+  await chooseFormat(setup, "By the piece");
   await expect(
-    setup.getByRole("textbox", {
-      name: "Weight of one piece (g, optional)",
-      exact: true,
-    }),
-  ).toHaveValue("");
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByText(/Buying setup saved/)).toBeVisible();
-  await expect(setup.getByRole("button", { name: "Edit shopping setup" })).toBeFocused();
+    setup.getByLabel("Weight of one piece (g, optional)", { exact: true }),
+  ).toBeVisible();
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[0].body).toEqual({
     mode: "piece",
     shopping_unit: "piece",
@@ -58,11 +68,12 @@ test("saves packages without contents and preserves independent name drafts and 
   api.ingredientReferences[1] = [reference];
   const setup = await openEgg(page);
   await editorScreen(page).getByLabel("Ingredient name", { exact: true }).fill("Unsaved name");
-  await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("radio", { name: "In a package", exact: true }).click();
-  await expect(setup.getByLabel("Package contents", { exact: true })).toBeHidden();
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByText(/Buying setup saved/)).toBeVisible();
+  await chooseFormat(setup, "In a package");
+  await expect(setup.getByLabel("Contents per package (optional)", { exact: true })).toHaveValue(
+    "",
+  );
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[0].body).toEqual({
     mode: "package",
     shopping_unit: "package",
@@ -72,15 +83,10 @@ test("saves packages without contents and preserves independent name drafts and 
   await expect(editorScreen(page).getByLabel("Ingredient name", { exact: true })).toHaveValue(
     "Unsaved name",
   );
-  await expect(setup.getByText(/Each .* contains/)).toHaveCount(0);
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
-  await setup.getByRole("button", { name: "Reset buying choice", exact: true }).click();
-  await setup.getByRole("button", { name: "Remove shopping setup" }).click();
-  await expect(setup.getByRole("status")).toHaveText(
-    "Buying setup removed. Recipe measurements and saved piece weights are kept.",
-  );
-  await expect(setup.getByRole("button", { name: "Set up shopping amounts" })).toBeFocused();
-  await expect(setup.getByText("Not set up yet", { exact: true })).toBeVisible();
+  await chooseFormat(setup, "Use recipe measurements");
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByRole("status")).toHaveText("Using recipe measurements again.");
+  await expect(formatControl(setup)).toHaveText("Use recipe measurements");
   expect(api.ingredientReferences[1]).toEqual([reference]);
   expect(api.ingredientSaves).toEqual([]);
   await cancelEditor(page);
@@ -98,38 +104,34 @@ test("keeps known package contents editable and validates optional values withou
     package_unit: "g",
   };
   const setup = await openEgg(page);
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
-  await expect(setup.getByLabel("Package contents", { exact: true })).toHaveValue("390");
-  await setup.getByLabel("Package contents", { exact: true }).fill("0");
-  const contents = setup.getByRole("button", { name: "Package contents (optional)", exact: true });
-  await contents.click();
-  await expect(contents).toHaveAttribute("aria-expanded", "false");
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
+  await expect(setup.getByLabel("Contents per package (optional)", { exact: true })).toHaveValue(
+    "390",
+  );
+  await setup.getByLabel("Contents per package (optional)", { exact: true }).fill("0");
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
   await expect(setup.getByRole("alert")).toBeVisible();
-  await expect(contents).toHaveAttribute("aria-expanded", "true");
-  await expect(setup.getByLabel("Package contents", { exact: true })).toBeVisible();
-  await expect(setup.getByLabel("Package contents", { exact: true })).toBeFocused();
+  await expect(setup.getByLabel("Contents per package (optional)", { exact: true })).toBeFocused();
   expect(api.profileSaves).toEqual([]);
-  await setup.getByLabel("Package contents", { exact: true }).fill("850");
+  await setup.getByLabel("Contents per package (optional)", { exact: true }).fill("850");
   api.profileSaveError = "Cannot save buying setup";
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
   await expect(setup.getByRole("alert")).toHaveText("Cannot save buying setup");
-  await expect(setup.getByLabel("Package contents", { exact: true })).toHaveValue("850");
+  await expect(setup.getByLabel("Contents per package (optional)", { exact: true })).toHaveValue(
+    "850",
+  );
   api.profileSaveError = null;
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByText(/Each jar contains 850 g/)).toBeVisible();
-  await expect(setup.getByText("I buy jars", { exact: true })).toBeVisible();
-  await expect(
-    setup.getByText(
-      "Recipe quantities, with package counts rounded to the nearest whole number. Small amounts keep their measure.",
-    ),
-  ).toBeVisible();
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
-  await setup.getByLabel("Package contents", { exact: true }).fill("");
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByText(/Each jar contains/)).toHaveCount(0);
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
+  await expect(formatControl(setup)).toHaveText("In a package");
+  await setup.getByLabel("Contents per package (optional)", { exact: true }).fill("");
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[api.profileSaves.length - 1].body.package_quantity).toBeNull();
   expect(api.profileSaves[api.profileSaves.length - 1].body.package_unit).toBeNull();
+  await chooseFormat(setup, "By weight");
+  await chooseFormat(setup, "In a package");
+  await expect(setup.getByRole("button", { name: "Save buying preference" })).toBeDisabled();
+  await expect(setup.getByRole("combobox", { name: "Package type" })).toHaveText("jars");
 });
 
 test("buying setup retry preserves the ingredient name draft", async ({ page, api }) => {
@@ -138,10 +140,10 @@ test("buying setup retry preserves the ingredient name draft", async ({ page, ap
   await editorScreen(page).getByLabel("Ingredient name", { exact: true }).fill("Keep my name");
   await expect(setup.getByRole("alert")).toHaveText("Profile unavailable");
   delete api.readErrors["/ingredients/1/shopping_profile"];
-  await setup.getByRole("button", { name: "Retry shopping setup" }).click();
-  await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByText(/Buying setup saved/)).toBeVisible();
+  await setup.getByRole("button", { name: "Retry loading buying preference" }).click();
+  await chooseFormat(setup, "By the piece");
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   await expect(editorScreen(page).getByLabel("Ingredient name", { exact: true })).toHaveValue(
     "Keep my name",
   );
@@ -153,10 +155,9 @@ test("bulk buying keeps its own unit without creating measurement references", a
   api,
 }) => {
   const setup = await openEgg(page);
-  await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("radio", { name: "By weight or volume", exact: true }).click();
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByText(/Buying setup saved/)).toBeVisible();
+  await chooseFormat(setup, "By weight");
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[0].body).toEqual({
     mode: "bulk",
     shopping_unit: "kg",
@@ -166,10 +167,7 @@ test("bulk buying keeps its own unit without creating measurement references", a
   expect(api.referenceSaves).toEqual([]);
 });
 
-test("weight and volume choices explain the receipt and preserve existing units", async ({
-  page,
-  api,
-}) => {
+test("weight and volume choices preserve existing units", async ({ page, api }) => {
   api.ingredientProfiles[1] = {
     ingredient_id: 1,
     mode: "bulk",
@@ -178,90 +176,101 @@ test("weight and volume choices explain the receipt and preserve existing units"
     package_unit: null,
   };
   const setup = await openEgg(page);
-  await expect(setup.getByText("I buy by volume", { exact: true })).toBeVisible();
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
-  await expect(setup.getByRole("combobox", { name: "Measure by" })).toHaveText("Volume");
-  await expect(
-    setup.getByText("A total in milliliters, when recipe amounts can be combined."),
-  ).toBeVisible();
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
+  await expect(formatControl(setup)).toHaveText("By volume");
+  await setup.getByLabel("Weight of one piece (g, optional)", { exact: true }).fill("25");
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[0].body.shopping_unit).toBe("ml");
 
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
-  await setup.getByRole("combobox", { name: "Measure by" }).click();
-  await page.getByRole("option", { name: "Weight", exact: true }).click();
-  await expect(
-    setup.getByText("A total in grams, when recipe amounts can be combined."),
-  ).toBeVisible();
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
+  await chooseFormat(setup, "By weight");
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
   expect(api.profileSaves[1].body.shopping_unit).toBe("kg");
-  await expect(setup.getByText("I buy by weight", { exact: true })).toBeVisible();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
+  await expect(formatControl(setup)).toHaveText("By weight");
 });
 
-test("buying choices support arrow keys and retain values when switching modes", async ({
+test("each buying choice shows its fields inline and saves independently", async ({
   page,
   api,
 }) => {
   const setup = await openEgg(page);
-  await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  const piece = setup.getByRole("radio", {
-    name: "Individual pieces",
-    exact: true,
-  });
-  await setup.getByLabel("Weight of one piece (g, optional)", { exact: true }).fill("60");
-  await piece.focus();
-  const bulk = setup.getByRole("radio", {
-    name: "By weight or volume",
-    exact: true,
-  });
-  const packageOption = setup.getByRole("radio", { name: "In a package", exact: true });
-  for (const option of [bulk, packageOption]) {
-    // Radix moves focus asynchronously while the arrow key is down.
-    await page.keyboard.down("ArrowRight");
-    try {
-      await expect(option).toBeFocused();
-      await expect(option).toBeChecked();
-    } finally {
-      await page.keyboard.up("ArrowRight");
-    }
+  const editor = editorScreen(page);
+  await expect(editor.getByRole("button", { name: "Save ingredient" })).toBeVisible();
+  await expect(editor.getByRole("button", { name: "Done", exact: true })).toHaveCount(0);
+  const nameInput = editor.getByLabel("Ingredient name", { exact: true });
+  await nameInput.fill("Unsaved name");
+  const save = setup.getByRole("button", { name: "Save buying preference", exact: true });
+  const pieceWeight = setup.getByLabel("Weight of one piece (g, optional)", { exact: true });
+  const packageType = setup.getByRole("combobox", { name: "Package type" });
+  const contents = setup.getByLabel("Contents per package (optional)", { exact: true });
+
+  await expect(save).toBeDisabled();
+  await chooseFormat(setup, "By the piece");
+  await pieceWeight.fill("60");
+  for (const name of ["By weight", "By volume"]) {
+    await chooseFormat(setup, name);
+    await expect(pieceWeight).toBeVisible();
+    await expect(pieceWeight).toHaveValue("60");
+    await expect(packageType).toBeHidden();
+    await expect(save).toBeEnabled();
   }
-  await expect(setup.getByLabel("Weight of one piece (g, optional)", { exact: true })).toHaveCount(
-    0,
-  );
-  await piece.click();
-  await expect(setup.getByLabel("Weight of one piece (g, optional)", { exact: true })).toHaveValue(
-    "60",
-  );
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByRole("button", { name: "Edit shopping setup" })).toBeVisible();
+  expect(api.reads["/units"] ?? 0).toBe(0);
+
+  await chooseFormat(setup, "In a package");
+  await expect(packageType).toBeVisible();
+  await expect(pieceWeight).toBeHidden();
+  await contents.fill("250");
+  await chooseFormat(setup, "Use recipe measurements");
+  await expect(contents).toBeHidden();
+  await expect(save).toBeDisabled();
+
+  await chooseFormat(setup, "In a package");
+  await expect(contents).toHaveValue("250");
+  await chooseFormat(setup, "By the piece");
+  await expect(pieceWeight).toHaveValue("60");
+  let releaseSave!: () => void;
+  api.profileSaveBarrier = new Promise<void>((resolve) => {
+    releaseSave = resolve;
+  });
+  const saveIngredient = editor.getByRole("button", { name: "Save ingredient", exact: true });
+  try {
+    await save.click();
+    await expect(saveIngredient).toBeDisabled();
+  } finally {
+    releaseSave();
+  }
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
+  await expect(save).toBeDisabled();
+  await expect(saveIngredient).toBeEnabled();
+  await expect(nameInput).toHaveValue("Unsaved name");
   expect(api.profileSaves[0].body.piece_weight).toEqual({
     quantity: "60",
     reference_quantity: "1",
   });
 });
 
-test("protects unsaved buying choices when leaving the editor", async ({ page, api }) => {
+test("Back protects unsaved buying and ingredient changes", async ({ page, api }) => {
   const setup = await openEgg(page);
-  await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("radio", { name: "In a package", exact: true }).click();
+  await editorScreen(page).getByLabel("Ingredient name", { exact: true }).fill("Unsaved name");
+  await chooseFormat(setup, "In a package");
   page.once("dialog", (dialog) => dialog.dismiss());
-  await editorScreen(page).getByRole("button", { name: "Done", exact: true }).click();
+  await editorScreen(page).getByRole("button", { name: "Back", exact: true }).click();
   await expect(page).toHaveURL("/ingredients/1/edit");
-  await expect(setup.getByRole("radio", { name: "In a package", exact: true })).toBeChecked();
+  await expect(formatControl(setup)).toHaveText("In a package");
   expect(api.profileSaves).toEqual([]);
   page.once("dialog", (dialog) => dialog.accept());
-  await setup.getByRole("button", { name: "Cancel", exact: true }).click();
-  await editorScreen(page).getByRole("button", { name: "Done", exact: true }).click();
+  await editorScreen(page).getByRole("button", { name: "Back", exact: true }).click();
   await expect(page).toHaveURL("/ingredients");
 });
 
 test("optional package fields fit supported widths", { tag: "@responsive" }, async ({ page }) => {
   const setup = await openEgg(page);
-  await setup.getByRole("button", { name: "Set up shopping amounts" }).click();
-  await setup.getByRole("radio", { name: "In a package", exact: true }).click();
-  await setup.getByRole("button", { name: "Package contents (optional)", exact: true }).click();
-  await setup.getByLabel("Package contents", { exact: true }).fill("250");
+  await chooseFormat(setup, "In a package");
+  await setup.getByLabel("Contents per package (optional)", { exact: true }).fill("250");
   await expect(setup.getByRole("combobox", { name: "Label unit" })).toBeVisible();
+  const section = await setup.boundingBox();
+  const ingredientName = await editorScreen(page).getByLabel("Ingredient name").boundingBox();
+  expect(section?.width).toBe(ingredientName?.width);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -276,15 +285,15 @@ test.describe("Spanish buying setup", () => {
       package_unit: null,
     };
     await page.goto("/ingredients/1/edit");
-    await expect(page.getByRole("heading", { name: "Cómo lo compro", exact: true })).toBeVisible();
-    await expect(page.getByText("Lo compro en frascos", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "¿Cómo compras este producto?", exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Medidas usadas en recetas" })).toHaveCount(0);
     const setup = page.getByRole("region", {
-      name: "Cómo lo compro",
+      name: "¿Cómo compras este producto?",
       exact: true,
     });
-    await setup.getByRole("button", { name: "Editar datos de compra" }).click();
-    await setup.getByRole("radio", { name: "Por pieza", exact: true }).click();
+    await chooseFormat(setup, "Por pieza");
     await expect(
       setup.getByLabel("Peso de una pieza (g, opcional)", { exact: true }),
     ).toBeVisible();
@@ -304,32 +313,30 @@ test("captures an optional piece weight in buying setup without source or descri
     package_unit: null,
   };
   const setup = await openEgg(page);
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
   const weight = setup.getByRole("textbox", {
     name: "Weight of one piece (g, optional)",
     exact: true,
   });
   await weight.fill("0");
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
   await expect(setup.getByRole("alert")).toHaveText("Enter a positive weight or leave it blank.");
   expect(api.profileSaves).toEqual([]);
   await weight.fill("272");
   api.profileSaveError = "Cannot save weight";
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
   await expect(setup.getByRole("alert")).toHaveText("Cannot save weight");
   await expect(weight).toHaveValue("272");
   api.profileSaveError = null;
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByText("1 piece ≈ 272 g", { exact: true })).toBeVisible();
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[1].body.piece_weight).toEqual({
     quantity: "272",
     reference_quantity: "1",
   });
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
   await expect(weight).toHaveValue("272");
   await weight.fill("");
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByText(/≈/)).toHaveCount(0);
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[2].body.piece_weight).toBeNull();
   expect(api.requests.some(({ path }) => path.endsWith("/measurement_references"))).toBe(false);
 });
@@ -347,22 +354,21 @@ test("preserves the measured basis of existing weights and hides the field for p
     piece_weight: { quantity: "150.123456", reference_quantity: "2.000001" },
   };
   const setup = await openEgg(page);
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
   await expect(
     setup.getByLabel("Weight of 2.000001 pieces (g, optional)", {
       exact: true,
     }),
   ).toHaveValue("150.123456");
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByRole("button", { name: "Edit shopping setup" })).toBeVisible();
+  await setup.getByLabel("Weight of 2.000001 pieces (g, optional)", { exact: true }).fill("151");
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[0].body.piece_weight).toEqual({
-    quantity: "150.123456",
+    quantity: "151",
     reference_quantity: "2.000001",
   });
-  await setup.getByRole("button", { name: "Edit shopping setup" }).click();
-  await setup.getByRole("radio", { name: "In a package", exact: true }).click();
+  await chooseFormat(setup, "In a package");
   await expect(setup.getByRole("textbox", { name: /Weight of/ })).toHaveCount(0);
-  await setup.getByRole("button", { name: "Save shopping setup", exact: true }).click();
-  await expect(setup.getByRole("button", { name: "Edit shopping setup" })).toBeVisible();
+  await setup.getByRole("button", { name: "Save buying preference", exact: true }).click();
+  await expect(setup.getByText(/Buying preference saved/)).toBeVisible();
   expect(api.profileSaves[1].body).not.toHaveProperty("piece_weight");
 });

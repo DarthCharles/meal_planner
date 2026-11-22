@@ -424,7 +424,7 @@ export async function cancelEditor(page: Page) {
   page.on("dialog", accept);
   try {
     await editorScreen(page)
-      .getByRole("button", { name: /^(Cancel|Cancelar|Done|Listo)$/, exact: true })
+      .getByRole("button", { name: /^(Back|Volver|Cancel|Cancelar)$/ })
       .last()
       .click();
     await expect(editorScreen(page)).toHaveCount(0);
@@ -438,6 +438,6 @@ export async function finishIngredientSave(page: Page) {
     editorScreen(page).getByRole("button", { name: /^(Save ingredient|Guardar ingrediente)$/ }),
   ).toBeEnabled();
   await editorScreen(page)
-    .getByRole("button", { name: /^(Done|Listo)$/ })
+    .getByRole("button", { name: /^(Back|Volver)$/ })
     .click();
 }
