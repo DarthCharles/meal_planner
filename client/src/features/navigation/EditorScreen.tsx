@@ -89,16 +89,16 @@ export function EditorScreen({
     }
   }, []);
   return (
-    <section role="region" aria-labelledby="editor-title" className="pb-8 pt-3">
-      <Button variant="link" className="mb-3 min-h-11 px-0" onClick={finishEditor}>
-        <ArrowLeft aria-hidden="true" className="mr-2 size-4" />
+    <section role="region" aria-labelledby="editor-title" className="pb-xl pt-sm">
+      <Button variant="link" className="mb-sm min-h-11 px-0" onClick={finishEditor}>
+        <ArrowLeft aria-hidden="true" className="mr-xs size-4" />
         {t("editor.back")}
       </Button>
       <h2
         ref={heading}
         id="editor-title"
         tabIndex={-1}
-        className={`mb-3 font-display font-semibold outline-none ${
+        className={`mb-sm font-display font-semibold outline-none ${
           editingMeal
             ? "text-[2rem] leading-tight tracking-[-.04em] text-balance"
             : "text-[32px] tracking-[-.03em]"
@@ -108,7 +108,7 @@ export function EditorScreen({
       </h2>
       {!create && (
         <p
-          className={`mb-6 text-muted-foreground ${
+          className={`mb-lg text-muted-foreground ${
             editingMeal ? "max-w-prose text-body text-pretty" : "text-sm"
           }`}
         >
@@ -121,7 +121,7 @@ export function EditorScreen({
         </p>
       )}
       {error && (
-        <div className="mb-4 space-y-3">
+        <div className="mb-md space-y-sm">
           <Notice>{error.message}</Notice>
           <Button
             variant="outline"
@@ -156,7 +156,7 @@ export function EditorScreen({
           ))}
       </EditorDraftContext.Provider>
       {(loading || blockingError || missing) && (
-        <Button variant="ghost" className="mt-4" onClick={finishEditor}>
+        <Button variant="ghost" className="mt-md" onClick={finishEditor}>
           {t("common.cancel")}
         </Button>
       )}

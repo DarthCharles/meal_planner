@@ -36,7 +36,7 @@ export function UnitSelect({
   const id = useId();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   return (
-    <div ref={setContainer} className="grid min-w-0 gap-2">
+    <div ref={setContainer} className="grid min-w-0 gap-xs">
       <Label htmlFor={id} className="text-label">
         {label}
       </Label>

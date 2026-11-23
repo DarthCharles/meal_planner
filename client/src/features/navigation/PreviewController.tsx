@@ -72,7 +72,7 @@ export function PreviewController() {
             {ingredientId && (
               <Button
                 variant="link"
-                className="mb-4 h-auto min-h-11 whitespace-normal px-0"
+                className="mb-md h-auto min-h-11 whitespace-normal px-0"
                 onClick={() => {
                   if (location.state?.previewParent) navigate(-1);
                   else {
@@ -86,7 +86,7 @@ export function PreviewController() {
                   }
                 }}
               >
-                <ArrowLeft aria-hidden="true" className="mr-2 size-4 shrink-0" />
+                <ArrowLeft aria-hidden="true" className="mr-xs size-4 shrink-0" />
                 {t("preview.back_to_meals")}
               </Button>
             )}

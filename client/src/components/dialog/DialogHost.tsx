@@ -52,7 +52,7 @@ export function DialogHost({
       ref={elementRef}
       aria-labelledby={titleId}
       aria-modal="true"
-      className="fixed inset-0 m-0 h-full w-full max-h-none max-w-none items-end justify-items-center overflow-hidden border-0 bg-transparent p-[15px] text-foreground open:grid desktop:items-center backdrop:bg-overlay"
+      className="fixed inset-0 m-0 h-full w-full max-h-none max-w-none items-end justify-items-center overflow-hidden border-0 bg-transparent p-md text-foreground open:grid desktop:items-center backdrop:bg-overlay"
       onCancel={(event) => {
         event.preventDefault();
         dismiss();
@@ -89,11 +89,11 @@ export function DialogHost({
         pointerStartedOutside.current = false;
       }}
     >
-      <section className="max-h-[calc(100dvh-30px)] w-full max-w-[520px] overflow-y-auto overscroll-contain rounded-[24px_24px_15px_15px] bg-card p-[25px] shadow-lg desktop:rounded-3xl">
-        <div className="mb-3 flex items-center justify-between gap-3">
+      <section className="max-h-[calc(100dvh_-_2_*_var(--space-md))] w-full max-w-[520px] overflow-y-auto overscroll-contain rounded-[24px_24px_15px_15px] bg-card p-lg shadow-lg desktop:rounded-3xl">
+        <div className="mb-sm flex items-center justify-between gap-sm">
           <div className="min-w-0 flex-1">
             {eyebrowText && (
-              <p className="mb-[5px] text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
+              <p className="mb-2xs text-[10px] font-bold tracking-[.13em] text-muted-foreground uppercase">
                 {eyebrowText}
               </p>
             )}

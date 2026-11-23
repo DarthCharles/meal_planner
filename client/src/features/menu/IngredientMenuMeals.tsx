@@ -48,7 +48,7 @@ export function IngredientMenuMeals({
   ].sort((a, b) => a.name.localeCompare(b.name, formatLocale()));
   return (
     <div>
-      <p className="mb-4 text-sm text-muted-foreground">{t("shopping_list.menu_meals_help")}</p>
+      <p className="mb-md text-sm text-muted-foreground">{t("shopping_list.menu_meals_help")}</p>
       {meals.length ? (
         <ul ref={list} className="m-0 list-none p-0">
           {meals.map((meal) => (
@@ -76,7 +76,7 @@ export function IngredientMenuMeals({
       ) : (
         <p>{t("shopping_list.unused_in_menu")}</p>
       )}
-      <div className="mt-5 border-t border-border pt-3">
+      <div className="mt-lg border-t border-border pt-sm">
         <Button
           variant="link"
           className="min-h-11 px-0"

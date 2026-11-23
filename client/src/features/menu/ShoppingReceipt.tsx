@@ -90,12 +90,12 @@ export function ShoppingReceipt({
 
   return (
     <ReceiptPaper label={t("shopping_list.receipt")}>
-      <header className="border-b border-dashed border-border pb-4 text-center">
-        <p className="mt-0 mb-2 text-xl font-bold tracking-[.18em]">COMAL</p>
+      <header className="border-b border-dashed border-border pb-md text-center">
+        <p className="mt-0 mb-xs text-xl font-bold tracking-[.18em]">COMAL</p>
         <p className="m-0 text-muted-foreground">{formatMenuDateRange(list)}</p>
-        <p className="mt-1 mb-0">{t("shopping_list.people", { count: list.people_count })}</p>
-        <Collapsible className="mt-2 font-sans">
-          <CollapsibleTrigger className="group inline-flex min-h-11 cursor-pointer items-center gap-1 px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+        <p className="mt-2xs mb-0">{t("shopping_list.people", { count: list.people_count })}</p>
+        <Collapsible className="mt-xs font-sans">
+          <CollapsibleTrigger className="group inline-flex min-h-11 cursor-pointer items-center gap-2xs px-sm text-sm font-semibold text-primary underline-offset-4 hover:underline">
             <ChevronRight
               aria-hidden="true"
               className="size-4 shrink-0 group-data-[state=open]:rotate-90"
@@ -104,36 +104,36 @@ export function ShoppingReceipt({
           </CollapsibleTrigger>
           <CollapsibleContent forceMount className="data-[state=closed]:hidden">
             {controls}
-            <div className="mt-2 flex justify-center">{updateAction}</div>
+            <div className="mt-xs flex justify-center">{updateAction}</div>
           </CollapsibleContent>
         </Collapsible>
       </header>
       {!!list.items.length && (
-        <div className="sticky top-0 z-[1] border-b border-dashed border-border bg-card py-3">
+        <div className="sticky top-0 z-[1] border-b border-dashed border-border bg-card py-sm">
           <p role="status" className="m-0 text-center font-bold tabular-nums">
             {t("shopping_list.checked", { checked: checkedCount, count: list.items.length })}
           </p>
         </div>
       )}
       {!list.items.length && (
-        <p className="my-6 text-center text-muted-foreground">{t("shopping_list.empty")}</p>
+        <p className="my-lg text-center text-muted-foreground">{t("shopping_list.empty")}</p>
       )}
-      <div className="mt-5 columns-1 gap-8 desktop:columns-2 min-[1100px]:columns-3">
+      <div className="mt-lg columns-1 gap-xl desktop:columns-2 min-[1100px]:columns-3">
         {groups.map(({ code, items }) => (
           <section
             key={code}
             aria-labelledby={`category-${code}`}
-            className="mb-8 min-w-0 break-inside-avoid-column"
+            className="mb-xl min-w-0 break-inside-avoid-column"
           >
             <h3
               id={`category-${code}`}
-              className="mb-1 border-b border-dashed border-border pb-2 text-xs font-bold uppercase tracking-wide"
+              className="mb-2xs border-b border-dashed border-border pb-xs text-xs font-bold uppercase tracking-wide"
             >
               {t(`reference.shopping_categories.${code}`)}
             </h3>
             <div
               aria-hidden="true"
-              className="mt-3 flex justify-between gap-3 text-[10px] uppercase tracking-widest text-muted-foreground"
+              className="mt-sm flex justify-between gap-sm text-[10px] uppercase tracking-widest text-muted-foreground"
             >
               <span>{t("shopping_list.ingredient")}</span>
               {items.some((item) => item.quantity !== null && item.unit !== null) && (
@@ -150,8 +150,8 @@ export function ShoppingReceipt({
                     : null;
                 return (
                   <li key={key}>
-                    <div className="flex min-h-14 min-w-0 items-start gap-1">
-                      <label className="flex min-h-14 w-11 shrink-0 cursor-pointer items-start justify-center pt-4">
+                    <div className="flex min-h-14 min-w-0 items-start gap-2xs">
+                      <label className="flex min-h-14 w-11 shrink-0 cursor-pointer items-start justify-center pt-md">
                         <Checkbox
                           className="shrink-0"
                           aria-label={quantity ? `${item.name}, ${quantity}` : item.name}
@@ -167,9 +167,9 @@ export function ShoppingReceipt({
                         />
                       </label>
                       <span
-                        className={`min-w-0 flex-1 py-4 ${isChecked ? "text-muted-foreground" : ""}`}
+                        className={`min-w-0 flex-1 py-md ${isChecked ? "text-muted-foreground" : ""}`}
                       >
-                        <span className="flex min-w-0 items-baseline gap-2">
+                        <span className="flex min-w-0 items-baseline gap-xs">
                           <Button
                             type="button"
                             variant="link"
@@ -201,9 +201,9 @@ export function ShoppingReceipt({
           </section>
         ))}
       </div>
-      <footer className="mt-5 border-t border-dashed border-border pt-4 text-center text-muted-foreground">
+      <footer className="mt-lg border-t border-dashed border-border pt-md text-center text-muted-foreground">
         <p className="m-0 text-xs">{t("shopping_list.checklist_help")}</p>
-        <p className="mt-3 mb-0 text-[10px] tablet:text-xs">{t("shopping_list.live")}</p>
+        <p className="mt-sm mb-0 text-[10px] tablet:text-xs">{t("shopping_list.live")}</p>
       </footer>
     </ReceiptPaper>
   );
@@ -214,7 +214,7 @@ function ReceiptPaper({ children, label }: { children: ReactNode; label: string 
   return (
     <section
       aria-label={label}
-      className="relative mx-auto mb-8 w-full min-w-0 bg-card px-4 pt-5 pb-6 font-mono text-sm leading-relaxed shadow-md tablet:px-6"
+      className="relative mx-auto mb-xl w-full min-w-0 bg-card px-md pt-md pb-lg font-mono text-sm leading-relaxed shadow-md tablet:px-lg"
     >
       {children}
       <svg aria-hidden="true" className="absolute top-full left-0 h-3 w-full text-card">

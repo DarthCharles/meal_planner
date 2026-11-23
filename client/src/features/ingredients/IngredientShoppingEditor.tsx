@@ -35,7 +35,7 @@ export function IngredientShoppingEditor({ ingredientId, disabled, onSavingChang
   return (
     <section
       aria-labelledby={headingId}
-      className="mb-6 grid min-w-0 gap-4 rounded-lg border border-border bg-muted/50 p-4 tablet:p-5"
+      className="mb-lg grid min-w-0 gap-md rounded-lg border border-border bg-muted/50 p-md tablet:p-lg"
     >
       <h3 id={headingId} className="m-0 font-display text-xl font-semibold">
         {t("ingredients.shopping.title")}
@@ -46,7 +46,7 @@ export function IngredientShoppingEditor({ ingredientId, disabled, onSavingChang
         </p>
       )}
       {error && (
-        <div className="grid justify-items-start gap-2 text-sm">
+        <div className="grid justify-items-start gap-xs text-sm">
           <p role="alert" className="m-0 text-destructive">
             {error.message}
           </p>
@@ -149,7 +149,7 @@ function ShoppingForm({
     <FormProvider {...methods}>
       <form
         noValidate
-        className="grid min-w-0 gap-3"
+        className="grid min-w-0 gap-sm"
         onSubmit={handleSubmit(submit, resetMutationErrors)}
         onChange={() => setFeedback(null)}
       >
@@ -167,7 +167,7 @@ function ShoppingForm({
             {message}
           </p>
         )}
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-sm">
           <div role="status" className={feedback && !hasChanges ? "mr-auto text-sm" : "sr-only"}>
             {feedback &&
               !hasChanges &&

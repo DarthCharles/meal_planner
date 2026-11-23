@@ -59,13 +59,13 @@ export function RecipePackageFields({
   }
 
   return (
-    <fieldset className="grid min-w-0 gap-2">
-      <legend className="text-label mb-1">{t("recipe.optional_contents")}</legend>
+    <fieldset className="grid min-w-0 gap-xs">
+      <legend className="text-label mb-2xs">{t("recipe.optional_contents")}</legend>
       <p className="m-0 max-w-prose text-caption text-pretty text-muted-foreground">
         {t("recipe.package_size_help", { unit: unitLabel(packageUnit, 1) })}
       </p>
-      <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
-        <Label className="text-label grid min-w-0 gap-2">
+      <div className="grid min-w-0 gap-sm tablet:grid-cols-2">
+        <Label className="text-label grid min-w-0 gap-xs">
           {t("recipe.contents")}
           <Input
             className="text-body h-11 tabular-nums md:text-body"

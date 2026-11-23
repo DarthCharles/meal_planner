@@ -16,7 +16,7 @@ export function CollectionHeader({
   onAdd: () => void;
 }) {
   return (
-    <div className="mb-6 flex min-w-0 flex-col gap-4 tablet:flex-row tablet:items-start tablet:justify-between tablet:gap-6">
+    <div className="mb-lg flex min-w-0 flex-col gap-md tablet:flex-row tablet:items-start tablet:justify-between tablet:gap-lg">
       <div className="min-w-0">
         <h2
           id={titleId}
@@ -25,7 +25,7 @@ export function CollectionHeader({
           {title}
         </h2>
         {description && (
-          <p className="mt-2 mb-0 text-sm leading-relaxed text-muted-foreground">{description}</p>
+          <p className="mt-xs mb-0 text-sm leading-relaxed text-muted-foreground">{description}</p>
         )}
       </div>
       <Button

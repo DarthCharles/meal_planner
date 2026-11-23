@@ -32,7 +32,7 @@ export function MenuHero({
   return (
     <section
       aria-labelledby="menu-hero-title"
-      className="mt-2 grid gap-3 rounded-[30px] bg-card p-4 tablet:grid-cols-[minmax(0,1fr)_auto] tablet:gap-5 tablet:p-6"
+      className="mt-xs grid gap-sm rounded-[30px] bg-card p-md tablet:grid-cols-[minmax(0,1fr)_auto] tablet:gap-lg tablet:p-lg"
     >
       <div className="min-w-0">
         <h2
@@ -41,7 +41,7 @@ export function MenuHero({
         >
           {t(meals.length ? "menu.hero.today" : "menu.hero.no_today")}
         </h2>
-        <time dateTime={todayDate} className="mt-1 block text-caption text-muted-foreground">
+        <time dateTime={todayDate} className="mt-2xs block text-caption text-muted-foreground">
           {now.toLocaleDateString(formatLocale(), dateFormat)}
         </time>
       </div>
@@ -50,7 +50,7 @@ export function MenuHero({
           {meals.map((meal, index) => (
             <li
               key={`${meal.id}-${index}`}
-              className="flex min-w-0 wide:px-3 wide:first:pl-0 wide:last:pr-0"
+              className="flex min-w-0 wide:px-sm wide:first:pl-0 wide:last:pr-0"
             >
               <MealRow
                 meal={meal}
@@ -69,7 +69,7 @@ export function MenuHero({
           })}
         </p>
       )}
-      <div className="grid min-w-0 justify-items-stretch gap-1 text-center tablet:col-start-2 tablet:row-start-1 tablet:justify-self-end">
+      <div className="grid min-w-0 justify-items-stretch gap-2xs text-center tablet:col-start-2 tablet:row-start-1 tablet:justify-self-end">
         <Button asChild variant="outline" className="h-auto min-h-11 whitespace-normal">
           <Link
             to={`/menus/${menu.id}/shopping-list`}

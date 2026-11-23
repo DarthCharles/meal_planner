@@ -24,11 +24,11 @@ export function AppHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   return (
-    <header className="flex h-[70px] items-center justify-between gap-2 tablet:h-[86px]">
+    <header className="flex h-[70px] items-center justify-between gap-xs tablet:h-[86px]">
       <Link
         to="/"
         aria-label={t("app_header.home")}
-        className="flex items-center gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring tablet:gap-[11px]"
+        className="flex items-center gap-xs rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring tablet:gap-sm"
       >
         <div className="grid size-[44px] -rotate-6 place-items-center rounded-[12px_12px_12px_4px] bg-primary">
           <FlowerArt className="h-auto w-[40px] rotate-6" />
@@ -40,20 +40,20 @@ export function AppHeader() {
           </h1>
         </div>
       </Link>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-xs">
         <Popover open={actionsOpen} onOpenChange={setActionsOpen}>
           <PopoverTrigger asChild>
             <Button
               ref={actionsTrigger}
               variant="outline"
-              className="h-auto min-h-11 min-w-11 shrink-0 px-2 text-xs tablet:px-3 tablet:text-sm"
+              className="h-auto min-h-11 min-w-11 shrink-0 px-xs text-xs tablet:px-sm tablet:text-sm"
             >
               {t("app_header.menu")}
             </Button>
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            className="flex w-64 max-w-[calc(100vw-30px)] flex-col gap-1 p-1.5"
+            className="flex w-64 max-w-[calc(100vw_-_2_*_var(--space-md))] flex-col gap-2xs p-xs"
             aria-label={t("app_header.navigation_menu")}
             onOpenAutoFocus={(event) => {
               event.preventDefault();
@@ -76,7 +76,7 @@ export function AppHeader() {
               }
             }}
           >
-            <nav className="flex flex-col gap-1" aria-label={t("navigation.primary_navigation")}>
+            <nav className="flex flex-col gap-2xs" aria-label={t("navigation.primary_navigation")}>
               {(
                 [
                   ["/", t("navigation.my_menu")],
@@ -86,7 +86,7 @@ export function AppHeader() {
                 ] as const
               ).map(([destination, label]) => (
                 <Fragment key={destination}>
-                  {destination === "/saved-menus" && <hr className="my-1 border-border" />}
+                  {destination === "/saved-menus" && <hr className="my-2xs border-border" />}
                   <NavLink
                     ref={destination === "/" ? menuLink : undefined}
                     to={destination}
@@ -116,7 +116,7 @@ export function AppHeader() {
                 </Fragment>
               ))}
             </nav>
-            <hr className="my-1 border-border" />
+            <hr className="my-2xs border-border" />
             <Button
               variant="ghost"
               className="min-h-11 w-full justify-start"
@@ -127,8 +127,8 @@ export function AppHeader() {
             >
               {t("app_header.add_meal_action")}
             </Button>
-            <hr className="my-1 border-border" />
-            <div role="group" aria-label={t("app_header.language")} className="flex gap-1">
+            <hr className="my-2xs border-border" />
+            <div role="group" aria-label={t("app_header.language")} className="flex gap-2xs">
               {(
                 [
                   ["en", "English"],

@@ -25,14 +25,14 @@ export function MealRow({
       type="button"
       variant="ghost"
       aria-label={t("meals.row.view_meal", { type: mealTypeLabel(mealType), name: meal.name })}
-      className={`flex h-auto min-h-[44px] w-full min-w-0 items-center justify-start gap-[11px] rounded-xl text-left whitespace-normal hover:bg-accent ${hero ? "bg-transparent px-2 py-3 wide:min-h-[88px]" : "bg-card px-3 py-1.5"} ${className}`}
+      className={`flex h-auto min-h-[44px] w-full min-w-0 items-center justify-start gap-sm rounded-xl text-left whitespace-normal hover:bg-accent ${hero ? "bg-transparent px-xs py-sm wide:min-h-[88px]" : "bg-card px-sm py-xs"} ${className}`}
       onClick={() => onOpen(meal)}
     >
       <span
-        className={`min-w-0 flex-1 ${hero ? "flex items-center gap-2 tablet:grid" : "grid gap-1"}`}
+        className={`min-w-0 flex-1 ${hero ? "flex items-center gap-xs tablet:grid" : "grid gap-2xs"}`}
       >
         <span
-          className={`text-caption ${hero ? `${mealTypeColorClassName(mealType)} w-fit max-w-full shrink-0 rounded-[5px] px-1.5 py-1` : "text-muted-foreground"}`}
+          className={`text-caption ${hero ? `${mealTypeColorClassName(mealType)} w-fit max-w-full shrink-0 rounded-[5px] px-2xs py-2xs` : "text-muted-foreground"}`}
         >
           {mealTypeLabel(mealType)}
         </span>

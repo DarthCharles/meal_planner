@@ -126,22 +126,22 @@ export function MealForm({
   return (
     <FormProvider {...methods}>
       <form
-        className="@container grid min-w-0 gap-4 max-desktop:[&_:is(input,textarea,button)]:scroll-mb-36"
+        className="@container grid min-w-0 gap-md max-desktop:[&_:is(input,textarea,button)]:scroll-mb-[9rem]"
         noValidate
         onSubmit={handleSubmit(submit, clearSaveErrors)}
       >
-        <div className="grid min-w-0 gap-4">
-          <Label className="text-label grid min-w-0 gap-2">
+        <div className="grid min-w-0 gap-md">
+          <Label className="text-label grid min-w-0 gap-xs">
             {t("meals.form.name")}
             <Input
-              className="h-auto rounded-[10px] p-3 text-body shadow-none md:text-body"
+              className="h-auto rounded-[10px] p-sm text-body shadow-none md:text-body"
               {...register("name", { validate: (value) => !!value.trim() })}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "meal-form-error" : undefined}
               placeholder={t("meals.form.meal_example")}
             />
           </Label>
-          <Label className="text-label grid min-w-0 gap-2">
+          <Label className="text-label grid min-w-0 gap-xs">
             {t("recipe.servings_label")}
             <Input
               className="text-body tabular-nums md:text-body"
@@ -159,10 +159,10 @@ export function MealForm({
               aria-describedby={errors.servings ? "meal-form-error" : undefined}
             />
           </Label>
-          <Label className="text-label grid min-w-0 gap-2">
+          <Label className="text-label grid min-w-0 gap-xs">
             {t("meals.form.instructions")}
             <Textarea
-              className="h-auto resize-y rounded-[10px] p-3 text-body shadow-none md:text-body"
+              className="h-auto resize-y rounded-[10px] p-sm text-body shadow-none md:text-body"
               {...register("description", {
                 validate: (value) => !!value.trim(),
               })}
@@ -171,28 +171,28 @@ export function MealForm({
               rows={3}
             />
           </Label>
-          <Label className="text-label grid min-w-0 gap-2">
+          <Label className="text-label grid min-w-0 gap-xs">
             <span>
               {t("meals.form.recipe_url")}{" "}
               <span className="text-caption text-muted-foreground">{t("common.optional")}</span>
             </span>
             <Input
-              className="h-auto rounded-[10px] p-3 text-body shadow-none md:text-body"
+              className="h-auto rounded-[10px] p-sm text-body shadow-none md:text-body"
               {...register("recipe_url")}
               placeholder="https://..."
             />
           </Label>
         </div>
         <IngredientManager units={units} />
-        <div className="grid min-w-0 gap-4">
-          <fieldset className="text-label grid min-w-0 gap-2 text-foreground">
-            <legend className="mb-2">{t("meals.form.meal_time")}</legend>
+        <div className="grid min-w-0 gap-md">
+          <fieldset className="text-label grid min-w-0 gap-xs text-foreground">
+            <legend className="mb-xs">{t("meals.form.meal_time")}</legend>
             <Controller
               name="meal_type_ids"
               control={control}
               rules={{ validate: (ids) => ids.length > 0 }}
               render={({ field }) => (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-xs">
                   {types.map(([name, id], index) => {
                     const selected = field.value.includes(id);
                     return (
@@ -225,7 +225,7 @@ export function MealForm({
           </fieldset>
           <PreferredDaysField />
         </div>
-        <div className="sticky bottom-0 z-[5] flex flex-wrap items-center justify-end gap-x-4 gap-y-2 bg-background py-2 [@media(max-height:420px)]:static">
+        <div className="sticky bottom-0 z-[5] flex flex-wrap items-center justify-end gap-x-md gap-y-xs bg-background py-xs [@media(max-height:420px)]:static">
           {error && (
             <p
               id="meal-form-error"

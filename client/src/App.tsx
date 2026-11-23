@@ -16,7 +16,7 @@ import { useI18n } from "./i18n";
 
 function PageLayout() {
   return (
-    <div className="pt-3">
+    <div className="pt-sm">
       <Outlet />
     </div>
   );
@@ -49,7 +49,7 @@ function App() {
     }
   }, [background, location]);
   return (
-    <div className="mx-auto min-h-screen max-w-[1240px] px-[15px] pb-[50px] tablet:px-6">
+    <div className="mx-auto min-h-screen max-w-[1240px] px-md pb-2xl tablet:px-lg">
       <AppHeader />
 
       <main>
@@ -80,11 +80,11 @@ function App() {
               <Route
                 path="*"
                 element={
-                  <section className="pb-8">
-                    <h2 className="mb-3 font-display text-[32px] font-semibold">
+                  <section className="pb-xl">
+                    <h2 className="mb-sm font-display text-[32px] font-semibold">
                       {t("app.not_found.title")}
                     </h2>
-                    <p className="mb-4 text-sm text-muted-foreground">{t("app.not_found.help")}</p>
+                    <p className="mb-md text-sm text-muted-foreground">{t("app.not_found.help")}</p>
                     <Button asChild>
                       <Link to="/">{t("app.not_found.go_to_menu")}</Link>
                     </Button>

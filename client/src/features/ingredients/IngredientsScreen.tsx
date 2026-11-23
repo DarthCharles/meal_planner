@@ -22,7 +22,7 @@ export function IngredientsScreen() {
     .sort((left, right) => left.name.localeCompare(right.name, formatLocale()));
 
   return (
-    <section aria-labelledby="ingredients-title" className="pb-5 tablet:pb-8">
+    <section aria-labelledby="ingredients-title" className="pb-lg tablet:pb-xl">
       <CollectionHeader
         titleId="ingredients-title"
         title={t("navigation.my_ingredients")}
@@ -31,7 +31,7 @@ export function IngredientsScreen() {
         actionVariant="default"
         onAdd={() => openForm()}
       />
-      <div className="mb-4">
+      <div className="mb-md">
         <Input
           type="search"
           aria-label={t("ingredients.screen.search_ingredients")}
@@ -44,7 +44,7 @@ export function IngredientsScreen() {
       </div>
 
       {error && (
-        <div className="mb-5 space-y-3">
+        <div className="mb-lg space-y-sm">
           <Notice>
             {t("ingredients.screen.load_error")} {error.message}
           </Notice>
@@ -56,21 +56,21 @@ export function IngredientsScreen() {
       {loading && <IngredientsSkeleton />}
       {ingredients && (
         <>
-          <p role="status" className="text-caption mb-3 text-muted-foreground">
+          <p role="status" className="text-caption mb-sm text-muted-foreground">
             {t("ingredients.screen.count", { shown: filtered.length, count: ingredients.length })}
           </p>
           {filtered.length > 0 ? (
             <ul
               aria-label={t("ingredients.screen.ingredient_catalog")}
-              className="m-0 grid list-none grid-cols-1 gap-3 p-0 tablet:grid-cols-2 wide:grid-cols-3"
+              className="m-0 grid list-none grid-cols-1 gap-sm p-0 tablet:grid-cols-2 wide:grid-cols-3"
             >
               {filtered.map((ingredient) => (
                 <li
                   key={ingredient.id}
-                  className="min-w-0 rounded-xl border border-border bg-card p-4"
+                  className="min-w-0 rounded-xl border border-border bg-card p-md"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="m-0 min-w-0 pt-1 text-body font-medium wrap-anywhere text-pretty">
+                  <div className="flex items-start justify-between gap-sm">
+                    <h3 className="m-0 min-w-0 pt-2xs text-body font-medium wrap-anywhere text-pretty">
                       {ingredient.name}
                     </h3>
                     <Button
@@ -86,7 +86,7 @@ export function IngredientsScreen() {
                   <Button
                     variant="link"
                     size="sm"
-                    className="mt-2 h-auto max-w-full px-0 py-1 text-left text-caption whitespace-normal"
+                    className="mt-xs h-auto max-w-full px-0 py-2xs text-left text-caption whitespace-normal"
                     onClick={() => preview({ ingredient: ingredient.id, name: ingredient.name })}
                   >
                     <span className="min-w-0 wrap-anywhere">
@@ -99,19 +99,19 @@ export function IngredientsScreen() {
               ))}
             </ul>
           ) : (
-            <div className="rounded-[20px] border border-dashed border-border p-6">
+            <div className="rounded-[20px] border border-dashed border-border p-lg">
               <h3 className="m-0 font-display text-2xl leading-tight font-semibold tracking-[-.03em] text-balance">
                 {ingredients.length
                   ? t("ingredients.screen.no_ingredients_found")
                   : t("ingredients.screen.no_ingredients")}
               </h3>
-              <p className="mt-2 mb-0 text-body text-pretty text-muted-foreground">
+              <p className="mt-xs mb-0 text-body text-pretty text-muted-foreground">
                 {ingredients.length
                   ? t("ingredients.screen.try_search")
                   : t("ingredients.screen.first_ingredient")}
               </p>
               {search && (
-                <Button variant="link" className="mt-3 px-0" onClick={() => setSearch("")}>
+                <Button variant="link" className="mt-sm px-0" onClick={() => setSearch("")}>
                   {t("ingredients.screen.clear_search")}
                 </Button>
               )}

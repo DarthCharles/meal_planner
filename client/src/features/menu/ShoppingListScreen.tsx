@@ -12,14 +12,14 @@ export function ShoppingListScreen() {
   const id = Number(menuId);
   const { t } = useI18n();
   return (
-    <section aria-labelledby="shopping-list-title" className="pb-8">
-      <Button asChild variant="link" className="mb-3 min-h-11 px-0">
+    <section aria-labelledby="shopping-list-title" className="pb-xl">
+      <Button asChild variant="link" className="mb-sm min-h-11 px-0">
         <Link to={returnTo} state={{ selectedMenuId: Number(menuId) }}>
-          <ArrowLeft aria-hidden="true" className="mr-2 size-4" />
+          <ArrowLeft aria-hidden="true" className="mr-xs size-4" />
           {t("shopping_list.back")}
         </Link>
       </Button>
-      <h2 id="shopping-list-title" className="mb-4 font-display text-[32px] font-semibold">
+      <h2 id="shopping-list-title" className="mb-md font-display text-[32px] font-semibold">
         {t("shopping_list.title")}
       </h2>
       {Number.isSafeInteger(id) && id > 0 ? (

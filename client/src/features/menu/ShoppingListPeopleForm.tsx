@@ -46,15 +46,15 @@ export function ShoppingListPeopleForm({
   return children(
     <form
       id={formId}
-      className="mt-4 text-center font-sans"
+      className="mt-md text-center font-sans"
       noValidate
       onSubmit={handleSubmit(({ people }) => {
         if (!isPending && !refreshing)
           save(people, { onSuccess: (menu) => resetForm({ people: menu.people_count }) });
       })}
     >
-      <div className="flex flex-wrap items-end justify-center gap-3">
-        <label htmlFor={inputId} className="grid gap-2 text-sm font-semibold">
+      <div className="flex flex-wrap items-end justify-center gap-sm">
+        <label htmlFor={inputId} className="grid gap-xs text-sm font-semibold">
           {t("shopping_list.people_label")}
           <Input
             id={inputId}
@@ -75,12 +75,12 @@ export function ShoppingListPeopleForm({
         </label>
       </div>
       {(errors.people || error) && (
-        <p id={errorId} role="alert" className="mt-2 text-sm text-destructive">
+        <p id={errorId} role="alert" className="mt-xs text-sm text-destructive">
           {errors.people ? t("shopping_list.people_invalid") : error?.message}
         </p>
       )}
       {isSuccess && (
-        <p aria-live="polite" className="mt-2 text-sm text-muted-foreground">
+        <p aria-live="polite" className="mt-xs text-sm text-muted-foreground">
           {t("shopping_list.people_saved")}
         </p>
       )}

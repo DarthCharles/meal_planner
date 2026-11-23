@@ -8,9 +8,9 @@ import { preferredDaysLabel } from "./preferredDays";
 export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }) {
   const { t } = useI18n();
   return (
-    <div className="grid min-w-0 gap-6 break-words">
-      <div className="grid min-w-0 gap-3">
-        <div className="flex flex-wrap gap-2">
+    <div className="grid min-w-0 gap-lg break-words">
+      <div className="grid min-w-0 gap-sm">
+        <div className="flex flex-wrap gap-xs">
           {meal.meal_types.map((type) => (
             <Badge
               key={type}
@@ -29,13 +29,13 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
         </p>
       </div>
       <section aria-label={t("common.ingredients")}>
-        <h3 className="mb-3 font-display text-xl font-semibold">{t("common.ingredients")}</h3>
+        <h3 className="mb-sm font-display text-xl font-semibold">{t("common.ingredients")}</h3>
         {meal.ingredients.length ? (
-          <ul className="m-0 grid list-none gap-3 p-0">
+          <ul className="m-0 grid list-none gap-sm p-0">
             {meal.ingredients.map((ingredient, index) => (
               <li
                 key={ingredient.id ?? index}
-                className="border-t border-border pt-3 text-sm leading-relaxed"
+                className="border-t border-border pt-sm text-sm leading-relaxed"
               >
                 <span className="font-semibold">
                   {new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 6 }).format(
@@ -55,7 +55,7 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
                   · {ingredient.name}
                 </span>
                 {ingredient.preparation_note && (
-                  <p className="mt-1 mb-0 text-muted-foreground">{ingredient.preparation_note}</p>
+                  <p className="mt-2xs mb-0 text-muted-foreground">{ingredient.preparation_note}</p>
                 )}
               </li>
             ))}
@@ -66,7 +66,7 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
           </p>
         )}
       </section>
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-md border-t border-border pt-md">
         {meal.recipe_url && (
           <a
             href={meal.recipe_url}

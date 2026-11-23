@@ -24,7 +24,7 @@ export function MealsScreen() {
   return (
     <>
       {error && (
-        <div className="my-3 space-y-3">
+        <div className="my-sm space-y-sm">
           <Notice>{error}</Notice>
           <Button
             variant="outline"

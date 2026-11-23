@@ -55,7 +55,7 @@ function ShoppingSelect({
       control={control}
       rules={{ validate }}
       render={({ field, fieldState }) => (
-        <div ref={setContainer} className="flex min-w-0 flex-col gap-2">
+        <div ref={setContainer} className="flex min-w-0 flex-col gap-xs">
           {label && <Label htmlFor={triggerId}>{label}</Label>}
           <Select
             value={field.value}
@@ -139,7 +139,7 @@ export function IngredientShoppingFields({
       />
 
       {how !== "package" && how !== "recipe" && (
-        <div className="grid gap-2">
+        <div className="grid gap-xs">
           <Label htmlFor={`${fieldId}-weight`}>
             {Number(pieceCount) === 1
               ? t("ingredients.shopping.piece_weight")
@@ -170,7 +170,7 @@ export function IngredientShoppingFields({
       )}
 
       {how === "package" && (
-        <div className="grid min-w-0 gap-3">
+        <div className="grid min-w-0 gap-sm">
           {options && (
             <ShoppingSelect
               name="packageUnit"
@@ -183,7 +183,7 @@ export function IngredientShoppingFields({
             />
           )}
           {unitsError && (
-            <div className="grid justify-items-start gap-2 text-sm">
+            <div className="grid justify-items-start gap-xs text-sm">
               <p role="alert" className="m-0 text-destructive">
                 {unitsError.message}
               </p>
@@ -202,8 +202,8 @@ export function IngredientShoppingFields({
               {t("ingredients.shopping.loading_units")}
             </p>
           )}
-          <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
-            <div className="grid content-start gap-2">
+          <div className="grid min-w-0 gap-sm tablet:grid-cols-2">
+            <div className="grid content-start gap-xs">
               <Label htmlFor={`${fieldId}-contents`}>
                 {t("ingredients.shopping.package_size")}
               </Label>

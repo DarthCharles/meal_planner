@@ -31,7 +31,7 @@ export function NextWeekPlan({
           <p className="mt-0 text-body">
             {t("menu.next_week.replace_help", { dates: formatMenuDateRange(week) })}
           </p>
-          <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <div className="mt-lg flex flex-wrap justify-end gap-xs">
             <Button variant="outline" className="min-h-11" onClick={close}>
               {t("common.cancel")}
             </Button>
@@ -53,17 +53,17 @@ export function NextWeekPlan({
   return (
     <section
       aria-labelledby="next-week-title"
-      className="grid gap-3 rounded-[20px] bg-card p-4 tablet:grid-cols-[minmax(0,1fr)_auto] tablet:items-center tablet:p-6"
+      className="grid gap-sm rounded-[20px] bg-card p-md tablet:grid-cols-[minmax(0,1fr)_auto] tablet:items-center tablet:p-lg"
     >
       <div>
         <h2 id="next-week-title" className="m-0 font-display text-[26px] font-semibold">
           {t("menu.next_week.title")}
         </h2>
-        <p className="mt-1 mb-0 text-caption text-muted-foreground">
+        <p className="mt-2xs mb-0 text-caption text-muted-foreground">
           {formatMenuDateRange(week, false)}
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-xs">
         {savedMenu && (
           <Button asChild className="h-auto min-h-11 grow whitespace-normal">
             <Link to="/saved-menus" state={{ selectedMenuId: savedMenu.id }}>

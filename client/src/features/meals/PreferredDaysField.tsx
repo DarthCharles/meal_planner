@@ -15,9 +15,9 @@ export function PreferredDaysField() {
       render={({ field }) => (
         <fieldset
           aria-labelledby="preferred-days-label"
-          className="text-label grid min-w-0 gap-2 text-foreground"
+          className="text-label grid min-w-0 gap-xs text-foreground"
         >
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex flex-wrap items-center justify-between gap-x-sm gap-y-2xs">
             <span id="preferred-days-label">{t("meals.preferred_days.preferred_days")}</span>
             <Button
               type="button"
@@ -37,7 +37,7 @@ export function PreferredDaysField() {
           >
             {t("meals.preferred_days.preferred_days_help")}
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-xs">
             {weekdays.map((day, index) => (
               <Button
                 key={day}

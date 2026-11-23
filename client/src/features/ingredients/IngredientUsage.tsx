@@ -26,7 +26,7 @@ export function IngredientUsage({
   if (isPending) return <p role="status">{t("editor.loading")}</p>;
   if (error && !ingredients)
     return (
-      <div className="space-y-3">
+      <div className="space-y-sm">
         <p role="alert">{error.message}</p>
         <Button disabled={isFetching} onClick={() => void refetch()}>
           {t("common.try_again")}
@@ -37,7 +37,7 @@ export function IngredientUsage({
   if (!ingredient) return <p role="alert">{t("editor.missing")}</p>;
   return (
     <div>
-      <p className="mb-4 text-sm text-muted-foreground">{t("ingredients.form.meals_using")}</p>
+      <p className="mb-md text-sm text-muted-foreground">{t("ingredients.form.meals_using")}</p>
       {ingredient.meals.length ? (
         <ul ref={list} className="m-0 list-none p-0">
           {ingredient.meals.map((meal) => (
@@ -58,7 +58,7 @@ export function IngredientUsage({
       ) : (
         <p>{t("ingredients.form.unused_ingredient")}</p>
       )}
-      <div className="mt-5 border-t border-border pt-3">
+      <div className="mt-lg border-t border-border pt-sm">
         <Button
           variant="link"
           className="min-h-11 px-0"

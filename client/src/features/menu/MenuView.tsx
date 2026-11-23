@@ -14,7 +14,7 @@ export function MenuView({
 }) {
   if (loading)
     return (
-      <div className="mt-6 grid grid-cols-1 gap-4 tablet:grid-cols-2 wide:grid-cols-3">
+      <div className="mt-lg grid grid-cols-1 gap-md tablet:grid-cols-2 wide:grid-cols-3">
         <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
         <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
         <div className="h-[330px] animate-shimmer rounded-[20px] bg-skeleton bg-size-[200%_100%]"></div>
@@ -27,7 +27,7 @@ export function MenuView({
     (left, right) => weekdayIndex(left) - weekdayIndex(right),
   );
   return (
-    <div className="grid grid-cols-1 gap-4 tablet:grid-cols-2 wide:grid-cols-3">
+    <div className="grid grid-cols-1 gap-md tablet:grid-cols-2 wide:grid-cols-3">
       {orderedDays.map((day) => (
         <DayCard
           day={day}

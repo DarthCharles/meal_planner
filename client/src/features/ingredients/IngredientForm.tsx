@@ -138,7 +138,7 @@ function IngredientFormContent({
           },
         )}
       >
-        <Label className="text-label mb-4 grid gap-2">
+        <Label className="text-label mb-md grid gap-xs">
           {t("ingredients.form.name")}
           <Input
             className="text-body md:text-body"
@@ -151,7 +151,7 @@ function IngredientFormContent({
             placeholder={t("ingredients.form.ingredient_example")}
           />
         </Label>
-        <div ref={setCategoryContainer} className="mb-4 grid gap-2">
+        <div ref={setCategoryContainer} className="mb-md grid gap-xs">
           <Label htmlFor={categoryId}>{t("ingredients.form.shopping_category")}</Label>
           <Controller
             name="shopping_category"
@@ -181,24 +181,24 @@ function IngredientFormContent({
           />
         </div>
         {ingredient && (
-          <p className="mb-4 text-sm text-muted-foreground">
+          <p className="mb-md text-sm text-muted-foreground">
             {t("ingredients.form.rename_ingredient_help")}
           </p>
         )}
         {fieldError && (
-          <p id="ingredient-form-error" role="alert" className="mb-4 text-sm text-destructive">
+          <p id="ingredient-form-error" role="alert" className="mb-md text-sm text-destructive">
             {fieldError}
           </p>
         )}
         {saved && !isDirty && <p role="status">{t("configuration.name_saved")}</p>}
-        <div className="mb-6 flex flex-wrap justify-end gap-2">
+        <div className="mb-lg flex flex-wrap justify-end gap-xs">
           <Button type="submit" disabled={busy || savingShopping}>
             {saving ? t("common.saving") : t("ingredients.form.save_ingredient")}
           </Button>
         </div>
       </form>
       {!ingredient && (
-        <p className="mb-4 text-sm text-muted-foreground">{t("configuration.create_help")}</p>
+        <p className="mb-md text-sm text-muted-foreground">{t("configuration.create_help")}</p>
       )}
       {ingredient && (
         <IngredientShoppingEditor
@@ -208,11 +208,11 @@ function IngredientFormContent({
         />
       )}
       {deleteError && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
+        <p role="alert" className="mb-md text-sm text-destructive">
           {deleteError.message}
         </p>
       )}
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-xs">
         {ingredient && ingredient.meals.length === 0 && (
           <Button
             variant="ghost"

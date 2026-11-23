@@ -17,7 +17,7 @@ export function MealDetailsContent({ id, onEdit }: { id: number; onEdit: (meal: 
         </p>
       )}
       {error && (
-        <div className="mb-4 space-y-3">
+        <div className="mb-md space-y-sm">
           <Notice>
             {t("meals.details.load_meal_error")} {error.message}
           </Notice>

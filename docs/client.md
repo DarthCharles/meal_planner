@@ -587,11 +587,16 @@ Use Node.js 22.12 or newer (Node 24 recommended) when installing dependencies an
 The existing `npm run dev` and `npm run build` commands compile Tailwind automatically.
 
 Add complete utility class names directly to JSX, for example
-`className="flex items-center gap-3"`. Tailwind scans `client/src/` for classes;
+`className="flex items-center gap-sm"`. Tailwind scans `client/src/` for classes;
 avoid constructing class names dynamically, such as `bg-${color}-500`.
 
-The client pins `@darthcharles/greda` 1.6.0. Lucide icons and their types are
-available through `@darthcharles/greda/icons` without a separate icon dependency.
+The client pins `@darthcharles/greda` 2.0.0. Use its named spacing utilities
+for padding, margins, and gaps, including responsive variants such as
+`tablet:p-lg`. Use `var(--space-md)` and other named properties in CSS
+calculations. Keep zero and auto utilities for resets and centering. The meal
+form keeps its 9rem mobile scroll clearance because it exceeds the named scale.
+Lucide icons and their types are available through `@darthcharles/greda/icons`
+without a separate icon dependency.
 TypeScript uses `Bundler` module resolution to honor package subpath exports,
 including Greda's icons entry point, consistently with Vite.
 Greda's `Collapsible` powers buying setup reset options, ingredient package

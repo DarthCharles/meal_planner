@@ -64,12 +64,15 @@ rounded:
   hero: "30px"
   full: "9999px"
 spacing:
-  unit: "0.25rem"
-  gap-2: "0.5rem"
-  gap-3: "0.75rem"
-  gap-4: "1rem"
-  gap-6: "1.5rem"
-  gap-8: "2rem"
+  3xs: "0.125rem"
+  2xs: "0.25rem"
+  xs: "0.5rem"
+  sm: "0.75rem"
+  md: "1rem"
+  lg: "1.5rem"
+  xl: "2rem"
+  2xl: "3rem"
+  3xl: "4rem"
 components:
   button-primary:
     backgroundColor: "{colors.terracotta}"
@@ -109,16 +112,16 @@ components:
     backgroundColor: "{colors.garden-sage}"
     textColor: "{colors.secondary-text}"
     rounded: "5px"
-    padding: "4px 6px"
+    padding: "4px"
   day-card:
     backgroundColor: "{colors.raised-cream}"
     textColor: "{colors.dark-brown}"
     rounded: "{rounded.day-card}"
-    padding: "19px"
+    padding: "16px"
   meal-row:
     backgroundColor: "{colors.raised-cream}"
     rounded: "{rounded.lg}"
-    padding: "6px 12px"
+    padding: "8px 12px"
 ---
 
 # Design System: Comal
@@ -128,7 +131,7 @@ components:
 Name: Comal
 Colors: primary: terracotta hsl(18 68% 31%); secondary: warm-tan hsl(32 26% 88%); tertiary: garden-sage hsl(90 20.40816% 80.78431%); neutral: warm-cream hsl(32 32% 94%) (+9 more in the sidecar)
 Fonts: Fraunces (display, headline, day-title); DM Sans (body, label, caption, eyebrow); ui-monospace (receipt)
-Spacing: unit 0.25rem, gap-2 0.5rem, gap-3 0.75rem, gap-4 1rem, gap-6 1.5rem, gap-8 2rem
+Spacing: Greda named utilities from `3xs` (2px) to `3xl` (64px). Use `gap-xs` (8px) within compact groups, `gap-sm` (12px) between related controls, and `gap-md` (16px) or `gap-lg` (24px) between groups.
 Radius: sm 0.375rem, md 0.75rem, lg 0.75rem, meal-card 17px, day-card 20px, dialog 24px, hero 30px, full 9999px
 North Star: "The Everyday Kitchen"
 Rules:

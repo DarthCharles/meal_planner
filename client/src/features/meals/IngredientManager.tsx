@@ -138,7 +138,7 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
   return (
     <fieldset
       aria-labelledby="meal-ingredients-label"
-      className="grid min-w-0 gap-2 text-foreground"
+      className="grid min-w-0 gap-xs text-foreground"
     >
       <h3
         id="meal-ingredients-label"
@@ -184,7 +184,7 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
         </ul>
       )}
       {removed && (
-        <div className="flex flex-wrap items-center gap-x-3">
+        <div className="flex flex-wrap items-center gap-x-sm">
           <p
             role="status"
             className="m-0 min-w-0 text-caption wrap-anywhere text-pretty text-muted-foreground"
@@ -291,7 +291,7 @@ function IngredientRow({
           aria-describedby={`${fieldId}-summary`}
           aria-expanded={false}
           aria-controls={`${fieldId}-editor`}
-          className="grid min-h-11 w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,45%)_1rem] items-baseline gap-x-3 rounded-sm px-3 py-2 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          className="grid min-h-11 w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,45%)_1rem] items-baseline gap-x-sm rounded-sm px-sm py-xs text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
           onClick={() => {
             setDetailsExpanded(false);
             onOpen(name ? "quantity" : "name");
@@ -323,9 +323,12 @@ function IngredientRow({
           />
         </button>
       )}
-      <div id={`${fieldId}-editor`} className="px-3" hidden={!active}>
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2 pb-1 pt-2 @min-[40rem]:grid-cols-[minmax(0,1fr)_7rem_10rem]">
-          <div ref={setContainer} className="col-span-2 grid min-w-0 gap-2 @min-[40rem]:col-span-1">
+      <div id={`${fieldId}-editor`} className="px-sm" hidden={!active}>
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-xs pb-2xs pt-xs @min-[40rem]:grid-cols-[minmax(0,1fr)_7rem_10rem]">
+          <div
+            ref={setContainer}
+            className="col-span-2 grid min-w-0 gap-xs @min-[40rem]:col-span-1"
+          >
             <Label htmlFor={`${fieldId}-name`} className="text-label">
               {t("meals.ingredient_manager.ingredient_name")}
             </Label>
@@ -380,7 +383,7 @@ function IngredientRow({
                         },
                       )
                     }
-                    className="text-body h-11 min-w-0 rounded-[10px] px-3 shadow-none md:text-body"
+                    className="text-body h-11 min-w-0 rounded-[10px] px-sm shadow-none md:text-body"
                     aria-invalid={!!errors.ingredients?.[index]?.name}
                     aria-describedby={rowErrors?.name ? `${fieldId}-name-error` : undefined}
                   />
@@ -416,13 +419,13 @@ function IngredientRow({
               </p>
             )}
           </div>
-          <div className="grid min-w-0 gap-2">
+          <div className="grid min-w-0 gap-xs">
             <Label htmlFor={`${fieldId}-quantity`} className="text-label">
               {t("meals.ingredient_manager.quantity")}
             </Label>
             <Input
               id={`${fieldId}-quantity`}
-              className="text-body h-11 min-w-0 rounded-[10px] px-3 shadow-none tabular-nums md:text-body"
+              className="text-body h-11 min-w-0 rounded-[10px] px-sm shadow-none tabular-nums md:text-body"
               type="number"
               inputMode="decimal"
               step="any"
@@ -443,7 +446,7 @@ function IngredientRow({
               </p>
             )}
           </div>
-          <div className="grid min-w-0 gap-2">
+          <div className="grid min-w-0 gap-xs">
             <Label htmlFor={`${fieldId}-unit`} className="text-label">
               {t("meals.ingredient_manager.unit")}
             </Label>
@@ -467,7 +470,7 @@ function IngredientRow({
                     ref={field.ref}
                     onBlur={field.onBlur}
                     type="button"
-                    className="text-body h-11 min-w-0 w-full gap-2 rounded-[10px] px-3 shadow-none"
+                    className="text-body h-11 min-w-0 w-full gap-xs rounded-[10px] px-sm shadow-none"
                     aria-invalid={!!errors.ingredients?.[index]?.unit}
                     aria-describedby={rowErrors?.unit ? `${fieldId}-unit-error` : undefined}
                   >
@@ -498,9 +501,9 @@ function IngredientRow({
             onOpenChange={setDetailsExpanded}
             className="col-span-full min-w-0"
           >
-            <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center justify-between gap-xs">
               {(!empty || detailsOpen) && (
-                <CollapsibleTrigger className="group inline-flex min-h-11 items-center gap-1 text-label text-muted-foreground">
+                <CollapsibleTrigger className="group inline-flex min-h-11 items-center gap-2xs text-label text-muted-foreground">
                   {t("meals.ingredient_manager.ingredient_details")}
                   <ChevronDown
                     aria-hidden="true"
@@ -524,9 +527,9 @@ function IngredientRow({
             </div>
             <CollapsibleContent
               forceMount
-              className="grid min-w-0 gap-3 pb-2 data-[state=closed]:hidden"
+              className="grid min-w-0 gap-sm pb-xs data-[state=closed]:hidden"
             >
-              <Label className="text-label grid min-w-0 gap-2">
+              <Label className="text-label grid min-w-0 gap-xs">
                 {t("meals.ingredient_manager.preparation_note")}
                 <Input
                   className="text-body h-11 md:text-body"

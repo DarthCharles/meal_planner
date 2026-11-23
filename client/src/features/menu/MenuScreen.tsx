@@ -25,9 +25,9 @@ export function MenuScreen() {
   const canAddRecipe = checkLibrary && !checkingLibrary;
 
   return (
-    <div className="space-y-6 tablet:space-y-8">
+    <div className="space-y-lg tablet:space-y-xl">
       {isError && (
-        <div className="my-3 space-y-3">
+        <div className="my-sm space-y-sm">
           <Notice>{t(menus ? "menu.screen.refresh_error" : "menu.screen.load_error")}</Notice>
           <Button
             variant="outline"
@@ -41,7 +41,7 @@ export function MenuScreen() {
       )}
       {loading && (
         <>
-          <section className="mt-2 rounded-[30px] bg-card p-4 tablet:p-6">
+          <section className="mt-xs rounded-[30px] bg-card p-md tablet:p-lg">
             <p className="m-0 text-body text-secondary" role="status">
               {t("menu.hero.finding_menu")}
             </p>
@@ -52,8 +52,8 @@ export function MenuScreen() {
       {currentMenu && menus && (
         <>
           <MenuHero menu={currentMenu} menus={menus} now={now} onOpenMeal={openMeal} />
-          <section aria-labelledby="current-week-title" className="space-y-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <section aria-labelledby="current-week-title" className="space-y-md">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-md gap-y-2xs">
               <h2
                 id="current-week-title"
                 className="m-0 font-display text-[28px] font-semibold tracking-[-.03em]"
@@ -70,7 +70,7 @@ export function MenuScreen() {
               <Notice>
                 <div className="min-w-0">
                   <p className="m-0 font-semibold">{t("menu.notices.preference_fallback")}</p>
-                  <ul className="mt-2 mb-0 pl-5">
+                  <ul className="mt-xs mb-0 pl-lg">
                     {currentMenu.generation_notices.map((notice, index) => (
                       <li key={index}>{notice}</li>
                     ))}
@@ -83,17 +83,17 @@ export function MenuScreen() {
         </>
       )}
       {menus && !currentMenu && (
-        <section className="mt-2 rounded-[30px] bg-card p-4 tablet:p-6">
+        <section className="mt-xs rounded-[30px] bg-card p-md tablet:p-lg">
           <h2 className="m-0 font-display text-[28px] font-semibold">
             {t("menu.screen.no_current_week")}
           </h2>
           {firstRecipe && (
-            <p className="mt-2 mb-0 max-w-prose text-body text-secondary">
+            <p className="mt-xs mb-0 max-w-prose text-body text-secondary">
               {t("menu.hero.recipe_help")}
             </p>
           )}
           {(canAddRecipe || menus.length > 0) && (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-md flex flex-wrap gap-xs">
               {canAddRecipe && (
                 <Button
                   variant={firstRecipe ? "default" : "outline"}

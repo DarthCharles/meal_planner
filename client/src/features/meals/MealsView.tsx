@@ -31,7 +31,7 @@ export function MealsView({
   );
   return (
     <section aria-labelledby="meals-title">
-      <div className="mb-4 flex flex-col gap-3 desktop:flex-row desktop:items-center">
+      <div className="mb-md flex flex-col gap-sm desktop:flex-row desktop:items-center">
         <Input
           type="search"
           aria-label={t("meals.screen.search_meals")}
@@ -43,7 +43,7 @@ export function MealsView({
         <div
           role="group"
           aria-label={t("meals.form.meal_time")}
-          className="flex flex-wrap gap-2 desktop:max-w-[60%] desktop:shrink-0"
+          className="flex flex-wrap gap-xs desktop:max-w-[60%] desktop:shrink-0"
         >
           {["all", ...mealTypeOrder].map((item) => (
             <Button
@@ -60,23 +60,23 @@ export function MealsView({
         </div>
       </div>
       {showCount && (
-        <p role="status" className="text-caption mb-3 text-muted-foreground">
+        <p role="status" className="text-caption mb-sm text-muted-foreground">
           {t("meals.screen.count", { shown: filtered.length, count: meals.length })}
         </p>
       )}
-      <div className="grid grid-cols-1 gap-[14px] tablet:grid-cols-2 wide:grid-cols-3">
+      <div className="grid grid-cols-1 gap-md tablet:grid-cols-2 wide:grid-cols-3">
         {filtered.map((meal) => (
           <Card
             role="article"
-            className="min-h-[143px] overflow-hidden rounded-[17px] border border-border bg-card shadow-none pt-5 pr-[18px] pb-[18px] pl-[23px]"
+            className="min-h-[143px] overflow-hidden rounded-[17px] border border-border bg-card shadow-none pt-md pr-md pb-md pl-lg"
             key={meal.id}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex min-w-0 flex-1 flex-wrap gap-[5px]">
+            <div className="flex items-center gap-sm">
+              <div className="flex min-w-0 flex-1 flex-wrap gap-2xs">
                 {meal.meal_types.map((type) => (
                   <Badge
                     variant="secondary"
-                    className={`max-w-full rounded-[5px] border-0 px-1.5 py-1 text-caption wrap-anywhere whitespace-normal ${mealTypeColorClassName(type)}`}
+                    className={`max-w-full rounded-[5px] border-0 px-2xs py-2xs text-caption wrap-anywhere whitespace-normal ${mealTypeColorClassName(type)}`}
                     key={type}
                   >
                     {mealTypeLabel(type)}
@@ -93,10 +93,10 @@ export function MealsView({
                 {t("common.edit")}
               </Button>
             </div>
-            <h3 className="mt-2 mb-1">
+            <h3 className="mt-xs mb-2xs">
               <Button
                 variant="link"
-                className="h-auto max-w-full px-0 py-1 text-left text-body font-medium whitespace-normal text-foreground"
+                className="h-auto max-w-full px-0 py-2xs text-left text-body font-medium whitespace-normal text-foreground"
                 onClick={() => onOpen(meal)}
               >
                 <span className="min-w-0 wrap-anywhere text-pretty">{meal.name}</span>
@@ -108,11 +108,11 @@ export function MealsView({
           </Card>
         ))}
         {filtered.length === 0 && (
-          <div className="grid min-h-[180px] content-center justify-items-center rounded-[20px] border border-dashed border-border px-5 py-[42px] text-center col-span-full">
+          <div className="grid min-h-[180px] content-center justify-items-center rounded-[20px] border border-dashed border-border px-lg py-2xl text-center col-span-full">
             <h3 className="m-0 font-display text-2xl leading-tight font-semibold tracking-[-.03em] text-balance">
               {t("meals.screen.no_meals")}
             </h3>
-            <p className="mt-2 mb-0 max-w-[40ch] text-body text-pretty text-muted-foreground">
+            <p className="mt-xs mb-0 max-w-[40ch] text-body text-pretty text-muted-foreground">
               {t("meals.screen.try_meals")}
             </p>
           </div>

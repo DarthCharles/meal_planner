@@ -40,7 +40,7 @@ export function MealDialogContent({ initialMeal, onClose, onSaved }: MealDialogC
           <p role="status" className="text-body text-muted-foreground">
             {t("meals.dialog.loading_options")}
           </p>
-          <Button variant="ghost" className="mt-4" onClick={onClose}>
+          <Button variant="ghost" className="mt-md" onClick={onClose}>
             {t("common.cancel")}
           </Button>
         </>
