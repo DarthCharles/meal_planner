@@ -260,6 +260,10 @@ export const es: typeof en = {
       search_meals: "Buscar comidas",
       add_meal: "+ Agregar comida",
       all_meals: "Todas las comidas",
+      count: {
+        one: "%{shown} de %{count} comida",
+        other: "%{shown} de %{count} comidas",
+      },
       no_meals: "No se encontraron comidas.",
       try_meals: "Prueba otra búsqueda o agrega algo nuevo.",
       loading_meals_label: "Cargando comidas",

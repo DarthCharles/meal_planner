@@ -29,6 +29,7 @@ test(
     await expect(page).toHaveURL("/meals");
     await expect(page.getByRole("searchbox", { name: "Buscar comidas" })).toHaveValue("Huevos");
     await expect(page.getByRole("heading", { name: "Tu colección de comidas" })).toBeVisible();
+    await expect(page.getByText("1 de 3 comidas", { exact: true })).toBeVisible();
     await expect(page.getByRole("article")).toHaveCount(1);
     await expect(page.getByRole("heading", { name: "Huevos a la mexicana" })).toBeVisible();
     await expect(page).toHaveTitle("Comal — Planificador de comidas");

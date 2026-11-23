@@ -13,6 +13,7 @@ export function MealsSkeleton() {
             <div key={item} className={`h-8 w-20 shrink-0 rounded-full ${shimmer}`} />
           ))}
         </div>
+        <div className={`mb-3 h-4 w-28 rounded ${shimmer}`} />
         <div className="grid grid-cols-1 gap-[14px] tablet:grid-cols-2 wide:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((item) => (
             <div

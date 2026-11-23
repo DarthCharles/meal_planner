@@ -45,7 +45,12 @@ export function MealsScreen() {
       {loading ? (
         <MealsSkeleton />
       ) : (
-        <MealsView meals={meals ?? demoMeals} onEdit={openEditMeal} onOpen={openMeal} />
+        <MealsView
+          meals={meals ?? demoMeals}
+          showCount={meals !== undefined}
+          onEdit={openEditMeal}
+          onOpen={openMeal}
+        />
       )}
     </>
   );

@@ -196,7 +196,10 @@ search and a visible result count. My Meals and My Ingredients share a collectio
 header with a 32px title and an Add action: stacked below the title on mobile,
 alongside it from tablet width. The ingredient introduction stays below its title.
 The Collection eyebrow is omitted on both pages. Search occupies its own full-width
-row below the header, followed by the ingredient count or meal-type filters.
+row below the header. The ingredient count appears below search. The meal count
+appears below the meal-type filters with the same styling, shows matches out of
+the saved library total, and updates as search or meal type changes. The demo
+fallback omits the saved meal count.
 Search is disabled until catalog
 data is available. Ingredient names wrap on narrow screens.
 My Meals uses the same search field styling and header spacing.

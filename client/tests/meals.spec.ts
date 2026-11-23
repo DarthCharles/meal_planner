@@ -95,16 +95,24 @@ test(
 
 test("combines case-insensitive search and meal time filters", async ({ page }) => {
   await openLibrary(page);
+  const count = page.getByRole("region", { name: "Your meal library" }).getByRole("status");
+  await expect(count).toHaveText("3 of 3 meals");
   await expect(page.getByRole("article")).toHaveCount(3);
   await page.getByRole("button", { name: "Dinner", exact: true }).click();
+  await expect(count).toHaveText("2 of 3 meals");
   await expect(page.getByRole("article")).toHaveCount(2);
   await page.getByPlaceholder("Search meals").fill("AVENA");
+  await expect(count).toHaveText("1 of 3 meals");
   await expect(page.getByRole("article")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "Avena cocida" })).toBeVisible();
   await page.getByPlaceholder("Search meals").fill("huevos");
+  await expect(count).toHaveText("0 of 3 meals");
   await expect(page.getByRole("heading", { name: "No meals found." })).toBeVisible();
   await page.getByRole("button", { name: "All meals", exact: true }).click();
+  await expect(count).toHaveText("1 of 3 meals");
   await expect(page.getByRole("heading", { name: "Huevos a la mexicana" })).toBeVisible();
+  await page.getByPlaceholder("Search meals").clear();
+  await expect(count).toHaveText("3 of 3 meals");
 });
 
 test("validates required fields and ingredient quantity/unit before saving", async ({

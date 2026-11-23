@@ -257,6 +257,10 @@ export const en = {
       search_meals: "Search meals",
       add_meal: "+ Add meal",
       all_meals: "All meals",
+      count: {
+        one: "%{shown} of %{count} meal",
+        other: "%{shown} of %{count} meals",
+      },
       no_meals: "No meals found.",
       try_meals: "Try another search or add something new.",
       loading_meals_label: "Loading meals",

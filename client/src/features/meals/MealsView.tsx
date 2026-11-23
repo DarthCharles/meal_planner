@@ -8,10 +8,12 @@ import { mealTypeColorClassName, mealTypeLabel, mealTypeOrder } from "./mealType
 
 export function MealsView({
   meals,
+  showCount,
   onEdit,
   onOpen,
 }: {
   meals: Meal[];
+  showCount: boolean;
   onEdit: (meal: Meal) => void;
   onOpen: (meal: Meal) => void;
 }) {
@@ -53,6 +55,11 @@ export function MealsView({
           </Button>
         ))}
       </div>
+      {showCount && (
+        <p role="status" className="text-caption mb-3 text-muted-foreground">
+          {t("meals.screen.count", { shown: filtered.length, count: meals.length })}
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-[14px] tablet:grid-cols-2 wide:grid-cols-3">
         {filtered.map((meal) => (
           <Card

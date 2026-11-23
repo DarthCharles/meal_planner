@@ -55,7 +55,7 @@ export function IngredientsScreen() {
       {loading && <IngredientsSkeleton />}
       {ingredients && (
         <>
-          <p role="status" className="mb-3 text-xs text-muted-foreground">
+          <p role="status" className="text-caption mb-3 text-muted-foreground">
             {t("ingredients.screen.count", { shown: filtered.length, count: ingredients.length })}
           </p>
           {filtered.length > 0 ? (
