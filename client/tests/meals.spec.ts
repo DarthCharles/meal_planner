@@ -35,6 +35,9 @@ test(
   { tag: "@responsive" },
   async ({ page }) => {
     await openLibrary(page);
+    const selectedFilterFill = await page
+      .getByRole("button", { name: "All meals", pressed: true, exact: true })
+      .evaluate((button) => getComputedStyle(button).backgroundColor);
     const dialog = await addMeal(page);
     for (const [groupName, actions] of [
       [
@@ -76,6 +79,11 @@ test(
         const button = group.getByRole("button", { name: label, exact: true });
         await button.click();
         await expect(button).toHaveAttribute("aria-pressed", String(selected));
+        if (selected) {
+          await expect(button).toHaveCSS("background-color", selectedFilterFill);
+        } else {
+          await expect(button).not.toHaveCSS("background-color", selectedFilterFill);
+        }
         expect(await geometry()).toEqual(before);
         // Action buttons may fade when disabled; selection toggles must not animate.
         expect(

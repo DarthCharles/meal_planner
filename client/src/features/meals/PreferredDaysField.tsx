@@ -43,8 +43,8 @@ export function PreferredDaysField() {
                 key={day}
                 type="button"
                 size="sm"
-                className="text-label"
-                variant={field.value.includes(day) ? "secondary" : "outline"}
+                variant="outline"
+                className="aria-pressed:surface-tertiary aria-pressed:text-foreground aria-pressed:hover:surface-tertiary aria-pressed:hover:text-foreground"
                 aria-pressed={field.value.includes(day)}
                 aria-describedby="preferred-days-help"
                 ref={index === 0 ? field.ref : undefined}

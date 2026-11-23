@@ -505,9 +505,11 @@ the ingredient or package unit clears the old size and its validation errors.
 ## Day preferences
 
 The meal form's **Preferred days** field uses React Hook Form through
-`PreferredDaysField`. Individual weekday toggles support custom choices. A
-“Clear all” action beside the label clears the selected days and uses the same
-styling as “Add ingredient.” It is disabled when no days are selected.
+`PreferredDaysField`. Individual weekday toggles support custom choices. Meal
+time and preferred day toggles use Greda outline buttons with the same selected
+fill as the meal library filters. A “Clear all” action beside the label clears
+the selected days and uses the same styling as “Add ingredient.” It is disabled
+when no days are selected.
 Clearing all choices restores Any day (an empty array). Existing meals default to
 Any day, and the edit form initializes from the saved preference. Meal details
 show the saved days; saving also updates meals embedded in cached menus.

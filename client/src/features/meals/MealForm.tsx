@@ -198,9 +198,9 @@ export function MealForm({
                     return (
                       <Button
                         type="button"
-                        variant={selected ? "secondary" : "outline"}
+                        variant="outline"
                         size="sm"
-                        className="text-label capitalize"
+                        className="aria-pressed:surface-tertiary aria-pressed:text-foreground aria-pressed:hover:surface-tertiary aria-pressed:hover:text-foreground"
                         key={id}
                         ref={index === 0 ? field.ref : undefined}
                         onBlur={field.onBlur}
