@@ -51,7 +51,7 @@ export function MealsView({
               variant="outline"
               size="sm"
               aria-pressed={filter === item}
-              className="h-auto min-h-11 max-w-full rounded-full text-label whitespace-normal aria-pressed:surface-tertiary aria-pressed:text-foreground aria-pressed:hover:surface-tertiary aria-pressed:hover:text-foreground"
+              className="h-auto min-h-11 max-w-full text-label whitespace-normal aria-pressed:surface-tertiary aria-pressed:text-foreground aria-pressed:hover:surface-tertiary aria-pressed:hover:text-foreground"
               onClick={() => setFilter(item)}
             >
               {item === "all" ? t("meals.screen.all_meals") : mealTypeLabel(item)}

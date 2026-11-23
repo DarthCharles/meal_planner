@@ -11,7 +11,7 @@ export function MealsSkeleton() {
           <div className={`h-11 w-full rounded-xl desktop:flex-1 ${shimmer}`} />
           <div className="flex flex-wrap gap-2 desktop:max-w-[60%] desktop:shrink-0">
             {[0, 1, 2, 3].map((item) => (
-              <div key={item} className={`h-11 w-20 rounded-full ${shimmer}`} />
+              <div key={item} className={`h-11 w-20 rounded-md ${shimmer}`} />
             ))}
           </div>
         </div>
