@@ -31,7 +31,7 @@ test("requires explicit servings and retains decimal quantities and repeated ing
   const form = editorScreen(page);
   await form.getByLabel("Meal name", { exact: true }).fill("Decimal recipe");
   await form
-    .getByLabel("Description", { exact: true })
+    .getByLabel("Instructions", { exact: true })
     .fill("Repeated rows for separate preparations");
   await form.getByRole("button", { name: "Lunch", exact: true }).click();
   await form.getByRole("button", { name: "Save meal", exact: true }).click();

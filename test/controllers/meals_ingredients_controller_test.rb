@@ -52,7 +52,7 @@ class MealsIngredientsControllerTest < ActionDispatch::IntegrationTest
       { name: " ", quantity: 1, unit: "g" },
       { ingredient_id: egg.id, quantity: 0, unit: "g" },
       { ingredient_id: egg.id, quantity: 1, unit: "unknown" },
-      { ingredient_id: egg.id, quantity: 1, unit: "can" },
+      { ingredient_id: egg.id, quantity: 1, unit: "can", package_quantity: 140 },
       { ingredient_id: egg.id, quantity: 1, unit: "g", package_quantity: [] }
     ]
     invalid_rows.each do |row|

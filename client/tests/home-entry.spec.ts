@@ -54,7 +54,7 @@ test(
     const editor = page.getByRole("region", { name: "A new favorite", exact: true });
     await editor.getByLabel("Meal name", { exact: true }).fill("Vegetable soup");
     await page.getByLabel("How many people?", { exact: true }).fill("2");
-    await editor.getByLabel("Description", { exact: true }).fill("An easy dinner.");
+    await editor.getByLabel("Instructions", { exact: true }).fill("An easy dinner.");
     await editor.getByRole("button", { name: "Dinner", exact: true }).click();
     await editor.getByRole("button", { name: "Save meal", exact: true }).click();
     await expect(page).toHaveURL("/");

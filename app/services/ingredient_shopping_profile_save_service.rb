@@ -31,7 +31,7 @@ class IngredientShoppingProfileSaveService
       return
     end
     unless attributes.is_a?(Hash)
-      profile.errors.add(:piece_weight, :invalid)
+      profile.errors.add(:piece_weight, I18n.t("errors.messages.invalid"))
       raise ActiveRecord::RecordInvalid.new(profile)
     end
 

@@ -99,9 +99,11 @@ test("orders categories and keeps the receipt free of conversion details", async
 });
 
 test("shows and checks a calculated can of tuna", async ({ page, api }) => {
+  api.ingredients.push({ id: 3, name: "Tuna", shopping_category: "pantry" });
   api.shoppingLists[1].items = [
     {
       ...api.shoppingLists[1].items[0],
+      ingredient_id: 3,
       name: "Tuna",
       shopping_category: "pantry",
       quantity: "1",
@@ -657,9 +659,10 @@ test("unquantified products remain simple and checking them survives reload", as
   page,
   api,
 }) => {
+  api.ingredients.push({ id: 3, name: "Mayonnaise", shopping_category: "pantry" });
   api.shoppingLists[1].items = [
     {
-      ingredient_id: 1,
+      ingredient_id: 3,
       name: "Mayonnaise",
       shopping_category: "pantry",
       quantity: null,
@@ -668,7 +671,7 @@ test("unquantified products remain simple and checking them survives reload", as
       required_quantity: null,
       required_unit: null,
       presentation: {
-        ingredient_id: 1,
+        ingredient_id: 3,
         mode: "package",
         shopping_unit: "jar",
         package_quantity: "250",
