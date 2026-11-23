@@ -270,7 +270,6 @@ export const en = {
   menu: {
     day_card: {
       today: "Today",
-      day_number: "Day %{number}",
     },
     hero: {
       add_first_recipe: "Add your first recipe",

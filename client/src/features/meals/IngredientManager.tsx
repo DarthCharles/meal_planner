@@ -127,9 +127,12 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
   return (
     <fieldset
       aria-labelledby="meal-ingredients-label"
-      className="grid min-w-0 gap-2 text-sm text-foreground"
+      className="grid min-w-0 gap-2 text-foreground"
     >
-      <h3 id="meal-ingredients-label" className="m-0 font-display text-xl font-semibold">
+      <h3
+        id="meal-ingredients-label"
+        className="m-0 font-display text-[1.4375rem] leading-tight font-semibold text-balance"
+      >
         {t("common.ingredients")}
       </h3>
       {error && (
@@ -139,7 +142,7 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
             type="button"
             variant="link"
             size="sm"
-            className="text-sm"
+            className="text-label"
             onClick={() => void refetch()}
           >
             {t("meals.ingredient_manager.retry_ingredients")}
@@ -170,7 +173,10 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
       )}
       {removed && (
         <div className="flex flex-wrap items-center gap-x-3">
-          <p role="status" className="text-caption m-0 text-muted-foreground">
+          <p
+            role="status"
+            className="m-0 min-w-0 text-caption wrap-anywhere text-pretty text-muted-foreground"
+          >
             {t("meals.ingredient_manager.removed_ingredient", { name: removed.ingredient.name })}
           </p>
           <Button
@@ -286,17 +292,17 @@ function IngredientRow({
           onOpen(name ? "quantity" : "name");
         }}
       >
-        <span className="break-words font-medium text-action">
+        <span className="text-body font-medium wrap-anywhere text-pretty text-action">
           {name || t("meals.ingredient_manager.new_ingredient")}
         </span>
         <span id={`${fieldId}-summary`} className="contents">
           {amount && (
-            <span className="break-words text-right tabular-nums text-muted-foreground">
+            <span className="wrap-anywhere text-label text-right tabular-nums text-muted-foreground">
               {amount} {packageSize}
             </span>
           )}
           {note && (
-            <span className="col-span-full break-words text-caption text-muted-foreground">
+            <span className="col-span-full text-caption wrap-anywhere text-pretty text-muted-foreground">
               {note}
             </span>
           )}
@@ -366,7 +372,7 @@ function IngredientRow({
                         },
                       )
                     }
-                    className="text-body h-11 min-w-0 rounded-[10px] px-3 shadow-none md:text-base"
+                    className="text-body h-11 min-w-0 rounded-[10px] px-3 shadow-none md:text-body"
                     aria-label={t("meals.ingredient_manager.ingredient_name")}
                     aria-invalid={!!errors.ingredients?.[index]?.name}
                     aria-describedby={rowErrors?.name ? `${fieldId}-name-error` : undefined}
@@ -411,7 +417,7 @@ function IngredientRow({
             <Input
               id={`${fieldId}-quantity`}
               aria-label={t("meals.ingredient_manager.quantity")}
-              className="text-body h-11 min-w-0 rounded-[10px] px-3 shadow-none tabular-nums md:text-base"
+              className="text-body h-11 min-w-0 rounded-[10px] px-3 shadow-none tabular-nums md:text-body"
               type="number"
               inputMode="decimal"
               step="any"
@@ -427,7 +433,7 @@ function IngredientRow({
               <p
                 id={`${fieldId}-quantity-error`}
                 role="alert"
-                className="m-0 text-caption text-destructive"
+                className="m-0 text-caption wrap-anywhere text-pretty text-destructive"
               >
                 {t("meals.ingredient_manager.enter_quantity", { name })}
               </p>
@@ -478,7 +484,7 @@ function IngredientRow({
               <p
                 id={`${fieldId}-unit-error`}
                 role="alert"
-                className="m-0 text-caption text-destructive"
+                className="m-0 text-caption wrap-anywhere text-pretty text-destructive"
               >
                 {t("meals.ingredient_manager.choose_unit", { name })}
               </p>
@@ -503,7 +509,7 @@ function IngredientRow({
               <Label className="text-label grid min-w-0 gap-2">
                 {t("meals.ingredient_manager.preparation_note")}
                 <Input
-                  className="text-body h-11 md:text-base"
+                  className="text-body h-11 md:text-body"
                   {...register(`ingredients.${index}.preparation_note`)}
                   placeholder={t("meals.ingredient_manager.note_optional")}
                 />

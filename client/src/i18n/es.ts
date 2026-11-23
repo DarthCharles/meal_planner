@@ -273,7 +273,6 @@ export const es: typeof en = {
   menu: {
     day_card: {
       today: "Hoy",
-      day_number: "Día %{number}",
     },
     hero: {
       add_first_recipe: "Agrega tu primera receta",

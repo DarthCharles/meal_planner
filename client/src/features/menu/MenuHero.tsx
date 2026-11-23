@@ -41,7 +41,7 @@ export function MenuHero({
         >
           {t(meals.length ? "menu.hero.today" : "menu.hero.no_today")}
         </h2>
-        <time dateTime={todayDate} className="mt-1 block text-body text-secondary">
+        <time dateTime={todayDate} className="mt-1 block text-caption text-muted-foreground">
           {now.toLocaleDateString(formatLocale(), dateFormat)}
         </time>
       </div>
@@ -79,7 +79,7 @@ export function MenuHero({
             {t("shopping_list.title")}
           </Link>
         </Button>
-        <p id="shopping-week" className="m-0 text-caption text-secondary">
+        <p id="shopping-week" className="m-0 text-caption text-muted-foreground">
           {formatMenuDateRange(menu, false)}
         </p>
       </div>

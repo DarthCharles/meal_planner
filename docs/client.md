@@ -193,15 +193,15 @@ The library keeps its own add action.
 My Ingredients is available in the header Menu.
 It displays the shared catalog alphabetically, with case-insensitive local name
 search and a visible result count. My Meals and My Ingredients share a collection
-header with a 32px title and an Add action: stacked below the title on mobile,
+header with a 32px title and a primary Add action: stacked below the title on mobile,
 alongside it from tablet width. The ingredient introduction stays below its title.
-The Collection eyebrow is omitted on both pages. Search occupies its own full-width
-row below the header. The ingredient count appears below search. The meal count
+The Collection eyebrow is omitted on both pages. Ingredient search occupies its
+own full-width row below the header, followed by the ingredient count. The meal count
 appears below the meal-type filters with the same styling, shows matches out of
 the saved library total, and updates as search or meal type changes. The demo
 fallback omits the saved meal count.
-Search is disabled until catalog
-data is available. Ingredient names wrap on narrow screens.
+Search is disabled until catalog data is available. Ingredient names use the
+DM Sans body role and wrap beside Edit, with meal usage on a separate row below.
 My Meals uses the same search field styling and header spacing.
 The page fetches `GET /ingredients` only when opened and reuses the same React
 Query cache as the meal form. Initial loading uses a shimmer skeleton for the
@@ -212,8 +212,8 @@ assistive technology, and disables animation for reduced-motion preferences.
 It also shows empty catalog, no search results, and request errors with retry;
 cached ingredients remain visible if a refresh
 fails. It does not use demo data. Each ingredient card shows its meal usage
-count from the backend catalog response, or an unused message. Cards use larger
-serif ingredient names and link-style (`link`) usage buttons that open a quick
+count from the backend catalog response, or an unused message. Cards use
+caption-sized, link-style (`link`) usage buttons that open a quick
 preview, including for unused ingredients. The preview lists meals using the
 ingredient without fetching `/meals`. Selecting a meal shows its details in the
 same dialog, fetching only `GET /meals/:id`; Back returns to usage. Edit ingredient
@@ -289,20 +289,28 @@ after leaving and returning to Home. A failure appears in the planning section a
 leaves saved menus available.
 
 The meal library has no hero, keeping its heading, search, filters, and add action
-at the top of the screen. Its Add action remains available during initial loading;
-skeletons represent the full-width search field, filters, and six meal cards using
-the same responsive grid. The skeleton
+at the top of the screen. Its primary Add meal button remains available during
+initial loading. Search and meal-type filters sit side by side from 760px and
+stack below that width, with filters wrapping as needed. The active filter has
+a sage fill, and the other filters use outline styling. Skeletons mirror the
+browsing controls and six meal cards using the same responsive grid. The skeleton
 announces loading once, hides decorative placeholders from assistive technology,
 and disables shimmer for reduced-motion preferences. Cached meals remain visible
-during background refreshes.
+during background refreshes. Fraunces marks the library and empty-state headings.
+Meal names and search text use the DM Sans body role, controls use the label
+role, and meal categories and result counts use captions. Names and descriptions
+wrap across the full card width below the category badges and Edit action.
 
 Today’s meals and weekly day cards reuse `MealRow`. Today’s meals have labeled
 category badges and horizontal separators, with three equal columns and vertical
 separators from 901px. The meal
 name sits beside its badge on mobile and below the badge at larger widths.
-Buttons have at least 44px touch targets and long names wrap. Weekly day cards
-use their existing compact rows, with the meal type above each name and a
-trailing chevron. Both button variants use the existing accent interaction fill.
+Dish names use the DM Sans body role, and meal times and dates use quieter
+caption typography. Buttons have at least 44px touch targets and long names wrap.
+Weekly day cards show the weekday, one localized month-and-day date, and a
+Today label when applicable. Their compact rows display the meal type above each
+name with a trailing chevron. Both button variants use the existing accent
+interaction fill.
 Clicking a row or activating it with Enter or
 Space opens the meal card through `useMealDialog` and the shared dialog host.
 The card shows meal types, description, ingredient quantities and preparation
@@ -427,6 +435,10 @@ unsaved draft. Meal and ingredient controls use Greda’s `surface-raised` fill.
 Fields and group labels use Greda’s label typography, with an 8px gap above
 field controls. Hints, optional markers, and validation messages use caption
 typography. Input values and select triggers use the body size at every width.
+The edit page title and the shared Ingredients heading use Fraunces. In the
+recipe form, collapsed ingredient names use the body role, amounts use
+right-aligned tabular numerals, and notes use the caption role. Ingredient names
+and notes wrap within their available width.
 
 Ingredient units use Greda's `Select` through RHF `Controller`, with codes from
 `GET /units`. The trigger shows the saved unit when editing, supports keyboard

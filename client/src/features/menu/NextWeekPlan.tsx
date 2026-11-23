@@ -59,7 +59,9 @@ export function NextWeekPlan({
         <h2 id="next-week-title" className="m-0 font-display text-[26px] font-semibold">
           {t("menu.next_week.title")}
         </h2>
-        <p className="mt-1 mb-0 text-body text-secondary">{formatMenuDateRange(week, false)}</p>
+        <p className="mt-1 mb-0 text-caption text-muted-foreground">
+          {formatMenuDateRange(week, false)}
+        </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {savedMenu && (

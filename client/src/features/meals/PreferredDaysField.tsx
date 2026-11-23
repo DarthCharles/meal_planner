@@ -23,7 +23,7 @@ export function PreferredDaysField() {
               type="button"
               variant="link"
               size="sm"
-              className="px-0 text-sm"
+              className="px-0 text-label"
               disabled={field.value.length === 0}
               onBlur={field.onBlur}
               onClick={() => field.onChange([])}
@@ -31,7 +31,10 @@ export function PreferredDaysField() {
               {t("meals.preferred_days.clear_all")}
             </Button>
           </div>
-          <p id="preferred-days-help" className="text-caption m-0 text-muted-foreground">
+          <p
+            id="preferred-days-help"
+            className="m-0 max-w-prose text-caption text-pretty text-muted-foreground"
+          >
             {t("meals.preferred_days.preferred_days_help")}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -40,7 +43,7 @@ export function PreferredDaysField() {
                 key={day}
                 type="button"
                 size="sm"
-                className="text-sm"
+                className="text-label"
                 variant={field.value.includes(day) ? "secondary" : "outline"}
                 aria-pressed={field.value.includes(day)}
                 aria-describedby="preferred-days-help"

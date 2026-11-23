@@ -5,12 +5,14 @@ export function CollectionHeader({
   title,
   description,
   actionLabel,
+  actionVariant = "secondary",
   onAdd,
 }: {
   titleId: string;
   title: string;
   description?: string;
   actionLabel: string;
+  actionVariant?: "default" | "secondary";
   onAdd: () => void;
 }) {
   return (
@@ -28,7 +30,7 @@ export function CollectionHeader({
       </div>
       <Button
         className="min-h-11 max-w-full self-start whitespace-normal tablet:shrink-0"
-        variant="secondary"
+        variant={actionVariant}
         onClick={onAdd}
       >
         {actionLabel}

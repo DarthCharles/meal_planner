@@ -8,14 +8,16 @@ for (const week of [
     to: "2026-11-15",
     hero: "Monday, Nov 9",
     range: "Nov 9 — Nov 15",
-    sunday: "15",
+    sunday: "Nov 15",
+    legacySunday: "Day 15",
   },
   {
     from: "2026-12-28",
     to: "2027-01-03",
     hero: "Monday, Dec 28",
     range: "Dec 28 — Jan 3",
-    sunday: "03",
+    sunday: "Jan 3",
+    legacySunday: "Day 03",
   },
 ]) {
   test(`keeps hero, weekly range, and card dates consistent for ${week.from}`, async ({
@@ -48,10 +50,11 @@ for (const week of [
     await expect(monday.locator("time")).toHaveAttribute("datetime", week.from);
     await expect(sunday.locator("time")).toHaveText(week.sunday);
     await expect(sunday.locator("time")).toHaveAttribute("datetime", week.to);
-    await expect(sunday.getByText(`Day ${week.sunday}`, { exact: true })).toBeVisible();
+    await expect(sunday.getByText(week.legacySunday, { exact: true })).toHaveCount(0);
 
     await navigateTo(page, "Saved Menus");
     await expect(monday.locator("time")).toHaveAttribute("datetime", week.from);
+    await expect(sunday.locator("time")).toHaveText(week.sunday);
     await expect(sunday.locator("time")).toHaveAttribute("datetime", week.to);
   });
 }

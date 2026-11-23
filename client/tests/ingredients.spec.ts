@@ -50,6 +50,30 @@ test("filters ingredients locally and clears an unmatched search", async ({ page
   expect(api.reads["/ingredients"]).toBe(initialCatalogReads);
 });
 
+test("wraps long ingredient names beside Edit", { tag: "@responsive" }, async ({ page, api }) => {
+  const name = "FireRoastedTomatoesWithBasilGarlicAndExtraVirginOliveOil";
+  api.ingredients = [{ id: 99, name }];
+  await page.goto("/ingredients");
+
+  const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name }) });
+  const heading = card.getByRole("heading", { name });
+  const usage = card.getByRole("button", { name: "Not used in any meals yet" });
+  const edit = card.getByRole("button", { name: `Edit ${name}` });
+  await expect(heading).toBeVisible();
+  await expect(usage).toBeVisible();
+  await expect(edit).toBeVisible();
+  expect(await heading.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+    true,
+  );
+  const headingBox = (await heading.boundingBox())!;
+  const usageBox = (await usage.boundingBox())!;
+  const editBox = (await edit.boundingBox())!;
+  expect(headingBox.y + headingBox.height).toBeLessThanOrEqual(usageBox.y);
+  expect(editBox.y).toBe(headingBox.y);
+  expect(headingBox.x + headingBox.width).toBeLessThanOrEqual(editBox.x);
+  expect(editBox.y + editBox.height).toBeLessThanOrEqual(usageBox.y);
+});
+
 test("shows a genuine empty catalog", async ({ page, api }) => {
   api.ingredients = [];
   await page.goto("/ingredients");

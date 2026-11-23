@@ -131,7 +131,7 @@ export function MealForm({
           <Label className="text-label grid min-w-0 gap-2">
             {t("meals.form.name")}
             <Input
-              className="h-auto rounded-[10px] p-3 text-body shadow-none md:text-base"
+              className="h-auto rounded-[10px] p-3 text-body shadow-none md:text-body"
               {...register("name", { validate: (value) => !!value.trim() })}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "meal-form-error" : undefined}
@@ -142,7 +142,7 @@ export function MealForm({
             <Label className="text-label grid min-w-0 gap-2">
               {t("recipe.servings")}
               <Input
-                className="text-body md:text-base"
+                className="text-body tabular-nums md:text-body"
                 type="number"
                 inputMode="numeric"
                 min="1"
@@ -159,7 +159,10 @@ export function MealForm({
                 }
               />
             </Label>
-            <span id="servings-help" className="text-caption text-muted-foreground">
+            <span
+              id="servings-help"
+              className="max-w-prose text-caption text-pretty text-muted-foreground"
+            >
               {t("recipe.servings_help")}
             </span>
           </div>
@@ -169,7 +172,7 @@ export function MealForm({
           <Label className="text-label grid min-w-0 gap-2">
             {t("meals.form.description")}
             <Textarea
-              className="h-auto resize-y rounded-[10px] p-3 text-body shadow-none md:text-base"
+              className="h-auto resize-y rounded-[10px] p-3 text-body shadow-none md:text-body"
               {...register("description", {
                 validate: (value) => !!value.trim(),
               })}
@@ -185,7 +188,7 @@ export function MealForm({
               <span className="text-caption text-muted-foreground">{t("common.optional")}</span>
             </span>
             <Input
-              className="h-auto rounded-[10px] p-3 text-body shadow-none md:text-base"
+              className="h-auto rounded-[10px] p-3 text-body shadow-none md:text-body"
               {...register("recipe_url")}
               placeholder="https://..."
             />
@@ -207,7 +210,7 @@ export function MealForm({
                         type="button"
                         variant={selected ? "secondary" : "outline"}
                         size="sm"
-                        className="text-sm capitalize"
+                        className="text-label capitalize"
                         key={id}
                         ref={index === 0 ? field.ref : undefined}
                         onBlur={field.onBlur}
@@ -237,7 +240,7 @@ export function MealForm({
             <p
               id="meal-form-error"
               role="alert"
-              className="text-caption m-0 mr-auto text-destructive"
+              className="m-0 mr-auto max-w-prose text-caption wrap-anywhere text-pretty text-destructive"
             >
               {error}
             </p>

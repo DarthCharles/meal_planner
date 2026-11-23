@@ -96,9 +96,14 @@ test(
 test("combines case-insensitive search and meal time filters", async ({ page }) => {
   await openLibrary(page);
   const count = page.getByRole("region", { name: "Your meal library" }).getByRole("status");
+  const dinner = page.getByRole("button", { name: "Dinner", exact: true });
+  const allMeals = page.getByRole("button", { name: "All meals", exact: true });
+  await expect(allMeals).toHaveAttribute("aria-pressed", "true");
   await expect(count).toHaveText("3 of 3 meals");
   await expect(page.getByRole("article")).toHaveCount(3);
-  await page.getByRole("button", { name: "Dinner", exact: true }).click();
+  await dinner.click();
+  await expect(dinner).toHaveAttribute("aria-pressed", "true");
+  await expect(allMeals).toHaveAttribute("aria-pressed", "false");
   await expect(count).toHaveText("2 of 3 meals");
   await expect(page.getByRole("article")).toHaveCount(2);
   await page.getByPlaceholder("Search meals").fill("AVENA");
@@ -108,12 +113,62 @@ test("combines case-insensitive search and meal time filters", async ({ page }) 
   await page.getByPlaceholder("Search meals").fill("huevos");
   await expect(count).toHaveText("0 of 3 meals");
   await expect(page.getByRole("heading", { name: "No meals found." })).toBeVisible();
-  await page.getByRole("button", { name: "All meals", exact: true }).click();
+  await allMeals.click();
   await expect(count).toHaveText("1 of 3 meals");
   await expect(page.getByRole("heading", { name: "Huevos a la mexicana" })).toBeVisible();
   await page.getByPlaceholder("Search meals").clear();
   await expect(count).toHaveText("3 of 3 meals");
 });
+
+test(
+  "places meal time filters below search on phones and beside search on larger screens",
+  { tag: "@responsive" },
+  async ({ page }) => {
+    await page.goto("/meals");
+    const search = page.getByRole("searchbox", { name: "Search meals" });
+    const filters = page.getByRole("group", { name: "Meal time", exact: true });
+    await expect(search).toBeVisible();
+    await expect(filters).toBeVisible();
+
+    const searchBox = (await search.boundingBox())!;
+    const filterBox = (await filters.boundingBox())!;
+    const { width } = page.viewportSize()!;
+    expect(filterBox.x + filterBox.width).toBeLessThanOrEqual(width);
+    if (width >= 760) {
+      expect(filterBox.x).toBeGreaterThanOrEqual(searchBox.x + searchBox.width);
+      expect(filterBox.y).toBeLessThan(searchBox.y + searchBox.height);
+      expect(filterBox.y + filterBox.height).toBeGreaterThan(searchBox.y);
+    } else {
+      expect(filterBox.y).toBeGreaterThanOrEqual(searchBox.y + searchBox.height);
+    }
+  },
+);
+
+test(
+  "wraps long meal card text across the card below the edit action",
+  { tag: "@responsive" },
+  async ({ page, api }) => {
+    const name = "RoastedVegetablesWithRiceAndFreshTomatoSalsaMadeForTheWholeFamily";
+    const description = "Roasted vegetables and rice served with freshly made tomato salsa.";
+    Object.assign(api.meals[0], { name, description });
+    await page.goto("/meals");
+
+    const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name }) });
+    const edit = card.getByRole("button", { name: `Edit ${name}` });
+    await expect(edit).toBeVisible();
+    const editBox = (await edit.boundingBox())!;
+    for (const text of [name, description]) {
+      const content = card.getByText(text, { exact: true });
+      await expect(content).toBeVisible();
+      expect(await content.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+        true,
+      );
+      const box = (await content.boundingBox())!;
+      expect(box.y).toBeGreaterThanOrEqual(editBox.y + editBox.height);
+      expect(box.x + box.width).toBeGreaterThan(editBox.x);
+    }
+  },
+);
 
 test("validates required fields and ingredient quantity/unit before saving", async ({
   page,

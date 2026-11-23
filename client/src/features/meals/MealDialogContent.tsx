@@ -37,7 +37,7 @@ export function MealDialogContent({ initialMeal, onClose, onSaved }: MealDialogC
       {optionsError && <Notice>{optionsError}</Notice>}
       {loading ? (
         <>
-          <p role="status" className="text-sm text-muted-foreground">
+          <p role="status" className="text-body text-muted-foreground">
             {t("meals.dialog.loading_options")}
           </p>
           <Button variant="ghost" className="mt-4" onClick={onClose}>

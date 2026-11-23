@@ -1,6 +1,6 @@
 import { Card } from "@darthcharles/greda";
 
-import { useI18n } from "../../i18n";
+import { formatLocale, useI18n } from "../../i18n";
 import type { Menu } from "../../types";
 import type { Meal } from "../../types";
 import { MealRow } from "../meals/MealRow";
@@ -19,27 +19,23 @@ export function DayCard({
   onOpenMeal: (meal: Meal) => void;
 }) {
   const { t } = useI18n();
-  const dayNumber = String(date.getUTCDate()).padStart(2, "0");
   return (
     <Card
       role="article"
       className={`rounded-[20px] bg-card p-[19px] shadow-sm tablet:p-[22px] ${featured ? "border border-action" : "border-0 max-[640px]:pt-[17px] max-[640px]:pb-[10px]"}`}
     >
-      <div className="mb-[17px] flex items-start justify-between">
-        <div>
-          <p className="mb-[5px] text-[11px] font-bold tracking-[.13em] text-muted-foreground uppercase">
-            {featured
-              ? t("menu.day_card.today")
-              : t("menu.day_card.day_number", { number: dayNumber })}
-          </p>
-          <h4 className="m-0 font-display text-[23px] font-semibold">{dayLabel(day.weekday)}</h4>
+      <div className="mb-[17px] flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h4 className="m-0 font-display text-[23px] font-semibold">{dayLabel(day.weekday)}</h4>
+        <div className="flex flex-wrap items-baseline gap-x-2 text-caption text-muted-foreground">
+          {featured && <span className="font-medium">{t("menu.day_card.today")}</span>}
+          <time dateTime={date.toISOString().slice(0, 10)}>
+            {date.toLocaleDateString(formatLocale(), {
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            })}
+          </time>
         </div>
-        <time
-          dateTime={date.toISOString().slice(0, 10)}
-          className="font-display text-[27px] font-semibold text-muted-foreground"
-        >
-          {dayNumber}
-        </time>
       </div>
       <div className="grid gap-0.5">
         {day.meals.map((meal, index) => (

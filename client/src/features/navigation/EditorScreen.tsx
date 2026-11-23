@@ -25,6 +25,9 @@ export function EditorScreen({
   const { t } = useI18n();
   const { finishEditor } = useWorkspaceNavigation();
   const heading = useRef<HTMLHeadingElement>(null);
+  const focusHeadingOnMount = useRef(
+    kind !== "ingredient" || new URLSearchParams(location.search).get("section") !== "measurements",
+  );
   const drafts = useRef(new Set<string>());
   const registerDraft = useCallback((id: string, dirty: boolean) => {
     if (dirty) drafts.current.add(id);
@@ -74,15 +77,13 @@ export function EditorScreen({
   const blockingError = !!error && !(kind === "meal" ? meal : ingredient);
   const missing =
     !valid || (!create && !loading && !error && !(kind === "meal" ? meal : ingredient));
+  const editingMeal = kind === "meal" && !create;
   const title =
     kind === "meal"
       ? t(create ? "meals.dialog.new_favorite" : "meals.details.edit_meal")
       : t(create ? "ingredients.form.add_ingredient_title" : "ingredients.form.edit_ingredient");
   useEffect(() => {
-    if (
-      kind !== "ingredient" ||
-      new URLSearchParams(location.search).get("section") !== "measurements"
-    ) {
+    if (focusHeadingOnMount.current) {
       heading.current?.focus({ preventScroll: true });
       window.scrollTo(0, 0);
     }
@@ -97,16 +98,28 @@ export function EditorScreen({
         ref={heading}
         id="editor-title"
         tabIndex={-1}
-        className="mb-3 font-display text-[32px] font-semibold tracking-[-.03em] outline-none"
+        className={`mb-3 font-display font-semibold outline-none ${
+          editingMeal
+            ? "text-[2rem] leading-tight tracking-[-.04em] text-balance"
+            : "text-[32px] tracking-[-.03em]"
+        }`}
       >
         {title}
       </h2>
       {!create && (
-        <p className="mb-6 text-sm text-muted-foreground">
+        <p
+          className={`mb-6 text-muted-foreground ${
+            editingMeal ? "max-w-prose text-body text-pretty" : "text-sm"
+          }`}
+        >
           {t(kind === "meal" ? "editor.recipe_scope" : "editor.ingredient_scope")}
         </p>
       )}
-      {loading && <p role="status">{t("editor.loading")}</p>}
+      {loading && (
+        <p role="status" className={editingMeal ? "text-body text-muted-foreground" : undefined}>
+          {t("editor.loading")}
+        </p>
+      )}
       {error && (
         <div className="mb-4 space-y-3">
           <Notice>{error.message}</Notice>

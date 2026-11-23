@@ -40,6 +40,7 @@ export function MealsScreen() {
         titleId="meals-title"
         title={t("meals.screen.meal_library")}
         actionLabel={t("meals.screen.add_meal")}
+        actionVariant="default"
         onAdd={openCreateMeal}
       />
       {loading ? (

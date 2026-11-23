@@ -61,14 +61,14 @@ export function RecipePackageFields({
   return (
     <fieldset className="grid min-w-0 gap-2">
       <legend className="text-label mb-1">{t("recipe.optional_contents")}</legend>
-      <p className="m-0 text-caption text-muted-foreground">
+      <p className="m-0 max-w-prose text-caption text-pretty text-muted-foreground">
         {t("recipe.package_size_help", { unit: unitLabel(packageUnit, 1) })}
       </p>
       <div className="grid min-w-0 gap-3 tablet:grid-cols-2">
         <Label className="text-label grid min-w-0 gap-2">
           {t("recipe.contents")}
           <Input
-            className="text-body h-11 md:text-base"
+            className="text-body h-11 tabular-nums md:text-body"
             inputMode="decimal"
             {...register(`ingredients.${index}.package_quantity`, {
               validate: (value, values) =>

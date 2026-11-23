@@ -32,15 +32,13 @@ export function MealRow({
         className={`min-w-0 flex-1 ${hero ? "flex items-center gap-2 tablet:grid" : "grid gap-1"}`}
       >
         <span
-          className={`leading-tight uppercase ${hero ? `${mealTypeColorClassName(mealType)} w-fit max-w-full shrink-0 rounded-[5px] px-1.5 py-1 text-[11px] font-medium tracking-[.08em]` : "text-[11px] font-bold tracking-[.08em] text-muted-foreground"}`}
+          className={`text-caption ${hero ? `${mealTypeColorClassName(mealType)} w-fit max-w-full shrink-0 rounded-[5px] px-1.5 py-1` : "text-muted-foreground"}`}
         >
           {mealTypeLabel(mealType)}
         </span>
-        <strong
-          className={`break-words font-sans ${hero ? "min-w-0 text-[13px] leading-[1.2] font-semibold text-foreground tablet:text-[20px] tablet:tracking-[-.02em]" : "text-[13px] leading-[1.25]"}`}
-        >
+        <span className="min-w-0 text-body break-words text-pretty text-foreground">
           {meal.name}
-        </strong>
+        </span>
       </span>
       <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
     </Button>
