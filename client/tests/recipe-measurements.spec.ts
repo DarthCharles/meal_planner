@@ -35,7 +35,7 @@ test("requires explicit servings and retains decimal quantities and repeated ing
     .fill("Repeated rows for separate preparations");
   await form.getByRole("button", { name: "Lunch", exact: true }).click();
   await form.getByRole("button", { name: "Save meal", exact: true }).click();
-  const servings = form.getByRole("spinbutton", { name: "Recipe servings", exact: true });
+  const servings = form.getByRole("spinbutton", { name: "How many people?", exact: true });
   await expect(servings).toBeFocused();
   await expect(form.getByRole("alert")).toHaveText("Enter a positive whole number of servings.");
   await servings.fill("1.5");
@@ -53,7 +53,7 @@ test("requires explicit servings and retains decimal quantities and repeated ing
     await form
       .getByRole("textbox", { name: "Preparation note", exact: true })
       .fill(`Preparation ${index}`);
-    if (index < 2) await form.getByRole("button", { name: "Add another", exact: true }).click();
+    if (index < 2) await form.getByRole("button", { name: "Add ingredient", exact: true }).click();
   }
   await form.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(form).toHaveCount(0);
@@ -85,7 +85,7 @@ test("recipe container contents survive editing and a habitual package change", 
   };
   await page.goto("/meals/1/edit");
   await expect(
-    editorScreen(page).getByRole("spinbutton", { name: "Recipe servings", exact: true }),
+    editorScreen(page).getByRole("spinbutton", { name: "How many people?", exact: true }),
   ).toHaveValue("2");
   await expect(page.getByRole("button", { name: "Edit Egg", exact: true })).toContainText(
     "1 can of 140 g",

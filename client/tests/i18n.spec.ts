@@ -101,8 +101,8 @@ test.describe("Spanish browser preference", () => {
       "Ingresa un número entero positivo de porciones.",
     );
     await dialog.getByLabel("Nombre de la comida", { exact: true }).fill("My soup");
-    await dialog.getByLabel("Descripción", { exact: true }).fill("Con verduras");
-    await dialog.getByLabel("Porciones de la receta", { exact: true }).fill("2");
+    await dialog.getByLabel("Instrucciones", { exact: true }).fill("Con verduras");
+    await dialog.getByLabel("¿Para cuántas personas?", { exact: true }).fill("2");
     await dialog.getByRole("button", { name: "Comida", exact: true }).click();
     await dialog.getByRole("button", { name: "Lunes", exact: true }).click();
     await dialog.getByRole("button", { name: "Agregar ingrediente", exact: true }).click();

@@ -1,7 +1,7 @@
 export const en = {
   recipe: {
     servings: "Recipe servings",
-    servings_help: "How many people do these ingredient quantities serve?",
+    servings_label: "How many people?",
     servings_error: "Enter a positive whole number of servings.",
     serves: {
       one: "Recipe for %{count} person",
@@ -44,7 +44,7 @@ export const en = {
   api: {
     generic_error: "Something went wrong.",
     field_name: "name",
-    field_description: "description",
+    field_description: "instructions",
     field_ingredients: "ingredients",
     field_preferred_days: "preferred_days",
     field_quantity: "quantity",
@@ -194,11 +194,10 @@ export const en = {
       in_library: "In your library",
     },
     form: {
-      meal_required: "Add a name, description, and at least one meal time.",
+      meal_required: "Add a name, instructions, and at least one meal time.",
       name: "Meal name",
       meal_example: "e.g. Tacos de papa",
-      description: "Description",
-      description_help: "What makes it delicious?",
+      instructions: "Instructions",
       recipe_url: "Recipe URL",
       meal_time: "Meal time",
       update_meal: "Update meal",
@@ -206,7 +205,6 @@ export const en = {
     },
     ingredient_manager: {
       add_ingredient: "Add ingredient",
-      add_another: "Add another",
       edit_ingredient: "Edit %{name}",
       new_ingredient: "New ingredient",
       check_ingredient: "Check this ingredient",
@@ -216,15 +214,13 @@ export const en = {
       removed_ingredient: "Removed %{name}",
       undo: "Undo",
       choose_name: "Choose an ingredient from the list or add it as a new ingredient.",
-      empty_name: "Choose an ingredient or remove this row.",
+      empty_name: "Choose an ingredient.",
       enter_quantity: "Enter a valid quantity for %{name}.",
       choose_unit: "Choose a unit for %{name}.",
       load_ingredients_error: "Could not load ingredients.",
       retry_ingredients: "Retry ingredients",
       ingredient_name: "Ingredient name",
-      choose_or_create: "Search ingredients",
       quantity: "Quantity",
-      quantity_short: "Qty",
       unit: "Unit",
       preparation_note: "Preparation note",
       note_optional: "Note (optional)",

@@ -10,6 +10,7 @@ import type {
   UnitOption,
 } from "../../types";
 import { useEditorDraft } from "../navigation/EditorDraftContext";
+import { isEmptyIngredient } from "./ingredientDraft";
 import { IngredientManager } from "./IngredientManager";
 import { mealTypeLabel } from "./mealTypes";
 import { PreferredDaysField } from "./PreferredDaysField";
@@ -93,26 +94,28 @@ export function MealForm({
   const submit = (form: MealFormValues) => {
     if (saving) return;
     clearSaveErrors();
-    const ingredients: MealPayload["ingredients"] = form.ingredients.map(
-      ({
-        ingredient_id,
-        name,
-        quantity,
-        unit,
-        preparation_note,
-        package_quantity,
-        package_unit,
-      }) => ({
-        ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
-        quantity,
-        unit,
-        preparation_note,
-        ...(units.find((option) => option.code === unit)?.dimension === "package" &&
-        package_quantity?.trim()
-          ? { package_quantity, package_unit }
-          : {}),
-      }),
-    );
+    const ingredients: MealPayload["ingredients"] = form.ingredients
+      .filter((ingredient) => !isEmptyIngredient(ingredient))
+      .map(
+        ({
+          ingredient_id,
+          name,
+          quantity,
+          unit,
+          preparation_note,
+          package_quantity,
+          package_unit,
+        }) => ({
+          ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
+          quantity,
+          unit,
+          preparation_note,
+          ...(units.find((option) => option.code === unit)?.dimension === "package" &&
+          package_quantity?.trim()
+            ? { package_quantity, package_unit }
+            : {}),
+        }),
+      );
     const values = { ...form, ingredients };
     if (initialMeal) {
       updateMeal({ id: initialMeal.id, form: values }, { onSuccess: onSaved });
@@ -123,7 +126,7 @@ export function MealForm({
   return (
     <FormProvider {...methods}>
       <form
-        className="@container grid min-w-0 gap-5 max-desktop:[&_:is(input,textarea,button)]:scroll-mb-36"
+        className="@container grid min-w-0 gap-4 max-desktop:[&_:is(input,textarea,button)]:scroll-mb-36"
         noValidate
         onSubmit={handleSubmit(submit, clearSaveErrors)}
       >
@@ -138,39 +141,26 @@ export function MealForm({
               placeholder={t("meals.form.meal_example")}
             />
           </Label>
-          <div className="grid min-w-0 gap-2">
-            <Label className="text-label grid min-w-0 gap-2">
-              {t("recipe.servings")}
-              <Input
-                className="text-body tabular-nums md:text-body"
-                type="number"
-                inputMode="numeric"
-                min="1"
-                step="1"
-                {...register("servings", {
-                  validate: (value) =>
-                    /^\d+$/.test(value) &&
-                    BigInt(value) > 0n &&
-                    BigInt(value) <= 9223372036854775807n,
-                })}
-                aria-invalid={!!errors.servings}
-                aria-describedby={
-                  errors.servings ? "meal-form-error servings-help" : "servings-help"
-                }
-              />
-            </Label>
-            <span
-              id="servings-help"
-              className="max-w-prose text-caption text-pretty text-muted-foreground"
-            >
-              {t("recipe.servings_help")}
-            </span>
-          </div>
-        </div>
-        <IngredientManager units={units} />
-        <div className="grid min-w-0 gap-4 border-t border-border pt-4">
           <Label className="text-label grid min-w-0 gap-2">
-            {t("meals.form.description")}
+            {t("recipe.servings_label")}
+            <Input
+              className="text-body tabular-nums md:text-body"
+              type="number"
+              inputMode="numeric"
+              min="1"
+              step="1"
+              {...register("servings", {
+                validate: (value) =>
+                  /^\d+$/.test(value) &&
+                  BigInt(value) > 0n &&
+                  BigInt(value) <= 9223372036854775807n,
+              })}
+              aria-invalid={!!errors.servings}
+              aria-describedby={errors.servings ? "meal-form-error" : undefined}
+            />
+          </Label>
+          <Label className="text-label grid min-w-0 gap-2">
+            {t("meals.form.instructions")}
             <Textarea
               className="h-auto resize-y rounded-[10px] p-3 text-body shadow-none md:text-body"
               {...register("description", {
@@ -178,7 +168,6 @@ export function MealForm({
               })}
               aria-invalid={!!errors.description}
               aria-describedby={errors.description ? "meal-form-error" : undefined}
-              placeholder={t("meals.form.description_help")}
               rows={3}
             />
           </Label>
@@ -194,7 +183,8 @@ export function MealForm({
             />
           </Label>
         </div>
-        <div className="grid min-w-0 gap-4 border-t border-border pt-6">
+        <IngredientManager units={units} />
+        <div className="grid min-w-0 gap-4">
           <fieldset className="text-label grid min-w-0 gap-2 text-foreground">
             <legend className="mb-2">{t("meals.form.meal_time")}</legend>
             <Controller

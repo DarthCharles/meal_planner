@@ -422,13 +422,13 @@ existing data and leave the form open for correction or retry.
 ## Forms
 
 `MealForm` uses React Hook Form's `useForm` with typed default values for create
-and edit. Native meal name, description, URL, quantity, and note fields use
+and edit. Native meal name, instructions, URL, quantity, and note fields use
 `register`; the meal-time toggle buttons use `Controller` to preserve numeric
 meal type IDs. React Query continues to own save requests, pending state, API
 errors, and cache updates.
 
-The meal editor shows the name and servings first, followed by the ingredient
-list, description, recipe link, and planning preferences. The save action sticks
+The meal editor shows the name, servings, instructions, and recipe URL before
+the ingredient list and planning preferences. The save action sticks
 to the bottom edge of the viewport at every width and returns to the page flow
 at viewport heights of 420px or less. Back exits the editor and protects any
 unsaved draft. Meal and ingredient controls use Greda’s `surface-raised` fill.
@@ -464,30 +464,33 @@ without leaving the editor.
 `FormProvider` shares the draft with `IngredientManager`, which uses
 `useFieldArray` with generated row IDs. The editor starts with compact rows that
 show the ingredient name, quantity, unit, and any preparation note or package
-size. Selecting a row opens Name, Quantity, and Unit beneath its summary and
+size. Selecting a row replaces its summary with Name, Quantity, and Unit and
 focuses Quantity. One row opens at a time. Ingredient details houses the note,
-package size when applicable, and Remove. The chevron in the summary row closes
-the editor and keeps draft changes. Undo restores the most recently removed
-ingredient in its original position.
+package size when applicable, and Remove. Details appear once the row has input.
+The collapse control below the fields returns the row to its summary. Undo
+restores the most recently removed ingredient in its original position.
 
-Add ingredient appears after the list and focuses ingredient search. Add another
-checks the current row before opening the next one. On phones, Quantity and Unit
+Add ingredient appears after the list for every row and focuses ingredient
+search. Selecting an ingredient moves focus to an empty Quantity field. Using
+Add ingredient again checks the current row before opening the next one, or
+returns focus to search if the current row is empty. On phones, Quantity and Unit
 share a row beneath the ingredient name. At form widths of 40rem or more, the
 three controls fit side by side. The inputs retain visible labels and 44px
-targets. A single meal save sends the entire draft.
+targets. Save meal or Update meal persists the entered ingredients together.
 
-Validation requires a nonblank name and description, a positive whole serving
-count, and at least one meal time. The servings number input starts blank for new
-recipes and shows the saved count when editing. The count describes how many
-people the entered ingredient quantities serve.
+Validation requires a nonblank name and instructions, a positive whole serving
+count, and at least one meal time. The **How many people?** field starts blank
+for new recipes and shows the saved count when editing. The count describes
+how many people the entered ingredient quantities serve.
 Named ingredient rows use a number input for positive decimal quantities such as
 `0.5` and `1.5`, sending their input values as strings. The supported quantity range
 is positive after six-place storage rounding through 1,000,000,000; Rails remains
 the authoritative validator. Repeated ingredient selections have independent
 quantities and notes; catalog usage updates deduplicate recipe IDs. Each row
-needs a unit. Every added row needs a selected or newly created ingredient
-before saving. Closing a blank row discards it. Invalid fields show their own errors and a
-blocked save opens the first invalid ingredient after the required meal fields
+needs a unit. A row with input needs a selected or newly created ingredient
+before saving. An empty row drops away when collapsed, when opening another row,
+or when saving the meal. Invalid fields show their own errors and a blocked
+save opens the first invalid ingredient after the required meal fields
 are complete. Cancel protects unsaved changes, and failed saves preserve the
 draft.
 

@@ -3,7 +3,7 @@ import type { en } from "./en";
 export const es: typeof en = {
   recipe: {
     servings: "Porciones de la receta",
-    servings_help: "¿Para cuántas personas son estas cantidades de ingredientes?",
+    servings_label: "¿Para cuántas personas?",
     servings_error: "Ingresa un número entero positivo de porciones.",
     serves: {
       one: "Receta para %{count} persona",
@@ -46,7 +46,7 @@ export const es: typeof en = {
   api: {
     generic_error: "Algo salió mal.",
     field_name: "nombre",
-    field_description: "descripción",
+    field_description: "instrucciones",
     field_ingredients: "ingredientes",
     field_preferred_days: "días preferidos",
     field_quantity: "cantidad",
@@ -197,11 +197,10 @@ export const es: typeof en = {
       in_library: "En tu colección",
     },
     form: {
-      meal_required: "Agrega un nombre, una descripción y al menos un horario de comida.",
+      meal_required: "Agrega un nombre, instrucciones y al menos un horario de comida.",
       name: "Nombre de la comida",
       meal_example: "p. ej., Tacos de papa",
-      description: "Descripción",
-      description_help: "¿Qué la hace deliciosa?",
+      instructions: "Instrucciones",
       recipe_url: "Enlace de la receta",
       meal_time: "Horario de comida",
       update_meal: "Actualizar comida",
@@ -209,7 +208,6 @@ export const es: typeof en = {
     },
     ingredient_manager: {
       add_ingredient: "Agregar ingrediente",
-      add_another: "Agregar otro",
       edit_ingredient: "Editar %{name}",
       new_ingredient: "Nuevo ingrediente",
       check_ingredient: "Revisa este ingrediente",
@@ -219,15 +217,13 @@ export const es: typeof en = {
       removed_ingredient: "Se quitó %{name}",
       undo: "Deshacer",
       choose_name: "Elige un ingrediente de la lista o agrégalo como nuevo ingrediente.",
-      empty_name: "Elige un ingrediente o quita esta fila.",
+      empty_name: "Elige un ingrediente.",
       enter_quantity: "Ingresa una cantidad válida para %{name}.",
       choose_unit: "Elige una unidad para %{name}.",
       load_ingredients_error: "No se pudieron cargar los ingredientes.",
       retry_ingredients: "Reintentar ingredientes",
       ingredient_name: "Nombre del ingrediente",
-      choose_or_create: "Buscar ingredientes",
       quantity: "Cantidad",
-      quantity_short: "Cant.",
       unit: "Unidad",
       preparation_note: "Nota de preparación",
       note_optional: "Nota (opcional)",

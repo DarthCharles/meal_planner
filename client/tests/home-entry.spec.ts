@@ -53,7 +53,7 @@ test(
     await expect(page).toHaveURL("/meals/new");
     const editor = page.getByRole("region", { name: "A new favorite", exact: true });
     await editor.getByLabel("Meal name", { exact: true }).fill("Vegetable soup");
-    await page.getByLabel("Recipe servings", { exact: true }).fill("2");
+    await page.getByLabel("How many people?", { exact: true }).fill("2");
     await editor.getByLabel("Description", { exact: true }).fill("An easy dinner.");
     await editor.getByRole("button", { name: "Dinner", exact: true }).click();
     await editor.getByRole("button", { name: "Save meal", exact: true }).click();

@@ -50,7 +50,7 @@ test("opens hero meal details, replaces them with editing, and restores focus", 
   await expect(dialog).toHaveCount(0);
   const editor = page.getByRole("region", { name: "Edit meal", exact: true });
   await expect(editor.getByLabel("Meal name", { exact: true })).toHaveValue("Huevos a la mexicana");
-  await expect(editor.getByRole("textbox", { name: "Description", exact: true })).toHaveValue(
+  await expect(editor.getByRole("textbox", { name: "Instructions", exact: true })).toHaveValue(
     "Eggs with tomato, onion, and chile.",
   );
   await cancelEditor(page);
@@ -427,9 +427,9 @@ test("creating a meal from the menu does not eagerly load the library", async ({
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = editorScreen(page);
   await page.getByLabel("Meal name", { exact: true }).fill("New breakfast");
-  await page.getByLabel("Recipe servings", { exact: true }).fill("2");
+  await page.getByLabel("How many people?", { exact: true }).fill("2");
   await page
-    .getByRole("textbox", { name: "Description", exact: true })
+    .getByRole("textbox", { name: "Instructions", exact: true })
     .fill("Fresh from the kitchen.");
   await dialog.getByRole("button", { name: "Breakfast", exact: true }).click();
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();

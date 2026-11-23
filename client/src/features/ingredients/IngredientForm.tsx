@@ -138,9 +138,10 @@ function IngredientFormContent({
           },
         )}
       >
-        <label className="mb-4 grid gap-2 text-xs font-bold">
+        <Label className="text-label mb-4 grid gap-2">
           {t("ingredients.form.name")}
           <Input
+            className="text-body md:text-body"
             {...register("name", {
               validate: (value) => !!value.trim() || t("ingredients.form.ingredient_required"),
             })}
@@ -149,7 +150,7 @@ function IngredientFormContent({
             aria-describedby={fieldError ? "ingredient-form-error" : undefined}
             placeholder={t("ingredients.form.ingredient_example")}
           />
-        </label>
+        </Label>
         <div ref={setCategoryContainer} className="mb-4 grid gap-2">
           <Label htmlFor={categoryId}>{t("ingredients.form.shopping_category")}</Label>
           <Controller
