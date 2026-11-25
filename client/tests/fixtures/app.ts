@@ -1,5 +1,23 @@
+import { utc } from "@date-fns/utc";
 import type { Page } from "@playwright/test";
 import { expect, test as base } from "@playwright/test";
+import {
+  addDays,
+  compareAsc,
+  compareDesc,
+  type Day,
+  endOfDay,
+  formatISO,
+  formatRFC3339,
+  getDay,
+  isAfter,
+  isSameDay,
+  isWithinInterval,
+  nextDay,
+  nextMonday,
+  parseISO,
+  startOfDay,
+} from "date-fns";
 
 import type {
   IngredientOption,
@@ -15,25 +33,24 @@ import type {
 } from "../../src/types";
 import { meals, mealTypes, menu, shoppingCategories, shoppingList, units } from "./data";
 
-function nextWeekBounds(now: Date) {
-  const start = new Date(now);
-  start.setUTCHours(0, 0, 0, 0);
-  start.setUTCDate(start.getUTCDate() + 7 - ((start.getUTCDay() + 6) % 7));
-  const end = new Date(start);
-  end.setUTCDate(end.getUTCDate() + 6);
-  end.setUTCHours(23, 59, 59, 999);
-  return { from: start.toISOString(), to: end.toISOString() };
+function nextWeekBounds(now: number) {
+  const start = startOfDay(nextMonday(now, { in: utc }));
+  return { start, end: endOfDay(addDays(start, 6)) };
+}
+
+function calendarDate(value: string) {
+  return parseISO(value.slice(0, 10), { in: utc });
 }
 
 function scheduledDates(menu: Menu) {
   const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const start = calendarDate(menu.from);
+  const startWeekday = getDay(start);
   return menu.days
     .filter((day) => day.meals.length)
     .map((day) => {
-      const date = new Date(`${menu.from.slice(0, 10)}T00:00:00Z`);
-      const weekday = weekdays.indexOf(day.weekday.toLowerCase());
-      date.setUTCDate(date.getUTCDate() + ((weekday - date.getUTCDay() + 7) % 7));
-      return date.toISOString().slice(0, 10);
+      const weekday = weekdays.indexOf(day.weekday.toLowerCase()) as Day;
+      return weekday === startWeekday ? start : nextDay(start, weekday);
     });
 }
 
@@ -115,6 +132,20 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
       };
       // Keep weekday ordering and date labels independent of the machine's clock.
       await page.clock.setFixedTime(new Date("2026-10-21T12:00:00Z"));
+      await page.addInitScript(() => {
+        const ClockDate = window.Date;
+        const NativeDate = ClockDate.prototype.constructor as DateConstructor;
+        if (ClockDate === NativeDate) return;
+
+        // Playwright's clock returns a plain Date from super(), losing date-fns' UTC subclass.
+        const subclassableDate: DateConstructor = new Proxy(ClockDate, {
+          construct(target, args, newTarget) {
+            if (newTarget === subclassableDate) return Reflect.construct(target, args);
+            return Reflect.construct(NativeDate, args.length ? args : [target.now()], newTarget);
+          },
+        });
+        window.Date = subclassableDate;
+      });
       // Browser tests must also work without access to Google Fonts.
       await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, (route) => route.abort());
       await page.route("http://127.0.0.1:4174/**", async (route) => {
@@ -167,37 +198,42 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           const menus = api.localizedMenus[language === "es" ? "es" : "en"] ?? api.menus;
           if (path === "/menus/home" || path === "/menus/summaries") {
             const ordered = [...menus].sort(
-              (left, right) => right.from.localeCompare(left.from) || right.id - left.id,
+              (left, right) =>
+                compareDesc(parseISO(left.from), parseISO(right.from)) || right.id - left.id,
             );
             if (path === "/menus/summaries")
               return void (await respond(ordered.map(({ id, from, to }) => ({ id, from, to }))));
-            const date = url.searchParams.get("date")!;
-            const now = new Date(await page.evaluate(() => Date.now()));
-            const { from, to } = nextWeekBounds(now);
-            const nextWeek = { from: from.slice(0, 10), to: to.slice(0, 10) };
+            const date = calendarDate(url.searchParams.get("date")!);
+            const week = nextWeekBounds(await page.evaluate(() => Date.now()));
             const currentMenu =
-              ordered.find(
-                (menu) => menu.from.slice(0, 10) <= date && date <= menu.to.slice(0, 10),
+              ordered.find((menu) =>
+                isWithinInterval(date, {
+                  start: calendarDate(menu.from),
+                  end: calendarDate(menu.to),
+                }),
               ) ?? null;
             const nextMealDate =
-              currentMenu && !scheduledDates(currentMenu).includes(date)
-                ? (ordered
-                    .flatMap((menu) =>
-                      scheduledDates(menu).filter(
-                        (day) => day > date && day <= menu.to.slice(0, 10),
-                      ),
-                    )
-                    .sort()[0] ?? null)
+              currentMenu && !scheduledDates(currentMenu).some((day) => isSameDay(day, date))
+                ? ordered
+                    .flatMap((menu) => {
+                      const end = calendarDate(menu.to);
+                      return scheduledDates(menu).filter(
+                        (day) => isAfter(day, date) && !isAfter(day, end),
+                      );
+                    })
+                    .sort(compareAsc)[0]
                 : null;
             return void (await respond({
               current_menu: currentMenu,
-              next_week: nextWeek,
+              next_week: {
+                from: formatISO(week.start, { representation: "date" }),
+                to: formatISO(week.end, { representation: "date" }),
+              },
               next_week_menu_id:
-                ordered.find((menu) => {
-                  const start = menu.from.slice(0, 10);
-                  return nextWeek.from <= start && start <= nextWeek.to;
-                })?.id ?? null,
-              next_meal_date: nextMealDate,
+                ordered.find((menu) => isWithinInterval(calendarDate(menu.from), week))?.id ?? null,
+              next_meal_date: nextMealDate
+                ? formatISO(nextMealDate, { representation: "date" })
+                : null,
               has_saved_menus: menus.length > 0,
               has_meals: api.meals.length > 0,
             } satisfies MenuHome));
@@ -271,23 +307,22 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         }
         if (path === "/menus/generate" && request.method() === "POST") {
           api.generationRequests++;
-          const requestDate = new Date(await page.evaluate(() => Date.now()));
+          const requestTime = await page.evaluate(() => Date.now());
           await api.generationBarrier;
           if (api.generationError) return void (await fail(api.generationError));
-          const { from, to } = nextWeekBounds(requestDate);
-          const existing = api.menus.find((item) => item.from >= from && item.from <= to);
+          const week = nextWeekBounds(requestTime);
+          const startsInWeek = (item: Menu) =>
+            isWithinInterval(parseISO(item.from, { in: utc }), week);
+          const existing = api.menus.find(startsInWeek);
           const generated = {
             ...structuredClone(menu),
             id: Math.max(menu.id, ...api.menus.map((item) => item.id)) + 1,
-            from,
-            to,
+            from: formatRFC3339(week.start, { fractionDigits: 3 }),
+            to: formatRFC3339(week.end, { fractionDigits: 3 }),
             people_count: existing?.people_count ?? 1,
             generation_notices: api.generationNotices,
           };
-          api.menus = [
-            generated,
-            ...api.menus.filter((item) => item.from < from || item.from > to),
-          ];
+          api.menus = [generated, ...api.menus.filter((item) => !startsInWeek(item))];
           return void (await respond(generated));
         }
         if (

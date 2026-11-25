@@ -1,4 +1,6 @@
 import { Card } from "@darthcharles/greda";
+import { utc } from "@date-fns/utc";
+import { formatISO, intlFormat } from "date-fns";
 
 import { formatLocale, useI18n } from "../../i18n";
 import type { Menu } from "../../types";
@@ -28,12 +30,12 @@ export function DayCard({
         <h4 className="m-0 font-display text-[23px] font-semibold">{dayLabel(day.weekday)}</h4>
         <div className="flex flex-wrap items-baseline gap-x-xs text-caption text-muted-foreground">
           {featured && <span className="font-medium">{t("menu.day_card.today")}</span>}
-          <time dateTime={date.toISOString().slice(0, 10)}>
-            {date.toLocaleDateString(formatLocale(), {
-              month: "short",
-              day: "numeric",
-              timeZone: "UTC",
-            })}
+          <time dateTime={formatISO(date, { representation: "date", in: utc })}>
+            {intlFormat(
+              date,
+              { month: "short", day: "numeric", timeZone: "UTC" },
+              { locale: formatLocale() },
+            )}
           </time>
         </div>
       </div>

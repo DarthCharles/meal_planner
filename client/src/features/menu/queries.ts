@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { useIsMutating, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { compareDesc, parseISO } from "date-fns";
 
 import { api } from "../../api";
 import { t, useI18n } from "../../i18n";
@@ -95,7 +96,10 @@ export function useGenerateMenu() {
           [
             { id: menu.id, from: menu.from, to: menu.to },
             ...summaries.filter((item) => item.id !== menu.id && !startsWithinWeek(item, menu)),
-          ].sort((left, right) => right.from.localeCompare(left.from) || right.id - left.id),
+          ].sort(
+            (left, right) =>
+              compareDesc(parseISO(left.from), parseISO(right.from)) || right.id - left.id,
+          ),
       );
       await Promise.all([
         client.invalidateQueries({ queryKey: queryKeys.menus }),

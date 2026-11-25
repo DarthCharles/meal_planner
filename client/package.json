@@ -16,8 +16,10 @@
   },
   "dependencies": {
     "@darthcharles/greda": "2.0.0",
+    "@date-fns/utc": "^2.1.1",
     "@tanstack/react-query": "^5.104.5",
     "@vitejs/plugin-react": "^4.0.0",
+    "date-fns": "^4.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.91.0",

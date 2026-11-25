@@ -101,10 +101,11 @@ its structure through TypeScript. Add entries to both files when changing copy.
 No translation loader or extra dependency is needed.
 
 Weekday matching and scheduling use stable English identifiers rather than
-translated date labels. Calendar dates still preserve the API's UTC boundaries;
-"today" uses the browser's local timezone. Meal and ingredient names,
-descriptions, recipe notes, URLs, and submitted unit codes remain user content
-or stable identifiers. Unknown meal types and units retain their original value.
+translated date labels. Menu calculations use date-fns and its UTC companion.
+API calendar dates and generation weeks use UTC. "Today" uses the browser's local
+timezone. Meal and ingredient names, descriptions, recipe notes, URLs, and
+submitted unit codes remain user content or stable identifiers. Unknown meal
+types and units retain their original value.
 
 API calls send `Accept-Language: en` or `es`. Menu query keys include the locale
 because their persisted notices are rendered by Rails. Meal and ingredient saves

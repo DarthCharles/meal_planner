@@ -14,9 +14,9 @@ class MenuHomeQuery
     current_menu = Menu.newest_first.where(from: ...tomorrow, to: start_of_day..)
       .with_recipe_details.first
     next_week_start = MenuGenerationService.next_monday
-    next_week_end = next_week_start + 6
+    next_week_end = next_week_start.next_day(6)
     next_week_menu_id = Menu.newest_first
-      .where(from: next_week_start.in_time_zone("UTC")...(next_week_end + 1).in_time_zone("UTC"))
+      .where(from: next_week_start.in_time_zone("UTC")...next_week_end.next_day.in_time_zone("UTC"))
       .pick(:id)
     weekday = Date::DAYNAMES[date.wday].downcase
     needs_next_meal = current_menu && current_menu.days.none? do |day|

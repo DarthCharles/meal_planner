@@ -14,6 +14,8 @@ class MenuGenerationServiceTest < ActiveSupport::TestCase
     menu = MenuGenerationService.new.call(week_start: week_start)
 
     assert menu.persisted?
+    assert_equal Time.utc(2025, 3, 3), menu.from
+    assert_equal Time.utc(2025, 3, 9, 23, 59, 59), menu.to
     assert_equal 7, menu.days.count
     assert_equal 21, DailyMeal.joins(:day).where(days: { menu_id: menu.id }).count
     assert_equal 21, menu.days.flat_map { |day| day.meals.pluck(:id) }.uniq.size

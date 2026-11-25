@@ -59,6 +59,19 @@ for (const week of [
   });
 }
 
+test("dates a legacy midweek menu's Monday card after the start date", async ({ page, api }) => {
+  await page.clock.setFixedTime(new Date("2026-10-25T19:00:00Z"));
+  const menu = api.menus[0];
+  menu.from = "2026-10-21T00:00:00Z";
+  menu.to = "2026-10-27T23:59:59Z";
+  menu.days = [{ ...menu.days[0], weekday: "Monday" }];
+
+  await page.goto("/");
+
+  await expect(page.getByText("Next on the menu: Monday, Oct 26.")).toBeVisible();
+  await expect(page.getByRole("article").locator("time")).toHaveAttribute("datetime", "2026-10-26");
+});
+
 test("requires a new planning action if the UTC week changes during confirmation", async ({
   page,
   api,

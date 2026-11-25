@@ -5,6 +5,6 @@ namespace :menu do
   task generate: :environment do
     week_start = MenuGenerationService.next_monday(from: Time.current.utc)
     MenuGenerationService.new.call(week_start: week_start)
-    puts "Created menu for #{week_start} – #{week_start + 6.days}"
+    puts "Created menu for #{week_start} – #{week_start.next_day(6)}"
   end
 end
