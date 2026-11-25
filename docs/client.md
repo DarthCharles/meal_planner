@@ -445,62 +445,47 @@ Ingredient units use Greda's `Select` through RHF `Controller`, with codes from
 selection, and exposes validation errors. Its popup renders inside the field
 container; Escape dismisses the unit list and restores focus to the trigger.
 
-Ingredient names use Greda's `Combobox` through RHF `Controller`. Opening the
-form fetches and caches `GET /ingredients`; filtering happens locally. Users
-select an existing ingredient or explicitly choose **Add “…” as a new ingredient**.
-Created options remain drafts until the meal saves, so cancelling does not
-create catalog entries. Existing options submit `ingredient_id`; new options
-submit `name`. Edit defaults preserve the saved ingredient identity. Successful
-saves merge returned ingredients into the catalog cache, making newly created
-ingredients available in the next form without an extra fetch. Catalog loading
-and errors stay inside the form; a failed catalog request has a retry action.
+The meal name and Servings fields share the first row, with more room for the
+name. Servings starts blank on new meals and records how many people the
+entered recipe quantities serve.
 
-Typing alone does not commit a selection. The form blocks saving until the user
-selects or creates an option, including when replacing a previously selected
-ingredient. The combobox popup portals inside its ingredient field container. Arrow keys and
-Enter select options without submitting the meal; Escape dismisses suggestions
-without leaving the editor.
+Ingredient names use Greda's `Combobox` through React Hook Form. The editor
+fetches and caches `GET /ingredients` and filters suggestions locally.
+Typing a name is enough to continue. The picker also offers **Add “…” as a new
+ingredient** when no exact match exists. A selected or exact name match uses its
+catalog ID. Otherwise the recipe submits the name so Rails can reuse or create
+the ingredient on save. Escape dismisses suggestions and keeps the typed name.
+Cancelling the meal does not create entries in the catalog. Catalog load
+failures show a retry action.
 
-`FormProvider` shares the draft with `IngredientManager`, which uses
-`useFieldArray` with generated row IDs. The editor starts with compact rows that
-show the ingredient name, quantity, unit, and any preparation note or package
-size. Selecting a row replaces its summary with Name, Quantity, and Unit and
-focuses Quantity. One row opens at a time. Ingredient details houses the note,
-package size when applicable, and Remove. Details appear once the row has input.
-The collapse control below the fields returns the row to its summary. Undo
-restores the most recently removed ingredient in its original position.
+The ingredient list shows each name, quantity, unit, and any preparation note
+or package size. Add ingredient opens a focused panel below the list. The panel
+gives Ingredient name its own line, followed by Quantity and Unit. **Add and
+continue** validates the row and focuses the next ingredient name. **Save meal**
+can save the final valid row directly, and an untouched entry is skipped.
+Selecting an ingredient suggestion keeps focus on the name field.
 
-Add ingredient appears after the list for every row and focuses ingredient
-search. Selecting an ingredient moves focus to an empty Quantity field. Using
-Add ingredient again checks the current row before opening the next one, or
-returns focus to search if the current row is empty. On phones, Quantity and Unit
-share a row beneath the ingredient name. At form widths of 40rem or more, the
-three controls fit side by side. The inputs retain visible labels and 44px
-targets. Save meal or Update meal persists the entered ingredients together.
+Selecting a list row opens the panel beneath it and keeps focus on the row.
+Selecting it again collapses the panel and keeps the edits in the meal draft.
+For a catalog ingredient, **Edit ingredient** below its name opens the shared
+ingredient editor in a new tab, keeping the meal draft open.
+**Done** also collapses the panel after validating the row. **Cancel** discards
+the current ingredient edit or removes the new draft row.
+The expanded panel has a Remove link. Undo restores the most recent removal to
+its original position.
 
-Validation requires a nonblank name and instructions, a positive whole serving
-count, and at least one meal time. The **How many people?** field starts blank
-for new recipes and shows the saved count when editing. The count describes
-how many people the entered ingredient quantities serve.
-Named ingredient rows use a number input for positive decimal quantities such as
-`0.5` and `1.5`, sending their input values as strings. The supported quantity range
-is positive after six-place storage rounding through 1,000,000,000; Rails remains
-the authoritative validator. Repeated ingredient selections have independent
-quantities and notes; catalog usage updates deduplicate recipe IDs. Each row
-needs a unit. A row with input needs a selected or newly created ingredient
-before saving. An empty row drops away when collapsed, when opening another row,
-or when saving the meal. Invalid fields show their own errors and a blocked
-save opens the first invalid ingredient after the required meal fields
-are complete. Cancel protects unsaved changes, and failed saves preserve the
-draft.
+Quantity accepts decimals, fractions such as `1/8`, and mixed numbers such as
+`1 1/2`. It is sent as a string with its chosen unit. Rails validates and stores
+the structured amount used by the shopping list. Common fractional counts,
+culinary measures, and container counts display as fractions in summaries.
+Repeated ingredient selections can have independent quantities and notes.
 
-For package units, **Ingredient details** includes optional package size
-fields and a prompt that names the container. Opening Details on a saved
-ingredient with a package unit looks up its buying size. When available, **Use saved size** displays
-the amount and copies it into the recipe on selection. Replacing an entered
-size requires confirmation. Manual entry also works for a new ingredient.
-Blank sizes are omitted, and entered sizes are saved with the recipe. Changing
-the ingredient or package unit clears the old size and its validation errors.
+Ingredient details contains an optional preparation note. A container unit also
+reveals optional size and contents-unit fields. Existing ingredients with a saved
+shopping size can copy it into the recipe. Replacing entered contents requires
+confirmation. Changing the ingredient or recipe unit clears the previous size.
+Recipe save validates required meal fields and ingredient values and preserves
+the draft when a request fails.
 
 ## Day preferences
 

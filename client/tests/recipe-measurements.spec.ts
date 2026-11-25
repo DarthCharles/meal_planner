@@ -20,7 +20,7 @@ async function toggleIngredientDetails(page: Page) {
   await editorScreen(page).getByRole("button", { name: "Ingredient details", exact: true }).click();
 }
 
-test("requires explicit servings and retains decimal quantities and repeated ingredient rows", async ({
+test("requires explicit servings and retains fractional and decimal quantities in repeated ingredient rows", async ({
   page,
   api,
 }) => {
@@ -35,7 +35,7 @@ test("requires explicit servings and retains decimal quantities and repeated ing
     .fill("Repeated rows for separate preparations");
   await form.getByRole("button", { name: "Lunch", exact: true }).click();
   await form.getByRole("button", { name: "Save meal", exact: true }).click();
-  const servings = form.getByRole("spinbutton", { name: "How many people?", exact: true });
+  const servings = form.getByRole("spinbutton", { name: "Servings", exact: true });
   await expect(servings).toBeFocused();
   await expect(form.getByRole("alert")).toHaveText("Enter a positive whole number of servings.");
   await servings.fill("1.5");
@@ -43,22 +43,33 @@ test("requires explicit servings and retains decimal quantities and repeated ing
   await expect(form.getByRole("alert")).toHaveText("Enter a positive whole number of servings.");
   expect(api.saves).toEqual([]);
   await servings.fill("4");
-  const quantities = ["0.5", "0.125", "1.5"];
+  const quantities = ["1/2", "⅛", "1.5"];
   await form.getByRole("button", { name: "Add ingredient", exact: true }).click();
   for (const [index, quantity] of quantities.entries()) {
     await selectEgg(page);
-    await form.getByRole("spinbutton", { name: "Quantity", exact: true }).fill(quantity);
+    await form.getByRole("textbox", { name: "Quantity", exact: true }).fill(quantity);
     await chooseUnit(page, "pieces");
     await form.getByRole("button", { name: "Ingredient details", exact: true }).click();
     await form
       .getByRole("textbox", { name: "Preparation note", exact: true })
       .fill(`Preparation ${index}`);
-    if (index < 2) await form.getByRole("button", { name: "Add ingredient", exact: true }).click();
+    if (index < 2) {
+      await form.getByRole("button", { name: "Add and continue", exact: true }).click();
+    }
   }
   await form.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(form).toHaveCount(0);
   expect(api.saves[0].body.servings).toBe("4");
   expect(api.saves[0].body.ingredients.map(({ quantity }) => quantity)).toEqual(quantities);
+  await page.getByRole("button", { name: "Edit Decimal recipe", exact: true }).click();
+  const eggRows = editorScreen(page).getByRole("button", { name: "Edit Egg", exact: true });
+  await expect(eggRows).toHaveCount(3);
+  await expect(eggRows.nth(1)).toContainText("⅛");
+  await eggRows.nth(1).click();
+  await expect(
+    editorScreen(page).getByRole("textbox", { name: "Quantity", exact: true }),
+  ).toHaveValue("⅛");
+  await cancelEditor(page);
   await navigateTo(page, "My Ingredients");
   await expect(page.getByRole("button", { name: "Used in 2 meals", exact: true })).toBeVisible();
 });
@@ -85,7 +96,7 @@ test("recipe container contents survive editing and a habitual package change", 
   };
   await page.goto("/meals/1/edit");
   await expect(
-    editorScreen(page).getByRole("spinbutton", { name: "How many people?", exact: true }),
+    editorScreen(page).getByRole("spinbutton", { name: "Servings", exact: true }),
   ).toHaveValue("2");
   await expect(page.getByRole("button", { name: "Edit Egg", exact: true })).toContainText(
     "1 can of 140 g",
@@ -159,7 +170,6 @@ test(
     await editEgg(page);
     const ingredient = page.getByRole("combobox", { name: "Ingredient name" });
     await ingredient.fill("Tuna");
-    await page.getByRole("option", { name: "Add “Tuna” as a new ingredient", exact: true }).click();
     await chooseUnit(page, "cans");
     await toggleIngredientDetails(page);
     await page.getByLabel("Contents per container", { exact: true }).fill("140");
@@ -209,7 +219,7 @@ test("a late presentation response cannot populate a removed row or replace cont
   await page.getByRole("button", { name: "Remove Egg", exact: true }).click();
   await editorScreen(page).getByRole("button", { name: "Add ingredient", exact: true }).click();
   await selectEgg(page);
-  await editorScreen(page).getByRole("spinbutton", { name: "Quantity", exact: true }).fill("1");
+  await editorScreen(page).getByRole("textbox", { name: "Quantity", exact: true }).fill("1");
   await chooseUnit(page, "cans");
   release();
   await toggleIngredientDetails(page);

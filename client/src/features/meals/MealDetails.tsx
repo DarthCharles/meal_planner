@@ -1,9 +1,10 @@
 import { Badge, Button } from "@darthcharles/greda";
 
-import { formatLocale, unitLabel, useI18n } from "../../i18n";
+import { unitLabel, useI18n } from "../../i18n";
 import type { Meal } from "../../types";
 import { mealTypeColorClassName, mealTypeLabel } from "./mealTypes";
 import { preferredDaysLabel } from "./preferredDays";
+import { formatRecipeQuantity, parseQuantity } from "./quantity";
 
 export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }) {
   const { t } = useI18n();
@@ -38,17 +39,19 @@ export function MealDetails({ meal, onEdit }: { meal: Meal; onEdit: () => void }
                 className="border-t border-border pt-sm text-sm leading-relaxed"
               >
                 <span className="font-semibold">
-                  {new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 6 }).format(
-                    Number(ingredient.quantity),
-                  )}{" "}
-                  {unitLabel(ingredient.unit, Number(ingredient.quantity))}
+                  {formatRecipeQuantity(ingredient.quantity, ingredient.unit)}{" "}
+                  {unitLabel(ingredient.unit, parseQuantity(String(ingredient.quantity)))}
                   {ingredient.package_quantity && (
                     <>
                       {" "}
-                      {t("recipe.of")} {ingredient.package_quantity}{" "}
+                      {t("recipe.of")}{" "}
+                      {formatRecipeQuantity(
+                        ingredient.package_quantity,
+                        ingredient.package_unit ?? "",
+                      )}{" "}
                       {unitLabel(
                         ingredient.package_unit ?? "",
-                        Number(ingredient.package_quantity),
+                        parseQuantity(ingredient.package_quantity),
                       )}
                     </>
                   )}{" "}

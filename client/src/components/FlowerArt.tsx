@@ -1,17 +1,15 @@
 export function FlowerArt({ className }: { className: string }) {
   return (
     <svg className={className} viewBox="0 0 40 40" aria-hidden="true">
-      <g transform="translate(20 20) scale(1.15)">
-        <g fill="#efe2ce">
-          <circle cy="-10" r="3.6" />
-          <circle cx="8.7" cy="-5" r="3.6" />
-          <circle cx="8.7" cy="5" r="3.6" />
-          <circle cy="10" r="3.6" />
-          <circle cx="-8.7" cy="5" r="3.6" />
-          <circle cx="-8.7" cy="-5" r="3.6" />
-        </g>
-        <circle r="5.5" fill="#617854" />
+      <g fill="#efe2ce">
+        <circle cx="20" cy="8.5" r="4.14" />
+        <circle cx="30.005" cy="14.25" r="4.14" />
+        <circle cx="30.005" cy="25.75" r="4.14" />
+        <circle cx="20" cy="31.5" r="4.14" />
+        <circle cx="9.995" cy="25.75" r="4.14" />
+        <circle cx="9.995" cy="14.25" r="4.14" />
       </g>
+      <circle cx="20" cy="20" r="6.325" fill="#617854" />
     </svg>
   );
 }

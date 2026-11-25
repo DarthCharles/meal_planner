@@ -427,7 +427,7 @@ test("creating a meal from the menu does not eagerly load the library", async ({
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   const dialog = editorScreen(page);
   await page.getByLabel("Meal name", { exact: true }).fill("New breakfast");
-  await page.getByLabel("How many people?", { exact: true }).fill("2");
+  await page.getByLabel("Servings", { exact: true }).fill("2");
   await page
     .getByRole("textbox", { name: "Instructions", exact: true })
     .fill("Fresh from the kitchen.");

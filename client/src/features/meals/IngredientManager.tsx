@@ -16,13 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@darthcharles/greda";
-import { ChevronDown, Plus } from "@darthcharles/greda/icons";
+import { ChevronDown, ChevronRight, Plus } from "@darthcharles/greda/icons";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
+import { Link } from "react-router";
 
-import { formatLocale, unitLabel, useI18n } from "../../i18n";
+import { unitLabel, useI18n } from "../../i18n";
 import type { IngredientForm, MealForm, UnitOption } from "../../types";
 import { isEmptyIngredient } from "./ingredientDraft";
-import { validQuantity } from "./quantity";
+import { formatRecipeQuantity, parseQuantity, validQuantity } from "./quantity";
 import { useIngredients } from "./queries";
 import { RecipePackageFields } from "./RecipePackageFields";
 
@@ -36,6 +37,8 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
     getValues,
     getFieldState,
     setFocus,
+    setValue,
+    clearErrors,
     trigger,
     formState: { errors, submitCount },
   } = useFormContext<MealForm>();
@@ -51,6 +54,8 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
     null,
   );
   const [listFocus, setListFocus] = useState<number | null>(null);
+  const [original, setOriginal] = useState<IngredientForm | null>(null);
+  const pendingValidation = useRef<symbol | null>(null);
   const lastSubmit = useRef(0);
   const addButton = useRef<HTMLButtonElement>(null);
   const summaryButtons = useRef(new Map<string, HTMLButtonElement>());
@@ -67,11 +72,15 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
     const index = errors.ingredients?.findIndex?.((row) => !!row) ?? -1;
     const row = errors.ingredients?.[index];
     const field = editableFields.find((key) => row?.[key]);
-    if (field) openRow(index, field);
-  }, [errors, submitCount]);
+    if (field) {
+      if (activeIndex !== index) setOriginal({ ...getValues(`ingredients.${index}`) });
+      openRow(index, field);
+    }
+  }, [activeIndex, errors, getValues, submitCount]);
 
   useLayoutEffect(() => {
-    if (focusRequest) setFocus(`ingredients.${focusRequest.index}.${focusRequest.field}`);
+    if (!focusRequest) return;
+    setFocus(`ingredients.${focusRequest.index}.${focusRequest.field}`);
   }, [focusRequest, setFocus]);
 
   useLayoutEffect(() => {
@@ -83,56 +92,88 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
   }, [fields, listFocus]);
 
   function addIngredient() {
+    setOriginal(null);
     append(
-      { name: "", quantity: "", unit: "", preparation_note: "", uncommitted: false },
+      {
+        name: "",
+        quantity: "",
+        unit: "",
+        preparation_note: "",
+        package_quantity: "",
+        package_unit: "",
+      },
       { shouldFocus: false },
     );
     openRow(fields.length, "name");
   }
 
-  async function handleAdd() {
-    if (activeIndex !== null) {
-      const path = `ingredients.${activeIndex}` as const;
-      if (isEmptyIngredient(getValues(path))) {
-        openRow(activeIndex, "name");
-        return;
-      }
-      const rowFields = editableFields.map((field) => `${path}.${field}` as const);
-      if (!(await trigger(rowFields))) {
-        const invalidField = editableFields.find(
-          (field) => getFieldState(`${path}.${field}`).invalid,
-        );
-        if (invalidField) openRow(activeIndex, invalidField);
-        return;
-      }
-    }
-    addIngredient();
-  }
-
-  function closeRow(index: number) {
-    if (isEmptyIngredient(getValues(`ingredients.${index}`))) {
-      removeRow(index);
+  async function finishRow(index: number) {
+    if (pendingValidation.current) return;
+    const path = `ingredients.${index}` as const;
+    if (isEmptyIngredient(getValues(path))) {
+      setFocus(`${path}.name`);
       return;
     }
+    const rowFields = editableFields.map((field) => `${path}.${field}` as const);
+    const validation = Symbol();
+    pendingValidation.current = validation;
+    const valid = await trigger(rowFields);
+    if (pendingValidation.current !== validation) return;
+    pendingValidation.current = null;
+    if (!valid) {
+      const invalidField = editableFields.find(
+        (field) => getFieldState(`${path}.${field}`).invalid,
+      );
+      if (invalidField) openRow(index, invalidField);
+      return;
+    }
+    if (!original) {
+      addIngredient();
+      return;
+    }
+    collapseRow(index);
+  }
+
+  function cancelRow(index: number) {
+    const path = `ingredients.${index}` as const;
+    if (original) {
+      setValue(path, original, { shouldDirty: true });
+      clearErrors(path);
+    } else {
+      remove(index);
+    }
+    collapseRow(index);
+  }
+
+  function collapseRow(index: number) {
+    pendingValidation.current = null;
+    setOriginal(null);
     setActiveIndex(null);
     setListFocus(index);
   }
 
-  function editRow(index: number, field: IngredientField) {
-    if (activeIndex !== null && isEmptyIngredient(getValues(`ingredients.${activeIndex}`))) {
-      remove(activeIndex);
-      openRow(index > activeIndex ? index - 1 : index, field);
+  function toggleRow(index: number) {
+    pendingValidation.current = null;
+    if (activeIndex === index) {
+      collapseRow(index);
       return;
     }
-    openRow(index, field);
+
+    setOriginal({ ...getValues(`ingredients.${index}`) });
+    let target = index;
+    if (activeIndex !== null && isEmptyIngredient(getValues(`ingredients.${activeIndex}`))) {
+      remove(activeIndex);
+      if (index > activeIndex) target -= 1;
+    }
+    setActiveIndex(target);
+    setListFocus(target);
   }
 
   function removeRow(index: number) {
     const ingredient = getValues(`ingredients.${index}`);
-    if (ingredient.name) setRemoved({ index, ingredient: { ...ingredient, uncommitted: false } });
-    setActiveIndex(null);
-    setListFocus(Math.min(index, fields.length - 2));
+    if (ingredient.name.trim()) setRemoved({ index, ingredient: { ...ingredient } });
     remove(index);
+    collapseRow(Math.min(index, fields.length - 2));
   }
 
   return (
@@ -171,9 +212,10 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
               loading={loading}
               catalogError={ingredients ? undefined : error?.message}
               active={activeIndex === index}
-              onOpen={(firstField) => editRow(index, firstField)}
-              onSelect={() => openRow(index, "quantity")}
-              onClose={() => closeRow(index)}
+              adding={activeIndex === index && original === null}
+              onToggle={() => toggleRow(index)}
+              onFinish={() => void finishRow(index)}
+              onCancel={() => cancelRow(index)}
               onRemove={() => removeRow(index)}
               summaryRef={(button) => {
                 if (button) summaryButtons.current.set(field.id, button);
@@ -196,6 +238,7 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
             variant="link"
             className="min-h-11 px-0"
             onClick={() => {
+              pendingValidation.current = null;
               insert(removed.index, removed.ingredient, { shouldFocus: false });
               if (activeIndex !== null && activeIndex >= removed.index)
                 setActiveIndex(activeIndex + 1);
@@ -207,16 +250,18 @@ export function IngredientManager({ units }: { units: UnitOption[] }) {
           </Button>
         </div>
       )}
-      <Button
-        ref={addButton}
-        type="button"
-        variant="link"
-        className="text-label min-h-11 justify-self-end px-0"
-        onClick={() => void handleAdd()}
-      >
-        <Plus aria-hidden="true" className="size-4 shrink-0" />
-        {t("meals.ingredient_manager.add_ingredient")}
-      </Button>
+      {activeIndex === null && (
+        <Button
+          ref={addButton}
+          type="button"
+          variant="link"
+          className="text-label min-h-11 justify-self-start px-0"
+          onClick={addIngredient}
+        >
+          <Plus aria-hidden="true" className="size-4 shrink-0" />
+          {t("meals.ingredient_manager.add_ingredient")}
+        </Button>
+      )}
     </fieldset>
   );
 }
@@ -228,9 +273,10 @@ function IngredientRow({
   loading,
   catalogError,
   active,
-  onOpen,
-  onSelect,
-  onClose,
+  adding,
+  onToggle,
+  onFinish,
+  onCancel,
   onRemove,
   summaryRef,
 }: {
@@ -240,9 +286,10 @@ function IngredientRow({
   loading: boolean;
   catalogError?: string;
   active: boolean;
-  onOpen: (field: IngredientField) => void;
-  onSelect: () => void;
-  onClose: () => void;
+  adding: boolean;
+  onToggle: () => void;
+  onFinish: () => void;
+  onCancel: () => void;
   onRemove: () => void;
   summaryRef: (button: HTMLButtonElement | null) => void;
 }) {
@@ -258,17 +305,15 @@ function IngredientRow({
   const path = `ingredients.${index}` as const;
   useWatch({ control, name: path });
   const row = getValues(path);
-  const empty = isEmptyIngredient(row);
   const { name, ingredient_id: ingredientId, quantity, unit, preparation_note: note } = row;
   const rowErrors = errors.ingredients?.[index];
-  const number = new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 6 });
   const amount =
-    quantity && unit
-      ? `${number.format(Number(quantity))} ${unitLabel(unit, Number(quantity))}`
+    quantity && unit && validQuantity(quantity)
+      ? `${formatRecipeQuantity(quantity, unit)} ${unitLabel(unit, parseQuantity(quantity))}`
       : "";
   const packageSize =
-    row.package_quantity && row.package_unit
-      ? `${t("recipe.of")} ${number.format(Number(row.package_quantity))} ${unitLabel(row.package_unit, Number(row.package_quantity))}`
+    row.package_quantity && row.package_unit && validQuantity(row.package_quantity)
+      ? `${t("recipe.of")} ${formatRecipeQuantity(row.package_quantity, row.package_unit)} ${unitLabel(row.package_unit, parseQuantity(row.package_quantity))}`
       : "";
   const clearContents = () => {
     setValue(`ingredients.${index}.package_quantity`, "", { shouldDirty: true });
@@ -277,58 +322,73 @@ function IngredientRow({
   };
   const fieldId = useId();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const isPickerOpen = active && pickerOpen;
   const detailsOpen = detailsExpanded || !!(rowErrors?.package_quantity || rowErrors?.package_unit);
+  const RowChevron = active ? ChevronDown : ChevronRight;
   return (
     <li className="min-w-0">
-      {!active && (
-        <button
-          ref={summaryRef}
-          type="button"
-          aria-label={t("meals.ingredient_manager.edit_ingredient", {
-            name: name || t("meals.ingredient_manager.ingredient"),
-          })}
-          aria-describedby={`${fieldId}-summary`}
-          aria-expanded={false}
-          aria-controls={`${fieldId}-editor`}
-          className="grid min-h-11 w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,45%)_1rem] items-baseline gap-x-sm rounded-sm px-sm py-xs text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
-          onClick={() => {
-            setDetailsExpanded(false);
-            onOpen(name ? "quantity" : "name");
-          }}
-        >
-          <span className="text-body font-medium wrap-anywhere text-pretty text-action">
-            {name || t("meals.ingredient_manager.new_ingredient")}
-          </span>
-          <span id={`${fieldId}-summary`} className="contents">
-            {amount && (
-              <span className="wrap-anywhere text-label text-right tabular-nums text-muted-foreground">
-                {amount} {packageSize}
-              </span>
-            )}
-            {note && (
-              <span className="col-span-full text-caption wrap-anywhere text-pretty text-muted-foreground">
-                {note}
-              </span>
-            )}
-            {rowErrors && (
-              <span className="col-span-full text-caption text-destructive">
-                {t("meals.ingredient_manager.check_ingredient")}
-              </span>
-            )}
-          </span>
-          <ChevronDown
-            aria-hidden="true"
-            className="col-start-3 row-start-1 size-4 self-center text-muted-foreground"
-          />
-        </button>
-      )}
-      <div id={`${fieldId}-editor`} className="px-sm" hidden={!active}>
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-xs pb-2xs pt-xs @min-[40rem]:grid-cols-[minmax(0,1fr)_7rem_10rem]">
-          <div
-            ref={setContainer}
-            className="col-span-2 grid min-w-0 gap-xs @min-[40rem]:col-span-1"
+      {!adding && (
+        <div className="grid">
+          <button
+            ref={summaryRef}
+            type="button"
+            aria-label={t("meals.ingredient_manager.edit_ingredient", {
+              name: name || t("meals.ingredient_manager.ingredient"),
+            })}
+            aria-describedby={`${fieldId}-summary`}
+            aria-expanded={active}
+            aria-controls={`${fieldId}-editor`}
+            className="grid min-h-11 min-w-0 grid-cols-[1rem_minmax(0,1fr)_minmax(0,45%)] items-baseline gap-x-xs rounded-sm px-sm py-xs text-left focus-visible:outline-2 focus-visible:outline-ring aria-[expanded=false]:hover:bg-muted"
+            onClick={() => {
+              setPickerOpen(false);
+              setDetailsExpanded(false);
+              onToggle();
+            }}
           >
+            <RowChevron
+              aria-hidden="true"
+              className="mt-2xs size-4 self-start text-muted-foreground"
+            />
+            <span className="text-body font-medium wrap-anywhere text-pretty text-action">
+              {name || t("meals.ingredient_manager.new_ingredient")}
+            </span>
+            <span id={`${fieldId}-summary`} className="contents">
+              {amount && (
+                <span className="wrap-anywhere text-label text-right tabular-nums text-muted-foreground">
+                  {amount} {packageSize}
+                </span>
+              )}
+              {note && (
+                <span className="col-span-2 col-start-2 text-caption wrap-anywhere text-pretty text-muted-foreground">
+                  {note}
+                </span>
+              )}
+              {rowErrors && (
+                <span className="col-span-2 col-start-2 text-caption text-destructive">
+                  {t("meals.ingredient_manager.check_ingredient")}
+                </span>
+              )}
+            </span>
+          </button>
+        </div>
+      )}
+      <div
+        id={`${fieldId}-editor`}
+        role="group"
+        aria-label={
+          adding
+            ? t("meals.ingredient_manager.add_ingredient")
+            : t("meals.ingredient_manager.edit_ingredient", {
+                name: name || t("meals.ingredient_manager.ingredient"),
+              })
+        }
+        className="my-xs rounded-md bg-muted px-sm"
+        hidden={!active}
+      >
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-xs py-sm">
+          <div ref={setContainer} className="col-span-2 grid min-w-0 gap-xs">
             <Label htmlFor={`${fieldId}-name`} className="text-label">
               {t("meals.ingredient_manager.ingredient_name")}
             </Label>
@@ -337,15 +397,16 @@ function IngredientRow({
               name={`ingredients.${index}.name`}
               rules={{
                 validate: (value, values) =>
-                  isEmptyIngredient(values.ingredients[index]) ||
-                  (!!value.trim() && !values.ingredients[index].uncommitted),
+                  isEmptyIngredient(values.ingredients[index]) || !!value.trim(),
                 deps: [`ingredients.${index}.quantity`, `ingredients.${index}.unit`],
               }}
               render={({ field }) => (
                 <Combobox
                   options={options}
+                  open={isPickerOpen}
+                  onOpenChange={setPickerOpen}
                   value={
-                    field.value
+                    field.value && (ingredientId || !isPickerOpen)
                       ? {
                           value: ingredientId
                             ? String(ingredientId)
@@ -354,36 +415,54 @@ function IngredientRow({
                         }
                       : null
                   }
+                  inputValue={field.value}
                   loading={loading}
                   error={catalogError}
                   onCreate={(label) => ({ value: `new:${label.toLowerCase()}`, label })}
                   onValueChange={(option) => {
                     const selectedId =
                       option && !option.value.startsWith("new:") ? Number(option.value) : undefined;
-                    if ((option?.label ?? "") !== name || selectedId !== ingredientId)
+                    if (
+                      (option?.label ?? "").trim().toLowerCase() !== name.trim().toLowerCase() ||
+                      selectedId !== ingredientId
+                    ) {
                       clearContents();
+                    }
                     setValue(`ingredients.${index}.ingredient_id`, selectedId, {
                       shouldDirty: true,
                     });
-                    setValue(`ingredients.${index}.uncommitted`, false, { shouldDirty: true });
                     field.onChange(option?.label ?? "");
-                    if (option && !quantity) onSelect();
                   }}
                 >
                   <ComboboxInput
                     id={`${fieldId}-name`}
                     ref={field.ref}
                     onBlur={field.onBlur}
-                    onChange={(event) =>
-                      setValue(
-                        `ingredients.${index}.uncommitted`,
-                        event.target.value.trim() !== (name ?? ""),
-                        {
-                          shouldDirty: true,
-                        },
-                      )
-                    }
-                    className="text-body h-11 min-w-0 rounded-[10px] px-sm shadow-none md:text-body"
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      const normalized = value.trim().toLowerCase();
+                      const match = options.find(
+                        (option) => option.label.toLowerCase() === normalized,
+                      );
+                      const nextId = match ? Number(match.value) : undefined;
+                      if (normalized !== name.trim().toLowerCase() || nextId !== ingredientId) {
+                        clearContents();
+                      }
+                      setValue(`ingredients.${index}.ingredient_id`, nextId, { shouldDirty: true });
+                      field.onChange(value);
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key !== "Enter" ||
+                        event.nativeEvent.isComposing ||
+                        event.keyCode === 229 ||
+                        event.currentTarget.hasAttribute("aria-activedescendant")
+                      ) {
+                        return;
+                      }
+                      event.preventDefault();
+                    }}
+                    className="text-body h-11 min-w-0 rounded-[10px] shadow-none md:text-body"
                     aria-invalid={!!errors.ingredients?.[index]?.name}
                     aria-describedby={rowErrors?.name ? `${fieldId}-name-error` : undefined}
                   />
@@ -411,12 +490,20 @@ function IngredientRow({
                 role="alert"
                 className="m-0 text-caption text-destructive"
               >
-                {t(
-                  row.uncommitted
-                    ? "meals.ingredient_manager.choose_name"
-                    : "meals.ingredient_manager.empty_name",
-                )}
+                {t("meals.ingredient_manager.empty_name")}
               </p>
+            )}
+            {active && ingredientId && (
+              <Button
+                asChild
+                variant="link"
+                className="text-label min-h-11 justify-self-start px-0"
+              >
+                <Link to={`/ingredients/${ingredientId}/edit`} target="_blank" rel="noopener">
+                  {t("ingredients.form.edit_ingredient")}
+                  <span className="sr-only"> {t("meals.ingredient_manager.opens_in_new_tab")}</span>
+                </Link>
+              </Button>
             )}
           </div>
           <div className="grid min-w-0 gap-xs">
@@ -426,9 +513,18 @@ function IngredientRow({
             <Input
               id={`${fieldId}-quantity`}
               className="text-body h-11 min-w-0 rounded-[10px] px-sm shadow-none tabular-nums md:text-body"
-              type="number"
-              inputMode="decimal"
-              step="any"
+              placeholder="1/2"
+              autoComplete="off"
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Enter" &&
+                  !event.nativeEvent.isComposing &&
+                  event.keyCode !== 229
+                ) {
+                  event.preventDefault();
+                  onFinish();
+                }
+              }}
               {...register(`ingredients.${index}.quantity`, {
                 validate: (value, values) =>
                   !values.ingredients[index]?.name.trim() || validQuantity(value),
@@ -474,7 +570,7 @@ function IngredientRow({
                     aria-invalid={!!errors.ingredients?.[index]?.unit}
                     aria-describedby={rowErrors?.unit ? `${fieldId}-unit-error` : undefined}
                   >
-                    <SelectValue />
+                    <SelectValue placeholder={t("meals.ingredient_manager.unit_placeholder")} />
                   </SelectTrigger>
                   <SelectContent container={container}>
                     {units.map((unit) => (
@@ -501,30 +597,13 @@ function IngredientRow({
             onOpenChange={setDetailsExpanded}
             className="col-span-full min-w-0"
           >
-            <div className="flex min-w-0 items-center justify-between gap-xs">
-              {(!empty || detailsOpen) && (
-                <CollapsibleTrigger className="group inline-flex min-h-11 items-center gap-2xs text-label text-muted-foreground">
-                  {t("meals.ingredient_manager.ingredient_details")}
-                  <ChevronDown
-                    aria-hidden="true"
-                    className="size-4 group-data-[state=open]:rotate-180"
-                  />
-                </CollapsibleTrigger>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="ml-auto min-h-11 min-w-11 shrink-0 text-muted-foreground"
-                aria-label={t("meals.ingredient_manager.collapse_ingredient", {
-                  name: name || t("meals.ingredient_manager.ingredient"),
-                })}
-                aria-expanded={true}
-                onClick={onClose}
-              >
-                <ChevronDown aria-hidden="true" className="rotate-180" />
-              </Button>
-            </div>
+            <CollapsibleTrigger className="group inline-flex min-h-11 items-center gap-2xs text-label text-muted-foreground">
+              {t("meals.ingredient_manager.ingredient_details")}
+              <ChevronDown
+                aria-hidden="true"
+                className="size-4 group-data-[state=open]:rotate-180"
+              />
+            </CollapsibleTrigger>
             <CollapsibleContent
               forceMount
               className="grid min-w-0 gap-sm pb-xs data-[state=closed]:hidden"
@@ -547,19 +626,40 @@ function IngredientRow({
                   packageUnit={unit}
                 />
               )}
+            </CollapsibleContent>
+          </Collapsible>
+          <div className="col-span-full flex flex-wrap items-center justify-end gap-xs">
+            {!adding && (
               <Button
                 type="button"
                 variant="link"
-                className="min-h-11 justify-self-start px-0 text-destructive"
-                onClick={onRemove}
+                size="sm"
+                className="text-label mr-auto min-h-11 min-w-11 px-xs text-destructive"
                 aria-label={t("meals.ingredient_manager.remove_ingredient", {
                   name: name || t("meals.ingredient_manager.ingredient"),
                 })}
+                onClick={onRemove}
               >
                 {t("meals.ingredient_manager.remove")}
               </Button>
-            </CollapsibleContent>
-          </Collapsible>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              className="min-h-11"
+              aria-label={t("meals.ingredient_manager.cancel_edit")}
+              onClick={onCancel}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button type="button" variant="default" className="min-h-11" onClick={onFinish}>
+              {t(
+                adding
+                  ? "meals.ingredient_manager.add_and_continue"
+                  : "meals.ingredient_manager.done",
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </li>

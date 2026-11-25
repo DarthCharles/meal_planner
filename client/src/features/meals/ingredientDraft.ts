@@ -2,7 +2,6 @@ import type { IngredientForm } from "../../types";
 
 export function isEmptyIngredient({
   ingredient_id,
-  uncommitted,
   name,
   quantity,
   unit,
@@ -12,7 +11,6 @@ export function isEmptyIngredient({
 }: IngredientForm) {
   return (
     !ingredient_id &&
-    !uncommitted &&
     !name &&
     !quantity &&
     !unit &&

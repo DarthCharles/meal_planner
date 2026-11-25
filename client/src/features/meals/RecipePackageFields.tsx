@@ -49,7 +49,7 @@ export function RecipePackageFields({
   function applySize() {
     if (!savedSize || isFetching) return;
     const row = getValues(`ingredients.${index}`);
-    if (row.ingredient_id !== ingredientId || row.uncommitted) return;
+    if (row.ingredient_id !== ingredientId) return;
     if (row.package_quantity === savedSize.quantity && row.package_unit === savedSize.unit) return;
     if ((row.package_quantity || row.package_unit) && !window.confirm(t("recipe.replace_contents")))
       return;

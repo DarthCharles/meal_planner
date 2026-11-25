@@ -14,6 +14,7 @@ import { isEmptyIngredient } from "./ingredientDraft";
 import { IngredientManager } from "./IngredientManager";
 import { mealTypeLabel } from "./mealTypes";
 import { PreferredDaysField } from "./PreferredDaysField";
+import { recipeQuantityDraft } from "./quantity";
 import { useCreateMeal, useUpdateMeal } from "./queries";
 
 export function MealForm({
@@ -52,9 +53,8 @@ export function MealForm({
             package_quantity: package_quantity ?? "",
             package_unit: package_unit ?? "",
             ingredient_id,
-            uncommitted: false,
             name,
-            quantity: String(quantity),
+            quantity: recipeQuantityDraft(quantity, unit),
             unit,
             preparation_note: preparation_note ?? "",
           }),
@@ -131,34 +131,36 @@ export function MealForm({
         onSubmit={handleSubmit(submit, clearSaveErrors)}
       >
         <div className="grid min-w-0 gap-md">
-          <Label className="text-label grid min-w-0 gap-xs">
-            {t("meals.form.name")}
-            <Input
-              className="h-auto rounded-[10px] p-sm text-body shadow-none md:text-body"
-              {...register("name", { validate: (value) => !!value.trim() })}
-              aria-invalid={!!errors.name}
-              aria-describedby={errors.name ? "meal-form-error" : undefined}
-              placeholder={t("meals.form.meal_example")}
-            />
-          </Label>
-          <Label className="text-label grid min-w-0 gap-xs">
-            {t("recipe.servings_label")}
-            <Input
-              className="text-body tabular-nums md:text-body"
-              type="number"
-              inputMode="numeric"
-              min="1"
-              step="1"
-              {...register("servings", {
-                validate: (value) =>
-                  /^\d+$/.test(value) &&
-                  BigInt(value) > 0n &&
-                  BigInt(value) <= 9223372036854775807n,
-              })}
-              aria-invalid={!!errors.servings}
-              aria-describedby={errors.servings ? "meal-form-error" : undefined}
-            />
-          </Label>
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(5.5rem,24%)] items-end gap-xs">
+            <Label className="text-label grid min-w-0 gap-xs">
+              {t("meals.form.name")}
+              <Input
+                className="text-body h-11 min-w-0 rounded-[10px] px-sm shadow-none md:text-body"
+                {...register("name", { validate: (value) => !!value.trim() })}
+                aria-invalid={!!errors.name}
+                aria-describedby={errors.name ? "meal-form-error" : undefined}
+                placeholder={t("meals.form.meal_example")}
+              />
+            </Label>
+            <Label className="text-label grid min-w-0 gap-xs">
+              {t("recipe.servings_label")}
+              <Input
+                className="text-body h-11 min-w-0 rounded-[10px] px-sm shadow-none tabular-nums md:text-body"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                step="1"
+                {...register("servings", {
+                  validate: (value) =>
+                    /^\d+$/.test(value) &&
+                    BigInt(value) > 0n &&
+                    BigInt(value) <= 9223372036854775807n,
+                })}
+                aria-invalid={!!errors.servings}
+                aria-describedby={errors.servings ? "meal-form-error" : undefined}
+              />
+            </Label>
+          </div>
           <Label className="text-label grid min-w-0 gap-xs">
             {t("meals.form.instructions")}
             <Textarea

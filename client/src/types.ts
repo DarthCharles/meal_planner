@@ -136,7 +136,6 @@ export type MealForm = {
 
 export type IngredientForm = {
   ingredient_id?: number;
-  uncommitted?: boolean;
   name: string;
   quantity: string;
   unit: string;
@@ -146,6 +145,6 @@ export type IngredientForm = {
 };
 
 export type MealPayload = Omit<MealForm, "ingredients"> & {
-  ingredients: (Omit<IngredientForm, "ingredient_id" | "name" | "uncommitted"> &
+  ingredients: (Omit<IngredientForm, "ingredient_id" | "name"> &
     ({ ingredient_id: number; name?: never } | { name: string; ingredient_id?: never }))[];
 };
