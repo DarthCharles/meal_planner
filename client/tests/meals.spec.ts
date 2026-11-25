@@ -346,8 +346,7 @@ test(
     await expect(dialog.getByRole("button", { name: "Done", exact: true })).toBeVisible();
     await expect(egg).toHaveAttribute("aria-expanded", "true");
     await expect(egg).toBeFocused();
-    await expect(editIngredient).toHaveAttribute("href", "/ingredients/1/edit");
-    await expect(editIngredient).toHaveAttribute("target", "_blank");
+    await expect(editIngredient).toBeHidden();
     await expect(remove).toHaveText("Remove");
     const removeBounds = (await remove.boundingBox())!;
     expect(removeBounds.width).toBeGreaterThanOrEqual(44);
@@ -355,6 +354,13 @@ test(
     await expect(
       dialog.getByRole("textbox", { name: "Preparation note", exact: true }),
     ).toHaveCount(0);
+    const details = dialog.getByRole("button", { name: "Ingredient details", exact: true });
+    await details.click();
+    await expect(editIngredient).toBeVisible();
+    await expect(editIngredient).toHaveAttribute("href", "/ingredients/1/edit");
+    await expect(editIngredient).toHaveAttribute("target", "_blank");
+    await details.click();
+    await expect(editIngredient).toBeHidden();
     const amount = dialog.getByRole("textbox", { name: "Quantity", exact: true });
     await amount.fill("3");
     await egg.click();

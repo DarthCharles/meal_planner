@@ -20,15 +20,15 @@ erDiagram
   INGREDIENTS ||--o| INGREDIENT_SHOPPING_PROFILES : configures
   INGREDIENTS ||--o{ INGREDIENT_MEASUREMENT_REFERENCES : describes
   UNITS ||--o{ INGREDIENT_SHOPPING_PROFILES : measures
-  UNITS ||--o{ MEAL_INGREDIENTS : package_contents
+  UNITS ||--o{ INGREDIENT_SHOPPING_PROFILES : package_contents
 
   INGREDIENT_SHOPPING_PROFILES {
     int id PK
     int ingredient_id FK "unique, not null"
     string mode "bulk, piece, package"
     int shopping_unit_id FK "not null"
-    decimal package_quantity "required only for packages"
-    int package_unit_id FK "required only for packages"
+    decimal package_quantity "optional for packages"
+    int package_unit_id FK "optional for packages"
   }
 
   INGREDIENT_MEASUREMENT_REFERENCES {
@@ -114,8 +114,6 @@ erDiagram
     int ingredient_id FK "not null"
     decimal quantity "not null"
     int unit_id FK "not null"
-    decimal package_quantity "snapshot of contents per recipe container"
-    int package_unit_id FK "contents unit"
     string preparation_note
     int position "default 0"
     datetime created_at
@@ -180,9 +178,13 @@ erDiagram
   both fields may be null. When supplied they must form a valid pair.
   It is not a cooking conversion. Deleting a profile retains the ingredient's
   measurement references; deleting an unused ingredient removes both.
-- Recipe containers store their own content snapshot on `MealIngredient`.
-  Updating a shopping presentation never changes recipe contents. Package rows
-  allow unknown contents; ordinary recipe measures reject content fields.
+- Recipe packages store a count and their selected container unit. The buying
+  container and its size come from `IngredientShoppingProfile`. The migration preserves
+  conflicting historical sizes as exact direct measurements before removing
+  the old contents columns.
+  Updating a shopping presentation changes the contents used to calculate package
+  rows. These rows also allow unknown contents. Direct recipe measurements keep
+  their original quantities.
 - Missing dimension bridges produce one name-only checklist item. Original
   quantities remain stored in recipe rows; no conversion is invented and no
   reference configuration is required. Existing reference records are retained,

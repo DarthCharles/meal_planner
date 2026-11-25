@@ -74,62 +74,54 @@ test("requires explicit servings and retains fractional and decimal quantities i
   await expect(page.getByRole("button", { name: "Used in 2 meals", exact: true })).toBeVisible();
 });
 
-test("recipe container contents survive editing and a habitual package change", async ({
+test("saving a new recipe ingredient stores its package contents as a buying preference", async ({
   page,
   api,
 }) => {
-  api.meals[0].servings = 2;
-  api.meals[0].ingredients[0] = {
-    ingredient_id: 1,
-    name: "Egg",
-    quantity: "1",
-    unit: "can",
-    package_quantity: "140",
-    package_unit: "g",
-  };
-  api.ingredientProfiles[1] = {
-    ingredient_id: 1,
-    mode: "package",
-    shopping_unit: "can",
-    package_quantity: "100",
-    package_unit: "g",
-  };
   await page.goto("/meals/1/edit");
-  await expect(
-    editorScreen(page).getByRole("spinbutton", { name: "Servings", exact: true }),
-  ).toHaveValue("2");
-  await expect(page.getByRole("button", { name: "Edit Egg", exact: true })).toContainText(
-    "1 can of 140 g",
-  );
-  await expect(page.getByLabel("Contents per container", { exact: true })).toBeHidden();
-  expect(api.reads["/ingredients/1/shopping_profile"] ?? 0).toBe(0);
-  await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
-  await expect(editorScreen(page)).toHaveCount(0);
+  await editEgg(page);
+  const form = editorScreen(page);
+  await form.getByRole("combobox", { name: "Ingredient name", exact: true }).fill("Tuna");
+  await form.getByRole("option", { name: "Add “Tuna” as a new ingredient", exact: true }).click();
+  await form.getByRole("textbox", { name: "Quantity", exact: true }).fill("1");
+  await chooseUnit(page, "cans");
+  await form.getByLabel("Contents per container", { exact: true }).fill("140");
+  await form.getByRole("combobox", { name: "Content unit", exact: true }).click();
+  await page.getByRole("option", { name: "g", exact: true }).click();
+  await form.getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(form).toHaveCount(0);
   expect(api.saves[0].body.ingredients[0]).toMatchObject({
+    name: "Tuna",
+    unit: "can",
+    ingredient_package: { quantity: "140", unit: "g" },
+  });
+  const tunaId = api.ingredients.find((ingredient) => ingredient.name === "Tuna")!.id;
+  expect(api.ingredientProfiles[tunaId]).toMatchObject({
+    shopping_unit: "can",
     package_quantity: "140",
     package_unit: "g",
   });
-  api.ingredientProfiles[1].package_quantity = "850";
+
   await page.goto("/meals/1/edit");
-  await editEgg(page);
+  await editorScreen(page).getByRole("button", { name: "Edit Tuna", exact: true }).click();
   await toggleIngredientDetails(page);
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("140");
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Use saved size · 850 g", exact: true }).click();
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("850");
+  await expect(page.getByText("Saved size · 140 g")).toBeVisible();
+  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveCount(0);
+  await chooseUnit(page, "bottles");
+  await expect(page.getByText("Saved size · 140 g")).toBeVisible();
+  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveCount(0);
+  await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(editorScreen(page)).toHaveCount(0);
+  expect(api.saves[1].body.ingredients[0]).toMatchObject({ ingredient_id: tunaId, unit: "bottle" });
+  expect(api.saves[1].body.ingredients[0]).not.toHaveProperty("ingredient_package");
 });
 
-test("ingredient and container changes clear snapshots, errors, and late suggestions", async ({
-  page,
-  api,
-}) => {
+test("switching ingredients discards a late buying-size response", async ({ page, api }) => {
   api.meals[0].ingredients[0] = {
     ingredient_id: 1,
     name: "Egg",
     quantity: "1",
-    unit: "can",
-    package_quantity: "140",
-    package_unit: "g",
+    unit: "package",
   };
   api.ingredientProfiles[1] = {
     ingredient_id: 1,
@@ -146,34 +138,25 @@ test("ingredient and container changes clear snapshots, errors, and late suggest
   await editEgg(page);
   await toggleIngredientDetails(page);
   await expect(page.getByText("Looking up your saved package size…")).toBeVisible();
-  const ingredient = page.getByRole("combobox", { name: "Ingredient name" });
-  await ingredient.fill("Tomato");
+  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Ingredient name" }).fill("Tomato");
   await page.getByRole("option", { name: "Tomato", exact: true }).click();
   release();
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
-  await expect(page.getByRole("button", { name: /Use saved size/ })).toHaveCount(0);
-  await chooseUnit(page, "jars");
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
-  await chooseUnit(page, "g");
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveCount(0);
   await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(editorScreen(page)).toHaveCount(0);
-  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("package_quantity");
-  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("package_unit");
+  expect(api.saves[0].body.ingredients[0]).toMatchObject({ unit: "package" });
+  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("ingredient_package");
 });
 
 test(
   "returning to a container clears optional contents for an unsaved ingredient",
   { tag: "@responsive" },
-  async ({ page }) => {
+  async ({ page, api }) => {
     await page.goto("/meals/1/edit");
     await editEgg(page);
-    const ingredient = page.getByRole("combobox", { name: "Ingredient name" });
-    await ingredient.fill("Tuna");
+    await page.getByRole("combobox", { name: "Ingredient name" }).fill("Tuna");
     await chooseUnit(page, "cans");
-    await toggleIngredientDetails(page);
     await page.getByLabel("Contents per container", { exact: true }).fill("140");
-    await expect(page.getByRole("button", { name: /Use saved size/ })).toHaveCount(0);
     await chooseUnit(page, "g");
     await chooseUnit(page, "cans");
     await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
@@ -181,62 +164,35 @@ test(
       true,
     );
     await cancelEditor(page);
+    expect(api.saves).toHaveLength(0);
   },
 );
 
-test("a late presentation response cannot populate a removed row or replace contents without confirmation", async ({
+test("changing an existing ingredient to a container opens its shared buying setup", async ({
   page,
   api,
 }) => {
-  api.ingredientProfiles[1] = {
-    ingredient_id: 1,
-    mode: "package",
-    shopping_unit: "can",
-    package_quantity: "850",
-    package_unit: "g",
-  };
-  api.meals[0].ingredients[0] = {
-    ingredient_id: 1,
-    name: "Egg",
-    quantity: "1",
-    unit: "can",
-    package_quantity: "140",
-    package_unit: "g",
-  };
   await page.goto("/meals/1/edit");
   await editEgg(page);
-  await toggleIngredientDetails(page);
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("button", { name: "Use saved size · 850 g", exact: true }).click();
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("140");
-  await toggleIngredientDetails(page);
-  let release!: () => void;
-  api.readBarriers["/ingredients/1/shopping_profile"] = new Promise<void>((resolve) => {
-    release = resolve;
+  const form = editorScreen(page);
+  await form.getByRole("combobox", { name: "Unit", exact: true }).click();
+  for (const label of ["jars", "bags", "cans", "bottles", "packages"]) {
+    await expect(page.getByRole("option", { name: label, exact: true })).toBeVisible();
+  }
+  await page.getByRole("option", { name: "jars", exact: true }).click();
+  await form.getByLabel("Contents per container", { exact: true }).fill("250");
+  await form.getByRole("combobox", { name: "Content unit", exact: true }).click();
+  await page.getByRole("option", { name: "ml", exact: true }).click();
+  await form.getByRole("button", { name: "Update meal", exact: true }).click();
+  await expect(form).toHaveCount(0);
+  expect(api.saves[0].body.ingredients[0]).toMatchObject({
+    ingredient_id: 1,
+    unit: "jar",
+    ingredient_package: { quantity: "250", unit: "ml" },
   });
-  await toggleIngredientDetails(page);
-  await expect(page.getByRole("button", { name: /Use saved size/ })).toBeDisabled();
-  await page.getByRole("button", { name: "Remove Egg", exact: true }).click();
-  await editorScreen(page).getByRole("button", { name: "Add ingredient", exact: true }).click();
-  await selectEgg(page);
-  await editorScreen(page).getByRole("textbox", { name: "Quantity", exact: true }).fill("1");
-  await chooseUnit(page, "cans");
-  release();
-  await toggleIngredientDetails(page);
-  await expect(page.getByLabel("Contents per container", { exact: true })).toHaveValue("");
-  await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
-  await expect(editorScreen(page)).toHaveCount(0);
-  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("package_quantity");
-});
-
-test("saves a recipe container without asking for its contents", async ({ page, api }) => {
-  await page.goto("/meals/1/edit");
-  await editEgg(page);
-  await chooseUnit(page, "cans");
-  await expect(page.getByLabel("Contents per container", { exact: true })).toBeHidden();
-  await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
-  await expect(editorScreen(page)).toHaveCount(0);
-  expect(api.saves[0].body.ingredients[0]).toMatchObject({ unit: "can" });
-  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("package_quantity");
-  expect(api.saves[0].body.ingredients[0]).not.toHaveProperty("package_unit");
+  expect(api.ingredientProfiles[1]).toMatchObject({
+    shopping_unit: "jar",
+    package_quantity: "250",
+    package_unit: "ml",
+  });
 });

@@ -77,10 +77,12 @@ queries can show labeled demo fallbacks when their initial requests fail.
 The ingredient picker reuses the shared catalog. A selected or exact name match
 uses its catalog ID. An unmatched name is resolved by Rails when the recipe is
 saved. Quantities accept decimals, fractions, and mixed numbers and are submitted
-as strings alongside unit codes. A recipe can store optional package contents
-independently of the ingredient's buying preference. Changing the ingredient or
-unit clears the previous contents. The ingredient editor can be opened from the
-recipe editor in a new tab, keeping the recipe draft open.
+as strings alongside unit codes. Choosing a container in the recipe editor
+opens Details. If the ingredient has a saved package size, Details displays
+that size. Otherwise it shows optional contents fields. Saving entered
+contents sets the ingredient's buying preference using the selected container.
+Details includes an Edit ingredient link for saved ingredients. It opens
+the ingredient editor in a new tab while keeping the recipe draft open.
 
 My Ingredients loads the catalog on entry. Usage previews list recipes from the
 catalog response, then fetch details for the chosen recipe. The ingredient
@@ -90,9 +92,9 @@ can be deleted, and Rails checks usage again on deletion.
 Saved ingredients have a separate buying preference. Recipe measurements are
 the default. A custom preference can specify piece, weight, volume, or package
 purchases. Piece weight and package contents are optional. Buying preferences
-save independently of the name and category draft and leave existing recipe
-package contents intact. The client updates or deletes the profile at
-`/ingredients/:id/shopping_profile` and refreshes affected shopping lists.
+save independently of the name and category draft. The client updates or deletes
+the profile at `/ingredients/:id/shopping_profile` and refreshes recipes, menus,
+and shopping lists so package rows reflect the current presentation.
 
 ## Shopping lists
 

@@ -49,7 +49,7 @@ export function useIngredients({ enabled = true } = {}) {
 
 function useSyncSavedMeal() {
   const client = useQueryClient();
-  return async (meal: Meal) => {
+  return async (meal: Meal, form: MealPayload) => {
     await Promise.all([
       client.cancelQueries({ queryKey: queryKeys.meals }),
       client.cancelQueries({ queryKey: queryKeys.mealDetails }),
@@ -103,6 +103,21 @@ function useSyncSavedMeal() {
     client.setQueriesData<MenuHome>({ queryKey: queryKeys.menuHome }, (home) =>
       home && !home.has_meals ? { ...home, has_meals: true } : home,
     );
+    const changedProfiles = form.ingredients.flatMap((row, index) => {
+      const ingredientId = meal.ingredients[index]?.ingredient_id;
+      return row.ingredient_package && ingredientId ? [ingredientId] : [];
+    });
+    if (changedProfiles.length) {
+      await Promise.all([
+        ...[...new Set(changedProfiles)].map((id) =>
+          client.invalidateQueries({ queryKey: queryKeys.ingredientProfile(id) }),
+        ),
+        client.invalidateQueries({ queryKey: queryKeys.meals }),
+        client.invalidateQueries({ queryKey: queryKeys.mealDetails }),
+        client.invalidateQueries({ queryKey: queryKeys.menuHome }),
+        client.invalidateQueries({ queryKey: queryKeys.menuDetails }),
+      ]);
+    }
     await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
     // A mutation response cannot reconstruct a list that has never loaded.
     if (!client.getQueryData(queryKeys.meals)) {
@@ -120,6 +135,6 @@ export function useUpdateMeal() {
   const syncSavedMeal = useSyncSavedMeal();
   return useMutation({
     mutationFn: ({ id, form }: { id: number; form: MealPayload }) => api.updateMeal(id, form),
-    onSuccess: syncSavedMeal,
+    onSuccess: (meal, { form }) => syncSavedMeal(meal, form),
   });
 }

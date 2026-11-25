@@ -332,7 +332,10 @@ positive after storage rounding, with a maximum of `1000000000`. Scientific-nota
 and malformed quantities are rejected. Responses serialize decimals
 as strings. Recipe ingredients can repeat, preserving their notes and order.
 
-A recipe that uses a container can optionally record its contents:
+A recipe stores a count and its selected container unit. The ingredient's buying
+preference supplies the current contents and shopping container. To configure
+that preference while saving a recipe, send the container as the row's unit
+and add `ingredient_package`:
 
 ```json
 {
@@ -340,21 +343,28 @@ A recipe that uses a container can optionally record its contents:
   "description": "Mix the ingredients",
   "servings": 2,
   "ingredients": [
-    { "name": "Tuna", "quantity": "1", "unit": "can", "package_quantity": "140", "package_unit": "g" },
+    { "name": "Tuna", "quantity": "1", "unit": "can", "ingredient_package": { "quantity": "140", "unit": "g" } },
     { "name": "Mayonnaise", "quantity": "1/2", "unit": "cup" }
   ]
 }
 ```
 
-`package_unit` can be `g`, `kg`, `ml`, `l`, or `piece`; nested packages and
-culinary measures as package contents are rejected. Non-package rows must not
-include contents. The stored contents are independent of shopping setup:
-changing the habitual can from 140 g to 100 g never changes this recipe's need
-for 140 g. A recipe does not look up a mutable package size during calculation.
-Both package content fields may be absent/null, including for containers. If one
-is supplied, both must be valid. Recipe responses include `package_quantity` and
-`package_unit` (null when contents are unknown or for normal measures). Invalid rows return `422` under `errors.ingredients`, atomically
-rolling back the recipe, references to ingredients, and newly drafted ingredients.
+The container can be `jar`, `bag`, `can`, `bottle`, or `package`. When supplied,
+the contents must be a positive quantity in `g`, `kg`, `ml`, `l`, or `piece`.
+With an existing ingredient, identify it by `ingredient_id` to change its
+buying preference when a package size is missing. A request that repeats the
+saved presentation is accepted. Change a saved size using the ingredient
+shopping-profile endpoint. If `ingredient_package` is omitted, an existing preference
+is retained and a new ingredient starts with recipe measurements. A name
+that resolves to a preexisting ingredient cannot configure its profile in a meal
+request. Invalid rows return `422` under `errors.ingredients`, atomically rolling
+back the meal, newly drafted ingredients, and their profiles.
+
+Recipe responses still include the read-only `package_quantity` and `package_unit`,
+derived from the current purchasing profile for a package row, or null if the
+contents are unknown. Writing the old top-level contents fields with non-null
+values returns `422`. Direct measurements such as 140 g stay exact when the
+ingredient's presentation changes.
 
 ## Ingredient measurement references
 
@@ -462,18 +472,18 @@ before display rounding. Other menus do not contribute.
 
 Display rules:
 
-- Recipe counts in the configured shopping container remain usable without
-  contents: one recipe can produces one shopping can. If both recipe and buying
-  contents are known, convert the recipe snapshot to the current buying size.
+- A recipe package count maps to the ingredient’s current buying container.
+  For example, one recipe package produces one can if the ingredient is bought
+  in cans, and one jar if its buying preference changes to jars.
 - Known buying contents also convert compatible recipe weights, volumes, and
   pieces to containers. Sum all occurrences before rounding to the nearest whole
   container (half rounds up). If that would give zero, retain the required canonical
   amount using known contents, or the fractional container count without contents.
   For a 390 g jar: 36.67 g stays 36.67 g, 195 g and 380 g display 1 jar,
   and 585 g displays 2 jars. This display rule can round below the exact need.
-- Without a profile, identical recipe container units and content snapshots are
-  summed as container counts. Different known sizes fall back to canonical amounts.
-- Unknown contents do not erase a usable matching container count. If mixed
+- Without a profile, package-only requirements use the recipe container label
+  when all rows share it, or the generic package label when they differ.
+- Unknown contents still allow a package count. If mixed
   measures cannot be combined completely, return one name-only item instead of
   a partial purchase; other ingredients still calculate.
 - Otherwise, configured buying units select the canonical target (g, ml, or piece).

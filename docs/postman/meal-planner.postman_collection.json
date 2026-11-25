@@ -818,7 +818,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Postman salad {{run_id}}\",\n  \"description\": \"Demonstrates culinary measures, repeated ingredient rows, whole pieces and recipe-specific can contents.\",\n  \"servings\": 1,\n  \"meal_type_ids\": [\n    {{breakfast_id}},\n    {{lunch_id}},\n    {{dinner_id}}\n  ],\n  \"preferred_days\": [],\n  \"ingredients\": [\n    {\n      \"ingredient_id\": {{mayonnaise_id}},\n      \"quantity\": \"1\",\n      \"unit\": \"tablespoon\"\n    },\n    {\n      \"ingredient_id\": {{mayonnaise_id}},\n      \"quantity\": \"3\",\n      \"unit\": \"teaspoon\"\n    },\n    {\n      \"ingredient_id\": {{mayonnaise_id}},\n      \"quantity\": \"1/2\",\n      \"unit\": \"cup\"\n    },\n    {\n      \"ingredient_id\": {{onion_id}},\n      \"quantity\": \"360\",\n      \"unit\": \"g\"\n    },\n    {\n      \"ingredient_id\": {{tuna_id}},\n      \"quantity\": \"2\",\n      \"unit\": \"can\",\n      \"package_quantity\": \"140\",\n      \"package_unit\": \"g\"\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Postman salad {{run_id}}\",\n  \"description\": \"Demonstrates culinary measures, repeated ingredient rows, whole pieces and a shared buying presentation.\",\n  \"servings\": 1,\n  \"meal_type_ids\": [\n    {{breakfast_id}},\n    {{lunch_id}},\n    {{dinner_id}}\n  ],\n  \"preferred_days\": [],\n  \"ingredients\": [\n    {\n      \"ingredient_id\": {{mayonnaise_id}},\n      \"quantity\": \"1\",\n      \"unit\": \"tablespoon\"\n    },\n    {\n      \"ingredient_id\": {{mayonnaise_id}},\n      \"quantity\": \"3\",\n      \"unit\": \"teaspoon\"\n    },\n    {\n      \"ingredient_id\": {{mayonnaise_id}},\n      \"quantity\": \"1/2\",\n      \"unit\": \"cup\"\n    },\n    {\n      \"ingredient_id\": {{onion_id}},\n      \"quantity\": \"360\",\n      \"unit\": \"g\"\n    },\n    {\n      \"ingredient_id\": {{tuna_id}},\n      \"quantity\": \"2\",\n      \"unit\": \"can\"\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1268,7 +1268,7 @@
       "description": "These requests intentionally return 422 and should preserve the saved recipe, presentation or reference set.",
       "item": [
         {
-          "name": "Reject a container without its contents",
+          "name": "Reject incomplete contents for a new ingredient",
           "request": {
             "method": "POST",
             "header": [
@@ -1289,7 +1289,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Invalid container\",\n  \"description\": \"Missing content snapshot\",\n  \"servings\": 1,\n  \"ingredients\": [\n    {\n      \"ingredient_id\": {{tuna_id}},\n      \"quantity\": 1,\n      \"unit\": \"can\"\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Invalid container\",\n  \"description\": \"Invalid buying contents\",\n  \"servings\": 1,\n  \"ingredients\": [\n    {\n      \"name\": \"New Postman ingredient {{run_id}}\",\n      \"quantity\": 1,\n      \"unit\": \"can\",\n      \"ingredient_package\": { \"quantity\": \"140\" }\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"

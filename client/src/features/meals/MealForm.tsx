@@ -41,17 +41,7 @@ export function MealForm({
       preferred_days: initialMeal?.preferred_days ?? [],
       ingredients:
         initialMeal?.ingredients?.map(
-          ({
-            ingredient_id,
-            name,
-            quantity,
-            unit,
-            preparation_note,
-            package_quantity,
-            package_unit,
-          }) => ({
-            package_quantity: package_quantity ?? "",
-            package_unit: package_unit ?? "",
+          ({ ingredient_id, name, quantity, unit, preparation_note }) => ({
             ingredient_id,
             name,
             quantity: recipeQuantityDraft(quantity, unit),
@@ -105,16 +95,20 @@ export function MealForm({
           preparation_note,
           package_quantity,
           package_unit,
-        }) => ({
-          ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
-          quantity,
-          unit,
-          preparation_note,
-          ...(units.find((option) => option.code === unit)?.dimension === "package" &&
-          package_quantity?.trim()
-            ? { package_quantity, package_unit }
-            : {}),
-        }),
+        }) => {
+          const packaged = units.some(
+            (option) => option.code === unit && option.dimension === "package",
+          );
+          return {
+            ...(ingredient_id ? { ingredient_id } : { name: name.trim() }),
+            quantity,
+            unit,
+            preparation_note,
+            ...(packaged && package_quantity?.trim()
+              ? { ingredient_package: { quantity: package_quantity, unit: package_unit ?? "" } }
+              : {}),
+          };
+        },
       );
     const values = { ...form, ingredients };
     if (initialMeal) {

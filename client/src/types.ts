@@ -157,6 +157,11 @@ export type IngredientForm = {
 };
 
 export type MealPayload = Omit<MealForm, "ingredients"> & {
-  ingredients: (Omit<IngredientForm, "ingredient_id" | "name"> &
-    ({ ingredient_id: number; name?: never } | { name: string; ingredient_id?: never }))[];
+  ingredients: (Omit<
+    IngredientForm,
+    "ingredient_id" | "name" | "package_quantity" | "package_unit"
+  > &
+    ({ ingredient_id: number; name?: never } | { name: string; ingredient_id?: never }) & {
+      ingredient_package?: { quantity: string; unit: string };
+    })[];
 };

@@ -25,6 +25,7 @@ class MealSaveService
     rows = @attributes[:ingredients]
     invalid_ingredient(:invalid_array) unless rows.is_a?(Array)
     @meal.meal_ingredients.destroy_all
+    created_ingredients = {}
     rows.each_with_index do |row, index|
       invalid_ingredient(:invalid_identity) unless row[:name].nil? || row[:name].is_a?(String)
       if row[:ingredient_id].present?
@@ -42,26 +43,43 @@ class MealSaveService
         Ingredient.find_by(id: row[:ingredient_id]) || invalid_ingredient(:unknown_ingredient)
       else
         name = row[:name].to_s.strip
-        Ingredient.find_by(normalized_name: name.downcase) || Ingredient.create!(name: name)
+        match = Ingredient.find_by(normalized_name: name.downcase)
+        match || Ingredient.create!(name: name).tap { |record| created_ingredients[record.id] = true }
       end
-      invalid_ingredient(:invalid_quantity) if !row[:package_quantity].nil? && MeasurementQuantity.parse(row[:package_quantity]).nil?
-      unit = Unit.find_by(code: row[:unit].to_s.strip.downcase)
+      invalid_ingredient(:legacy_package_contents) unless row[:package_quantity].nil? && row[:package_unit].nil?
+
+      unit = Unit.find_by(code: row[:unit].strip.downcase)
       invalid_ingredient(:unknown_unit) unless unit
+      if row.key?(:ingredient_package)
+        invalid_ingredient(:invalid_package_contents) unless has_id || created_ingredients.key?(ingredient.id)
+        save_package(ingredient, unit, row[:ingredient_package])
+      end
+
       @meal.meal_ingredients.create!(
-        ingredient: ingredient, unit: unit, quantity: MeasurementQuantity.parse(row[:quantity]),
-        package_quantity: row[:package_quantity].nil? ? nil : MeasurementQuantity.parse(row[:package_quantity]),
-        package_unit: package_unit_for(row),
+        ingredient: ingredient,
+        unit: unit,
+        quantity: MeasurementQuantity.parse(row[:quantity]),
         preparation_note: row[:preparation_note], position: row[:position].presence || index
       )
     end
   end
 
-  def package_unit_for(row)
-    return if row[:package_unit].nil?
+  def save_package(ingredient, unit, contents)
+    invalid_ingredient(:invalid_package_contents) unless unit.package? && contents.is_a?(Hash) &&
+      contents[:quantity].present? && contents[:unit].present?
 
-    unit = Unit.find_by(code: row[:package_unit]) if row[:package_unit].is_a?(String)
-    invalid_ingredient(:unknown_unit) unless unit
-    unit
+    profile = ingredient.shopping_profile
+    if profile&.mode == "package" && profile.package_quantity && profile.package_unit_id
+      return if profile.shopping_unit == unit &&
+        profile.package_quantity == MeasurementQuantity.parse(contents[:quantity]) &&
+        profile.package_unit&.code == contents[:unit]
+
+      invalid_ingredient(:package_already_configured)
+    end
+
+    IngredientShoppingProfileSaveService.new.call(ingredient: ingredient, attributes: {
+      mode: "package", shopping_unit: unit.code, package_quantity: contents[:quantity], package_unit: contents[:unit]
+    })
   end
 
   def invalid_ingredient(message)

@@ -11,21 +11,17 @@ class MealIngredientTest < ActiveSupport::TestCase
     assert_includes meal_ingredient.errors[:quantity], "must be greater than 0"
   end
 
-  test "package contents are optional but must be complete when supplied" do
-    meal = Meal.create!(name: "Canned tuna", description: "Test", servings: 1)
+  test "package requirements use the ingredient presentation" do
+    meal = Meal.create!(name: "Tuna", description: "Test", servings: 1)
     tuna = Ingredient.create!(name: "Tuna")
-    can = Unit.find_or_create_by!(code: "can")
-    grams = Unit.find_or_create_by!(code: "g")
-    row = meal.meal_ingredients.build(ingredient: tuna, quantity: 1, unit: can)
-    assert row.valid?
+    package = Unit.find_or_create_by!(code: "package")
+    row = meal.meal_ingredients.build(ingredient: tuna, quantity: "0.5", unit: package)
     assert_nil row.requirement
-    row.package_quantity = 140
-    assert_not row.valid?
-    row.assign_attributes(package_quantity: 140, package_unit: grams)
-    assert row.valid?
-    assert_equal [Rational(140), "g"], row.requirement
-    row.unit = grams
-    assert_not row.valid?
-  end
 
+    IngredientShoppingProfileSaveService.new.call(ingredient: tuna, attributes: {
+      mode: "package", shopping_unit: Unit.find_or_create_by!(code: "can").code,
+      package_quantity: 140, package_unit: Unit.find_or_create_by!(code: "g").code
+    })
+    assert_equal [Rational(70), "g"], row.requirement
+  end
 end

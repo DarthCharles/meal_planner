@@ -35,3 +35,6 @@ en:
               invalid_identity: "must use either ingredient_id or name"
               unknown_ingredient: "contains an unknown ingredient"
               unknown_unit: "contains an unknown unit"
+              legacy_package_contents: "use ingredient_package to set the buying size"
+              invalid_package_contents: "requires a container, valid contents, and the ID for an existing ingredient"
+              package_already_configured: "includes an ingredient with a saved package size. Change it in My Ingredients"

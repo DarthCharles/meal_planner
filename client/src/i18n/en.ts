@@ -10,9 +10,9 @@ export const en = {
     contents: "Contents per container",
     optional_contents: "Package size (optional)",
     contents_unit: "Content unit",
-    use_saved_size: "Use saved size · %{size}",
-    replace_contents: "Replace the package size in this recipe with your saved buying size?",
-    package_size_help: "How much is in each %{unit}? This size is saved with the recipe.",
+    package_size_help:
+      "How much is in each %{unit}? This is saved as the ingredient’s buying size.",
+    saved_package_size: "Saved size · %{size}",
     loading_saved_size: "Looking up your saved package size…",
     saved_size_error: "Could not load your saved package size.",
     contents_required:

@@ -69,3 +69,6 @@ es:
               invalid_identity: "debe usar ingredient_id o name, pero no ambos"
               unknown_ingredient: "contiene un ingrediente desconocido"
               unknown_unit: "contiene una unidad desconocida"
+              legacy_package_contents: "usa ingredient_package para guardar el tamaño de compra"
+              invalid_package_contents: "requiere un envase, contenido válido y el ID del ingrediente si ya existe"
+              package_already_configured: "incluye un ingrediente con un tamaño de envase guardado. Puedes cambiarlo en Mis ingredientes"

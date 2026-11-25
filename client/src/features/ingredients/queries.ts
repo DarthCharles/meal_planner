@@ -37,8 +37,14 @@ function useSyncShoppingProfile(id: number) {
       { queryKey: queryKeys.ingredientProfile(id) },
       () => profile,
     );
-    await client.invalidateQueries({ queryKey: queryKeys.ingredientReferences(id) });
-    await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
+    await Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.ingredientReferences(id) }),
+      client.invalidateQueries({ queryKey: queryKeys.shoppingLists }),
+      client.invalidateQueries({ queryKey: queryKeys.meals }),
+      client.invalidateQueries({ queryKey: queryKeys.mealDetails }),
+      client.invalidateQueries({ queryKey: queryKeys.menuHome }),
+      client.invalidateQueries({ queryKey: queryKeys.menuDetails }),
+    ]);
   };
 }
 

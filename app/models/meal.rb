@@ -7,7 +7,7 @@ class Meal < ApplicationRecord
   has_many :ingredients, through: :meal_ingredients
 
   WEEKDAY_NAMES = %w[monday tuesday wednesday thursday friday saturday sunday].freeze
-  RECIPE_DETAILS = [:meal_types, :preferred_weekdays, { meal_ingredients: [:ingredient, :unit, :package_unit] }].freeze
+  RECIPE_DETAILS = [:meal_types, :preferred_weekdays, { meal_ingredients: [:unit, { ingredient: { shopping_profile: :package_unit } }] }].freeze
 
   has_many :meal_preferred_days, dependent: :destroy
   has_many :preferred_weekdays, through: :meal_preferred_days, source: :weekday

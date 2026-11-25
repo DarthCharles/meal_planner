@@ -46,8 +46,9 @@ class MealsController < ApplicationController
       :servings,
       preferred_days: [],
       meal_type_ids: [],
-      ingredients: %i[ingredient_id name quantity unit package_quantity package_unit preparation_note position]
-    )
+      ingredients: [*%i[ingredient_id name quantity unit package_quantity package_unit preparation_note position],
+        { ingredient_package: %i[quantity unit] }]
+    ).to_h
     if params.key?(:servings)
       value = params[:servings]
       permitted[:servings] = value.is_a?(Integer) || value.is_a?(String) ? value : nil
@@ -60,8 +61,15 @@ class MealsController < ApplicationController
       rows = params[:ingredients]
       permitted[:ingredients] = if rows.is_a?(Array) && rows.all? { |row| row.is_a?(ActionController::Parameters) }
         rows.map do |row|
-          %i[ingredient_id name quantity unit package_quantity package_unit preparation_note position].each_with_object({}) do |key, values|
-            values[key] = row[key] if row.key?(key)
+          %i[ingredient_id name quantity unit package_quantity package_unit ingredient_package preparation_note position].each_with_object({}) do |key, values|
+            next unless row.key?(key)
+
+            value = row[key]
+            values[key] = if key == :ingredient_package && value.is_a?(ActionController::Parameters)
+              { quantity: value[:quantity], unit: value[:unit] }
+            else
+              value
+            end
           end
         end
       end

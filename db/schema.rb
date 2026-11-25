@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_21_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_120000) do
   create_table "daily_meals", id: :integer, default: nil, force: :cascade do |t|
     t.integer "day_id", null: false
     t.integer "meal_id", null: false
@@ -83,15 +83,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_21_123000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "unit_id", null: false
-    t.decimal "package_quantity", precision: 18, scale: 6
-    t.integer "package_unit_id"
     t.index ["ingredient_id"], name: "index_meal_ingredients_on_ingredient_id"
     t.index ["meal_id", "ingredient_id"], name: "index_meal_ingredients_on_meal_id_and_ingredient_id"
     t.index ["meal_id", "position"], name: "index_meal_ingredients_on_meal_id_and_position"
     t.index ["meal_id"], name: "index_meal_ingredients_on_meal_id"
-    t.index ["package_unit_id"], name: "index_meal_ingredients_on_package_unit_id"
     t.index ["unit_id"], name: "index_meal_ingredients_on_unit_id"
-    t.check_constraint "(package_quantity IS NULL AND package_unit_id IS NULL) OR (package_quantity IS NOT NULL AND package_quantity > 0 AND package_quantity <= 1000000000 AND package_unit_id IS NOT NULL)", name: "meal_ingredients_valid_contents"
     t.check_constraint "quantity > 0 AND quantity <= 1000000000", name: "meal_ingredients_positive_quantity"
   end
 
@@ -170,7 +166,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_21_123000) do
   add_foreign_key "meal_ingredients", "ingredients"
   add_foreign_key "meal_ingredients", "meals"
   add_foreign_key "meal_ingredients", "units"
-  add_foreign_key "meal_ingredients", "units", column: "package_unit_id"
   add_foreign_key "meal_meal_types", "meal_types"
   add_foreign_key "meal_meal_types", "meals"
   add_foreign_key "meal_preferred_days", "meals"

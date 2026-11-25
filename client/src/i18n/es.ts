@@ -12,10 +12,9 @@ export const es: typeof en = {
     contents: "Contenido por envase",
     optional_contents: "Tamaño del envase (opcional)",
     contents_unit: "Unidad del contenido",
-    use_saved_size: "Usar tamaño guardado · %{size}",
-    replace_contents:
-      "¿Reemplazar el tamaño del envase en esta receta por tu tamaño habitual de compra?",
-    package_size_help: "¿Cuánto contiene cada unidad (%{unit})? El tamaño se guarda con la receta.",
+    package_size_help:
+      "¿Cuánto contiene cada unidad (%{unit})? Se guarda como tamaño de compra del ingrediente.",
+    saved_package_size: "Tamaño guardado · %{size}",
     loading_saved_size: "Buscando el tamaño de envase guardado…",
     saved_size_error: "No se pudo cargar el tamaño de envase guardado.",
     contents_required: "Ingresa un contenido positivo y su unidad, o deja el contenido vacío.",

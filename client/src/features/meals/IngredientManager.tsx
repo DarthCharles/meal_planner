@@ -311,6 +311,7 @@ function IngredientRow({
     quantity && unit && validQuantity(quantity)
       ? `${formatRecipeQuantity(quantity, unit)} ${unitLabel(unit, parseQuantity(quantity))}`
       : "";
+  const selectedPackage = units.find((option) => option.code === unit)?.dimension === "package";
   const packageSize =
     row.package_quantity && row.package_unit && validQuantity(row.package_quantity)
       ? `${t("recipe.of")} ${formatRecipeQuantity(row.package_quantity, row.package_unit)} ${unitLabel(row.package_unit, parseQuantity(row.package_quantity))}`
@@ -493,18 +494,6 @@ function IngredientRow({
                 {t("meals.ingredient_manager.empty_name")}
               </p>
             )}
-            {active && ingredientId && (
-              <Button
-                asChild
-                variant="link"
-                className="text-label min-h-11 justify-self-start px-0"
-              >
-                <Link to={`/ingredients/${ingredientId}/edit`} target="_blank" rel="noopener">
-                  {t("ingredients.form.edit_ingredient")}
-                  <span className="sr-only"> {t("meals.ingredient_manager.opens_in_new_tab")}</span>
-                </Link>
-              </Button>
-            )}
           </div>
           <div className="grid min-w-0 gap-xs">
             <Label htmlFor={`${fieldId}-quantity`} className="text-label">
@@ -559,6 +548,13 @@ function IngredientRow({
                   onValueChange={(value) => {
                     if (value !== field.value) clearContents();
                     field.onChange(value);
+                    if (
+                      units.some(
+                        (option) => option.code === value && option.dimension === "package",
+                      )
+                    ) {
+                      setDetailsExpanded(true);
+                    }
                   }}
                 >
                   <SelectTrigger
@@ -616,15 +612,30 @@ function IngredientRow({
                   placeholder={t("meals.ingredient_manager.note_optional")}
                 />
               </Label>
-              {units.find((option) => option.code === unit)?.dimension === "package" && (
-                <RecipePackageFields
-                  key={`${ingredientId ?? name}:${unit}`}
-                  index={index}
-                  ingredientId={ingredientId}
-                  units={units}
-                  visible={active && detailsOpen}
-                  packageUnit={unit}
-                />
+              {(selectedPackage || (active && !!ingredientId)) && (
+                <div className="flex min-w-0 flex-row flex-wrap items-center justify-between gap-x-sm gap-y-xs">
+                  {selectedPackage && (
+                    <RecipePackageFields
+                      key={`${ingredientId ?? name}:${unit}`}
+                      index={index}
+                      ingredientId={ingredientId}
+                      units={units}
+                      visible={active && detailsOpen}
+                      packageUnit={unit}
+                    />
+                  )}
+                  {active && ingredientId && (
+                    <Button asChild variant="link" className="text-label min-h-11 px-0">
+                      <Link to={`/ingredients/${ingredientId}/edit`} target="_blank" rel="noopener">
+                        {t("ingredients.form.edit_ingredient")}
+                        <span className="sr-only">
+                          {" "}
+                          {t("meals.ingredient_manager.opens_in_new_tab")}
+                        </span>
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               )}
             </CollapsibleContent>
           </Collapsible>

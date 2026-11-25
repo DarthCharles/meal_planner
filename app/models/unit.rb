@@ -14,7 +14,6 @@ class Unit < ApplicationRecord
   has_many :meal_ingredients, dependent: :restrict_with_exception
   has_many :shopping_profiles, class_name: "IngredientShoppingProfile", foreign_key: :shopping_unit_id, dependent: :restrict_with_exception
   has_many :package_shopping_profiles, class_name: "IngredientShoppingProfile", foreign_key: :package_unit_id, dependent: :restrict_with_exception
-  has_many :packaged_meal_ingredients, class_name: "MealIngredient", foreign_key: :package_unit_id, dependent: :restrict_with_exception
 
   before_validation :apply_standard, on: :create
   validates :code, uniqueness: true, inclusion: { in: STANDARD.keys }

@@ -169,6 +169,21 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
         }
         const respond = (data: unknown) => route.fulfill({ json: { data }, headers });
         const fail = (errors: string) => route.fulfill({ status: 422, json: { errors }, headers });
+        const withPackageSizes = (meal: Meal): Meal => ({
+          ...meal,
+          ingredients: meal.ingredients.map((row) => {
+            if (!units.some((unit) => unit.code === row.unit && unit.dimension === "package"))
+              return row;
+            const profile = row.ingredient_id
+              ? api.ingredientProfiles[row.ingredient_id]
+              : undefined;
+            return {
+              ...row,
+              package_quantity: profile?.mode === "package" ? profile.package_quantity : null,
+              package_unit: profile?.mode === "package" ? profile.package_unit : null,
+            };
+          }),
+        });
         if (request.method() === "GET") {
           api.reads[path] = (api.reads[path] ?? 0) + 1;
           await api.initialBarrier;
@@ -195,7 +210,12 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
                 : (profile ?? null),
             ));
           }
-          const menus = api.localizedMenus[language === "es" ? "es" : "en"] ?? api.menus;
+          const menus = (api.localizedMenus[language === "es" ? "es" : "en"] ?? api.menus).map(
+            (menu) => ({
+              ...menu,
+              days: menu.days.map((day) => ({ ...day, meals: day.meals.map(withPackageSizes) })),
+            }),
+          );
           if (path === "/menus/home" || path === "/menus/summaries") {
             const ordered = [...menus].sort(
               (left, right) =>
@@ -248,11 +268,11 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
               headers,
             }));
           }
-          if (path === "/meals") return void (await respond(api.meals));
-          if (/^\/meals\/\d+$/.test(path))
-            return void (await respond(
-              api.meals.find((meal) => meal.id === Number(path.split("/").pop())),
-            ));
+          if (path === "/meals") return void (await respond(api.meals.map(withPackageSizes)));
+          if (/^\/meals\/\d+$/.test(path)) {
+            const meal = api.meals.find((meal) => meal.id === Number(path.split("/").pop()));
+            return void (await respond(meal && withPackageSizes(meal)));
+          }
           if (path === "/shopping_categories") return void (await respond(shoppingCategories));
           if (/^\/menus\/\d+\/shopping_list$/.test(path)) {
             const id = Number(path.split("/")[2]);
@@ -460,15 +480,23 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
                 };
                 api.ingredients.push(ingredient);
               }
+              if (row.ingredient_package) {
+                api.ingredientProfiles[ingredient.id] = {
+                  ingredient_id: ingredient.id,
+                  mode: "package",
+                  shopping_unit: row.unit,
+                  package_quantity: row.ingredient_package.quantity,
+                  package_unit: row.ingredient_package.unit,
+                };
+              }
               const quantity =
                 ({ "1/2": "0.5", "½": "0.5", "1 ½": "1.5" } as Record<string, string>)[
                   row.quantity
                 ] ?? row.quantity;
               return {
-                ...row,
                 quantity,
-                package_quantity: row.package_quantity ?? null,
-                package_unit: row.package_unit ?? null,
+                unit: row.unit,
+                preparation_note: row.preparation_note,
                 name: ingredient.name,
                 ingredient_id: ingredient.id,
               };
@@ -488,7 +516,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
               meals: day.meals.map((meal) => (meal.id === savedMeal.id ? savedMeal : meal)),
             })),
           }));
-          return void (await respond(savedMeal));
+          return void (await respond(withPackageSizes(savedMeal)));
         }
         throw new Error(`Unexpected API request: ${request.method()} ${path}`);
       });

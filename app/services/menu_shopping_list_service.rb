@@ -3,7 +3,7 @@ class MenuShoppingListService
     requirements = {}
     missing = {}
     occurrences = DailyMeal.joins(:day).where(days: { menu_id: menu.id })
-      .includes(meal: { meal_ingredients: [:unit, :package_unit,
+      .includes(meal: { meal_ingredients: [:unit,
         { ingredient: [:measurement_references, { shopping_profile: [:shopping_unit, :package_unit] }] }] })
 
     occurrences.each do |occurrence|
@@ -46,13 +46,8 @@ class MenuShoppingListService
     if profile&.mode == "package"
       return package_purchase(entry, profile)
     elsif !profile && entry[:rows].all? { |row, _| row.unit.package? }
-      signatures = entry[:rows].map { |row, _| [row.unit.code, row.package_quantity, row.package_unit_id] }.uniq
-      if signatures.one?
-        total = entry[:rows].sum { |row, scale| Rational(row.quantity.to_s) * scale }
-        row = entry[:rows].first.first
-        size = Rational(row.package_quantity.to_s) * row.package_unit.canonical_factor if row.package_quantity && row.package_unit
-        return container_item(ingredient, total, row.unit.code, size: size, content_unit: row.package_unit&.canonical_code)
-      end
+      units = entry[:rows].map { |row, _| row.unit.code }.uniq
+      return container_item(ingredient, package_count(entry[:rows]), units.one? ? units.first : "package")
     end
     return item(ingredient, nil, nil) if entry[:unknown]
 
@@ -82,8 +77,7 @@ class MenuShoppingListService
     total = Rational(0)
     approximate = false
     entry[:rows].each do |row, scale|
-      # Preserve explicit recipe counts when no size conversion is needed or possible.
-      if row.unit == profile.shopping_unit && (!size || !row.requirement)
+      if row.unit.package?
         total += Rational(row.quantity.to_s) * scale
         next
       end
@@ -100,6 +94,10 @@ class MenuShoppingListService
     end
     container_item(ingredient, total, profile.shopping_unit.code,
       size: size, content_unit: profile.package_unit&.canonical_code, approximate: approximate)
+  end
+
+  def package_count(rows)
+    rows.sum { |row, scale| Rational(row.quantity.to_s) * scale }
   end
 
   def container_item(ingredient, total, unit, size: nil, content_unit: nil, approximate: false)

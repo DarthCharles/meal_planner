@@ -89,29 +89,29 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_equal "2", items.fetch(tomato.id)[:quantity]
   end
 
-  test "recipe package contents remain independent of the buying presentation" do
+  test "changing the ingredient presentation applies to package counts and exact grams add separately" do
     tuna = ingredient("Tuna", mode: "package", shopping_unit: "can", package_quantity: 140, package_unit: "g")
-    meal = recipe(tuna, [[1, "can", 140, "g"], [0.5, "can", 280, "g"]])
+    meal = recipe(tuna, [[1, "package"], [140, "g"]])
     @monday.daily_meals.create!(meal: meal)
-    assert_equal ["can", "2"], result[:items].sole.values_at(:unit, :quantity)
-    tuna.shopping_profile.update!(package_quantity: 100)
-    assert_equal ["can", "3"], result[:items].sole.values_at(:unit, :quantity)
-    assert_equal [140, 280], meal.meal_ingredients.ordered.pluck(:package_quantity)
+    assert_equal ["can", "2", "2.0"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
+
+    tuna.shopping_profile.update!(shopping_unit: unit("jar"), package_quantity: 100)
+    assert_equal ["jar", "2", "2.4"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
+    assert_equal [1, 140], meal.meal_ingredients.ordered.pluck(:quantity)
+
     tuna.shopping_profile.destroy!
-    assert_equal ["g", "280.0"], result[:items].sole.values_at(:unit, :quantity)
+    assert_name_only result[:items].sole, tuna
   end
 
-  test "one recipe can stays one can with or without buying contents or a profile" do
+  test "a recipe package count survives when the ingredient has no buying size or profile" do
     tuna = ingredient("Tuna", mode: "package", shopping_unit: "can")
-    meal = recipe(tuna, [[1, "can"]])
+    meal = recipe(tuna, [[1, "package"]])
     @monday.daily_meals.create!(meal: meal)
     assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
     tuna.shopping_profile.update!(package_quantity: 140, package_unit: unit("g"))
     assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
-    meal.meal_ingredients.sole.update!(package_quantity: 140, package_unit: unit("g"))
-    assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
     tuna.shopping_profile.destroy!
-    assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
+    assert_equal ["package", "1"], result[:items].sole.values_at(:unit, :quantity)
   end
 
   test "container counts scale by people and servings and round after all occurrences" do
@@ -123,15 +123,6 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
     assert_equal ["can", "1", "1.0"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
     tuna.shopping_profile.destroy!
     assert_equal ["can", "1", "1.0"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
-  end
-
-  test "unknown counts combine with convertible weight but never imply a different container" do
-    tuna = ingredient("Tuna", mode: "package", shopping_unit: "can", package_quantity: 140, package_unit: "g")
-    meal = recipe(tuna, [[1, "can"], [70, "g"]])
-    @monday.daily_meals.create!(meal: meal)
-    assert_equal ["can", "2", "1.5"], result[:items].sole.values_at(:unit, :quantity, :required_quantity)
-    tuna.shopping_profile.update!(shopping_unit: unit("jar"))
-    assert_name_only result[:items].sole, tuna
   end
 
   test "package rounding uses the nearest integer and preserves small needs in grams" do
@@ -149,14 +140,12 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
 
   test "unconfigured recipe packages also preserve small needs and use nearest rounding" do
     tuna = Ingredient.create!(name: "Tuna")
-    meal = recipe(tuna, [[0.1, "can", 140, "g"]])
+    meal = recipe(tuna, [[0.1, "package"]])
     @monday.daily_meals.create!(meal: meal)
     row = meal.meal_ingredients.sole
-    assert_equal ["g", "14.0"], result[:items].sole.values_at(:unit, :quantity)
-    row.update!(package_quantity: nil, package_unit: nil)
-    assert_equal ["can", "0.1"], result[:items].sole.values_at(:unit, :quantity)
+    assert_equal ["package", "0.1"], result[:items].sole.values_at(:unit, :quantity)
     row.update!(quantity: 1.1)
-    assert_equal ["can", "1"], result[:items].sole.values_at(:unit, :quantity)
+    assert_equal ["package", "1"], result[:items].sole.values_at(:unit, :quantity)
   end
 
   test "metric display preserves positive tiny needs and rounds only the total" do
@@ -217,9 +206,8 @@ class MenuShoppingListServiceTest < ActiveSupport::TestCase
 
   def recipe(ingredient, rows, servings: 1)
     meal = Meal.create!(name: "Recipe #{Meal.count}", description: "Test recipe", servings: servings)
-    rows.each do |quantity, code, package_quantity, package_code|
-      meal.meal_ingredients.create!(ingredient: ingredient, quantity: quantity, unit: unit(code),
-        package_quantity: package_quantity, package_unit: package_code && unit(package_code))
+    rows.each do |quantity, code|
+      meal.meal_ingredients.create!(ingredient: ingredient, quantity: quantity, unit: unit(code))
     end
     meal
   end

@@ -86,7 +86,7 @@ end
 # Rows are [ingredient_name, quantity, unit, preparation_note].
 MEAL_INGREDIENTS_TO_SEED = {
   "Sándwich" => [["Pan de caja", 2, "piece", nil], ["Mayonesa", 1, "tablespoon", nil]],
-  "Ensalada de atun" => [["Atún", 1, "can", "contenido escurrido", 140, "g"], ["Mayonesa", "1/2", "cup", nil], ["Cebolla", 40, "g", "picada"]],
+  "Ensalada de atun" => [["Atún", 1, "can", "contenido escurrido"], ["Mayonesa", "1/2", "cup", nil], ["Cebolla", 40, "g", "picada"]],
   "Ensalada de pollo" => [["Pechuga de pollo", 150, "g", "cocida"], ["Mayonesa", 2, "teaspoon", nil], ["Lechuga", 40, "g", nil]],
   "Huevos a la mexicana" => [["Huevo", 2, "piece", nil], ["Jitomate", 1, "piece", "picado"], ["Cebolla", 0.25, "piece", "picada"], ["Chile serrano", 1, "piece", "picado"], ["Tortilla de maíz", 4, "piece", nil]],
   "Chilaquiles verdes con huevo" => [["Totopos", 150, "g", nil], ["Salsa verde", 200, "ml", nil], ["Huevo", 2, "piece", nil], ["Crema", 30, "ml", nil], ["Queso fresco", 30, "g", nil]],
@@ -112,12 +112,11 @@ MEAL_INGREDIENTS_TO_SEED = {
 MEAL_INGREDIENTS_TO_SEED.each do |meal_name, ingredient_rows|
   meal = Meal.find_by!(name: meal_name)
   meal.meal_ingredients.destroy_all
-  ingredient_rows.each_with_index do |(name, quantity, unit, preparation_note, package_quantity, package_unit), position|
+  ingredient_rows.each_with_index do |(name, quantity, unit, preparation_note), position|
     ingredient = Ingredient.find_or_create_by!(name: name)
     unit_record = Unit.find_by!(code: unit)
     meal.meal_ingredients.build(ingredient: ingredient).tap do |meal_ingredient|
       meal_ingredient.assign_attributes(quantity: MeasurementQuantity.parse(quantity), unit: unit_record,
-        package_quantity: package_quantity, package_unit: package_unit && Unit.find_by!(code: package_unit),
         preparation_note: preparation_note, position: position)
       meal_ingredient.save!
     end
@@ -130,14 +129,21 @@ Ingredient.includes(meal_ingredients: :unit).find_each do |ingredient|
   next if ingredient.shopping_profile || ingredient.meal_ingredients.empty?
 
   row = ingredient.meal_ingredients.first
-  attributes = if row.unit.package?
-    { mode: "package", shopping_unit: row.unit.code, package_quantity: row.package_quantity, package_unit: row.package_unit.code }
-  elsif row.unit.dimension == "count"
+  next if row.unit.package?
+
+  attributes = if row.unit.dimension == "count"
     { mode: "piece", shopping_unit: "piece" }
   else
     { mode: "bulk", shopping_unit: row.unit.canonical_code }
   end
   IngredientShoppingProfileSaveService.new.call(ingredient: ingredient, attributes: attributes)
+end
+
+tuna = Ingredient.find_by!(normalized_name: "atún")
+unless tuna.shopping_profile
+  IngredientShoppingProfileSaveService.new.call(ingredient: tuna, attributes: {
+    mode: "package", shopping_unit: "can", package_quantity: 140, package_unit: "g"
+  })
 end
 
 mayonnaise = Ingredient.find_by!(normalized_name: "mayonesa")
