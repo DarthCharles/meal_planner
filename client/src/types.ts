@@ -32,14 +32,26 @@ export type Day = {
   meals: Meal[];
 };
 
-export type Menu = {
+export type MenuSummary = {
   id: number;
+  from: string;
+  to: string;
+};
+
+export type Menu = MenuSummary & {
   people_count: number;
   created_at?: string;
   generation_notices: string[];
-  from: string;
-  to: string;
   days: Day[];
+};
+
+export type MenuHome = {
+  current_menu: Menu | null;
+  next_week: Pick<MenuSummary, "from" | "to">;
+  next_week_menu_id: number | null;
+  next_meal_date: string | null;
+  has_saved_menus: boolean;
+  has_meals: boolean;
 };
 
 export type MealTypeOption = [string, number];

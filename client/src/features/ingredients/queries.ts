@@ -9,8 +9,8 @@ import type {
   IngredientShoppingProfilePayload,
   Meal,
   MeasurementReference,
-  Menu,
 } from "../../types";
+import { updateCachedMenus } from "../menu/queries";
 
 export function useShoppingCategories() {
   return useQuery({
@@ -88,7 +88,6 @@ export function useSaveIngredient() {
         client.cancelQueries({ queryKey: queryKeys.ingredients }),
         client.cancelQueries({ queryKey: queryKeys.meals }),
         client.cancelQueries({ queryKey: queryKeys.mealDetails }),
-        client.cancelQueries({ queryKey: queryKeys.menus }),
       ]);
       client.setQueryData<IngredientCatalogEntry[]>(
         queryKeys.ingredients,
@@ -109,12 +108,10 @@ export function useSaveIngredient() {
         { queryKey: queryKeys.mealDetails },
         (meal) => meal && updateMeal(meal),
       );
-      client.setQueriesData<Menu[]>({ queryKey: queryKeys.menus }, (menus) =>
-        menus?.map((menu) => ({
-          ...menu,
-          days: menu.days.map((day) => ({ ...day, meals: day.meals.map(updateMeal) })),
-        })),
-      );
+      await updateCachedMenus(client, (menu) => ({
+        ...menu,
+        days: menu.days.map((day) => ({ ...day, meals: day.meals.map(updateMeal) })),
+      }));
       await client.invalidateQueries({ queryKey: queryKeys.ingredients });
       await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
     },

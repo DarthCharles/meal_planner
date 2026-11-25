@@ -8,21 +8,31 @@ import { useI18n } from "../../i18n";
 import { useMealDialog } from "../meals/useMealDialog";
 import { formatMenuDateRange, menuPeriod } from "./menuDates";
 import { MenuView } from "./MenuView";
-import { useMenus } from "./queries";
+import { useMenu, useMenuSummaries } from "./queries";
 
 export function SavedMenusScreen() {
   const { t } = useI18n();
-  const { data: menus, isPending: loading, error, refetch, isFetching } = useMenus();
+  const {
+    data: savedMenus = [],
+    isPending: loading,
+    error,
+    refetch,
+    isFetching,
+  } = useMenuSummaries();
   const { openMeal } = useMealDialog();
   const location = useLocation();
   const [selectedId, setSelectedId] = useState<number | null>(
     location.state?.selectedMenuId ?? null,
   );
   const now = new Date();
-  const savedMenus = [...(menus ?? [])].sort(
-    (left, right) => right.from.localeCompare(left.from) || right.id - left.id,
-  );
   const selected = savedMenus.find((menu) => menu.id === selectedId) ?? savedMenus[0];
+  const {
+    data: menu,
+    isPending: loadingMenu,
+    error: menuError,
+    refetch: refetchMenu,
+    isFetching: fetchingMenu,
+  } = useMenu(selected?.id ?? 0);
 
   return (
     <section aria-labelledby="saved-menus-title" className="pb-lg tablet:pb-xl">
@@ -81,19 +91,32 @@ export function SavedMenusScreen() {
                   {t("shopping_list.title")}
                 </Link>
               </Button>
-              {!!selected.generation_notices?.length && (
+              {loadingMenu && <p role="status">{t("menu.hero.finding_menu")}</p>}
+              {menuError && (
+                <div className="mb-lg space-y-sm">
+                  <Notice>{menuError.message}</Notice>
+                  <Button
+                    variant="outline"
+                    disabled={fetchingMenu}
+                    onClick={() => void refetchMenu()}
+                  >
+                    {t("common.try_again")}
+                  </Button>
+                </div>
+              )}
+              {!!menu?.generation_notices?.length && (
                 <Notice>
                   <div>
                     <p className="m-0 font-semibold">{t("menu.notices.preference_fallback")}</p>
                     <ul className="mt-xs mb-0 pl-lg">
-                      {selected.generation_notices.map((notice, index) => (
+                      {menu.generation_notices.map((notice, index) => (
                         <li key={index}>{notice}</li>
                       ))}
                     </ul>
                   </div>
                 </Notice>
               )}
-              <MenuView menu={selected} loading={false} onOpenMeal={openMeal} />
+              {menu && <MenuView menu={menu} loading={false} onOpenMeal={openMeal} />}
             </section>
           )}
         </div>

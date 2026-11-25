@@ -24,12 +24,27 @@ class MenusController < ApplicationController
   end
 
   def index
-    @menus = Menu.order(from: :desc, id: :desc)
-    render json: { data: @menus }, status: :ok
+    render json: { data: Menu.newest_first.with_recipe_details }
+  end
+
+  def home
+    date = params[:date]
+    unless date.is_a?(String) && date.match?(/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/)
+      return render_invalid_home_date
+    end
+
+    render json: { data: MenuHomeQuery.new.call(date: Date.iso8601(date)) }
+  rescue Date::Error
+    render_invalid_home_date
+  end
+
+  def summaries
+    menus = Menu.newest_first.pluck(:id, :from, :to)
+    render json: { data: menus.map { |id, from, to| { id: id, from: from, to: to } } }
   end
 
   def show
-    @menu = Menu.find_by(id: params[:id])
+    @menu = Menu.with_recipe_details.find_by(id: params[:id])
 
     if @menu.present?
       render json: { data: @menu }, status: :ok
@@ -39,6 +54,10 @@ class MenusController < ApplicationController
   end
 
   private
+
+  def render_invalid_home_date
+    render json: { errors: I18n.t("api.invalid_menu_date") }, status: :unprocessable_entity
+  end
 
   def find_menu
     @menu = Menu.find_by(id: params[:id])

@@ -9,7 +9,7 @@ class Day < ApplicationRecord
     {}.tap do |h|
       h[:id] = id
       h[:weekday] = weekday.name
-      h[:meals] = meals
+      h[:meals] = daily_meals.loaded? ? daily_meals.map(&:meal) : meals
     end
   end
 end

@@ -6,21 +6,26 @@ import { Notice } from "../../components/Notice";
 import { useI18n } from "../../i18n";
 import type { Menu } from "../../types";
 import { formatMenuDateRange } from "./menuDates";
-import { useGenerateMenu } from "./queries";
 
 export function NextWeekPlan({
   week,
-  savedMenu,
+  savedMenuId,
   disabled,
+  generateMenu,
+  generating,
+  error,
 }: {
   week: Pick<Menu, "from" | "to">;
-  savedMenu: Menu | undefined;
+  savedMenuId: number | null;
   disabled: boolean;
+  generateMenu: (weekStart: string) => void;
+  generating: boolean;
+  error: Error | null;
 }) {
   const { t } = useI18n();
   const { openDialog } = useDialog();
-  const { mutate: generateMenu, isPending: generating, error } = useGenerateMenu();
-  const planLabel = savedMenu ? "menu.next_week.regenerate" : "menu.next_week.plan";
+  const hasSavedMenu = savedMenuId !== null;
+  const planLabel = hasSavedMenu ? "menu.next_week.regenerate" : "menu.next_week.plan";
 
   function confirmReplacement(button: HTMLButtonElement) {
     openDialog({
@@ -64,19 +69,19 @@ export function NextWeekPlan({
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-xs">
-        {savedMenu && (
+        {hasSavedMenu && (
           <Button asChild className="h-auto min-h-11 grow whitespace-normal">
-            <Link to="/saved-menus" state={{ selectedMenuId: savedMenu.id }}>
+            <Link to="/saved-menus" state={{ selectedMenuId: savedMenuId }}>
               {t("menu.next_week.view")}
             </Link>
           </Button>
         )}
         <Button
-          variant={savedMenu ? "outline" : "default"}
+          variant={hasSavedMenu ? "outline" : "default"}
           className="h-auto min-h-11 grow whitespace-normal"
           disabled={disabled || generating}
           onClick={(event) => {
-            if (savedMenu) confirmReplacement(event.currentTarget);
+            if (hasSavedMenu) confirmReplacement(event.currentTarget);
             else generateMenu(week.from);
           }}
         >

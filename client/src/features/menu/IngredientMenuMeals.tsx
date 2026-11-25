@@ -5,7 +5,7 @@ import { Button } from "@darthcharles/greda";
 import { formatLocale, useI18n } from "../../i18n";
 import { dayLabel } from "../meals/preferredDays";
 import { useWorkspaceNavigation } from "../navigation/useWorkspaceNavigation";
-import { useMenus } from "./queries";
+import { useMenu } from "./queries";
 
 export function IngredientMenuMeals({
   menuId,
@@ -18,14 +18,14 @@ export function IngredientMenuMeals({
 }) {
   const { t } = useI18n();
   const { preview, openEditor } = useWorkspaceNavigation();
-  const { data: menus, isPending, error, refetch, isFetching } = useMenus();
+  const { data: menu, isPending, error, refetch, isFetching } = useMenu(menuId);
   const list = useRef<HTMLUListElement>(null);
   useEffect(() => {
     if (focusMealId)
       list.current
         ?.querySelector<HTMLButtonElement>(`[data-meal-id="${focusMealId}"]`)
         ?.focus({ preventScroll: true });
-  }, [focusMealId, menus]);
+  }, [focusMealId, menu]);
   if (isPending) return <p role="status">{t("shopping_list.loading")}</p>;
   if (error)
     return (
@@ -36,7 +36,6 @@ export function IngredientMenuMeals({
         </Button>
       </div>
     );
-  const menu = menus?.find((item) => item.id === menuId);
   if (!menu) return <p role="alert">{t("shopping_list.menu_missing")}</p>;
   const meals = [
     ...new Map(

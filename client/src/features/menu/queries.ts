@@ -1,10 +1,11 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { useIsMutating, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../../api";
-import { getLocale, t, useI18n } from "../../i18n";
+import { t, useI18n } from "../../i18n";
 import { queryKeys } from "../../queryKeys";
-import type { Menu } from "../../types";
-import { nextGenerationWeek, startsWithinWeek } from "./menuDates";
+import type { Menu, MenuHome, MenuSummary } from "../../types";
+import { localDateKey, nextGenerationWeek, startsWithinWeek } from "./menuDates";
 
 export function useShoppingList(id: number) {
   const { locale } = useI18n();
@@ -18,12 +19,51 @@ export function useShoppingList(id: number) {
   });
 }
 
-export function useMenus() {
+export function useMenuHome(now: Date) {
+  const { locale } = useI18n();
+  const date = localDateKey(now);
+  return useQuery({
+    queryKey: [...queryKeys.menuHome, date, nextGenerationWeek(now).from, locale],
+    queryFn: ({ signal }) => api.getMenuHome(date, locale, signal),
+  });
+}
+
+export function useMenuSummaries() {
+  return useQuery({
+    queryKey: queryKeys.menuSummaries,
+    queryFn: ({ signal }) => api.getMenuSummaries(signal),
+  });
+}
+
+export function useMenu(id: number) {
   const { locale } = useI18n();
   return useQuery({
-    queryKey: [...queryKeys.menus, locale],
-    queryFn: ({ signal }) => api.getMenus(signal, locale),
+    queryKey: [...queryKeys.menu(id), locale],
+    queryFn: ({ signal }) => api.getMenu(id, locale, signal),
+    enabled: Number.isSafeInteger(id) && id > 0,
   });
+}
+
+export async function updateCachedMenus(client: QueryClient, updateMenu: (menu: Menu) => Menu) {
+  const filters = [queryKeys.menuDetails, queryKeys.menuHome].map((queryKey) => ({ queryKey }));
+  await Promise.all(filters.map((filter) => client.cancelQueries(filter)));
+
+  client.setQueriesData<Menu>(
+    { queryKey: queryKeys.menuDetails },
+    (menu) => menu && updateMenu(menu),
+  );
+  client.setQueriesData<MenuHome>({ queryKey: queryKeys.menuHome }, (home) =>
+    home?.current_menu ? { ...home, current_menu: updateMenu(home.current_menu) } : home,
+  );
+
+  // A cancelled initial load has no cached menu to patch.
+  for (const filter of filters) {
+    void client.refetchQueries({
+      ...filter,
+      type: "active",
+      predicate: (query) => query.state.status === "pending",
+    });
+  }
 }
 
 export function useGenerateMenu() {
@@ -38,21 +78,29 @@ export function useGenerateMenu() {
         void client.invalidateQueries({ queryKey: queryKeys.menus });
         throw new Error(t("menu.next_week.date_changed"));
       }
-      const locale = getLocale();
-      return { menu: await api.generateMenu(), locale };
+      return api.generateMenu();
     },
-    onSuccess: async ({ menu, locale }) => {
+    onSuccess: async (menu) => {
       // An older GET response must not overwrite the generated menu.
       await client.cancelQueries({ queryKey: queryKeys.menus });
-      client.setQueryData<Menu[]>([...queryKeys.menus, locale], (menus = []) => [
-        menu,
-        ...menus.filter((item) => item.id !== menu.id && !startsWithinWeek(item, menu)),
+      client.setQueriesData<MenuHome>({ queryKey: queryKeys.menuHome }, (home) =>
+        home && startsWithinWeek(menu, home.next_week)
+          ? { ...home, next_week_menu_id: menu.id, has_saved_menus: true }
+          : home,
+      );
+      client.setQueryData<MenuSummary[]>(
+        queryKeys.menuSummaries,
+        (summaries) =>
+          summaries &&
+          [
+            { id: menu.id, from: menu.from, to: menu.to },
+            ...summaries.filter((item) => item.id !== menu.id && !startsWithinWeek(item, menu)),
+          ].sort((left, right) => right.from.localeCompare(left.from) || right.id - left.id),
+      );
+      await Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.menus }),
+        client.invalidateQueries({ queryKey: queryKeys.shoppingLists }),
       ]);
-      await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
-      await client.invalidateQueries({
-        queryKey: queryKeys.menus,
-        predicate: (query) => query.queryKey[1] !== locale,
-      });
     },
   });
   return { mutate, error, isPending };
@@ -63,15 +111,10 @@ export function useUpdateMenuPeople(menuId: number) {
   return useMutation({
     mutationFn: (people: number) => api.updateMenuPeople(menuId, people),
     onSuccess: async (menu) => {
-      await Promise.all([
-        client.cancelQueries({ queryKey: queryKeys.menus }),
-        client.cancelQueries({ queryKey: [...queryKeys.shoppingLists, menuId] }),
-      ]);
+      await client.cancelQueries({ queryKey: [...queryKeys.shoppingLists, menuId] });
       // Copy only the count: each cached language keeps its own notices.
-      client.setQueriesData<Menu[]>({ queryKey: queryKeys.menus }, (menus) =>
-        menus?.map((item) =>
-          item.id === menu.id ? { ...item, people_count: menu.people_count } : item,
-        ),
+      await updateCachedMenus(client, (item) =>
+        item.id === menu.id ? { ...item, people_count: menu.people_count } : item,
       );
       await client.invalidateQueries({ queryKey: [...queryKeys.shoppingLists, menuId] });
     },

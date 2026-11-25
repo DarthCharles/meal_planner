@@ -38,16 +38,17 @@ test(
       contentType: "application/json",
     });
 
-    api.readErrors["/menus"] = "Connection details";
+    api.readErrors["/menus/home"] = "Connection details";
     await page.reload();
     await expect(page.getByText("We couldn’t load your menu. Please try again.")).toBeVisible();
     await captureEntry(page, testInfo, "home-error");
     api.menus = [];
     api.meals = [];
-    delete api.readErrors["/menus"];
+    delete api.readErrors["/menus/home"];
     await page.getByRole("button", { name: "Try again", exact: true }).click();
     const create = page.getByRole("button", { name: "Add your first recipe", exact: true });
     await expect(create).toBeVisible();
+    expect(api.reads["/meals"]).toBeUndefined();
     await captureEntry(page, testInfo, "home-empty");
     await create.click();
     await expect(page).toHaveURL("/meals/new");

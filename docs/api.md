@@ -199,12 +199,14 @@ apply to every meal time associated with the meal and affect future generation.
 | Method          | Endpoint                   | Purpose                            |
 | --------------- | -------------------------- | ---------------------------------- |
 | `GET`           | `/menus`                   | List menus                         |
+| `GET`           | `/menus/home?date=YYYY-MM-DD` | Get the home menu and planning status |
+| `GET`           | `/menus/summaries`         | List saved menu IDs and dates      |
 | `GET`           | `/menus/:id`               | Show one menu                      |
 | `POST`          | `/menus/generate`          | Generate the next weekly menu      |
 | `PUT` / `PATCH` | `/menus/:id`               | Update the menu's people count     |
 | `GET`           | `/menus/:id/shopping_list` | Calculate the menu's shopping list |
 
-Every menu response includes the positive integer `people_count`. Existing
+Full menu records include the positive integer `people_count`. Existing
 menus default to `1`. Generation optionally accepts `{"people_count":4}`.
 When omitted, a new week defaults to `1`; regenerating an existing week
 preserves its people count. An explicit value overrides it. Regeneration
@@ -226,6 +228,22 @@ the same string error envelope as menu detail.
 
 `GET /menus` returns menus by start date descending, with descending ID as a
 tie-breaker. The latest weekly plan stays first after generation and on reload.
+
+`GET /menus/summaries` uses the same ordering and returns only `id`, `from`, and
+`to` for each saved menu. Use `GET /menus/:id` to load one week's full menu.
+
+`GET /menus/home` takes the browser's local calendar date and returns a planning
+snapshot in `data`. Missing or invalid dates return a localized `422` error.
+
+- `current_menu` is the full menu covering that date, or `null`. If several
+  menus cover the date, the start date and ID ordering determines which appears.
+- `next_week` contains the next generation week's `from` and `to` calendar
+  dates. The server uses the same UTC next-Monday rule as generation.
+- `next_week_menu_id` is the newest saved menu starting within that generation
+  week, or `null`.
+- `next_meal_date` is the first later scheduled calendar date when a current
+  menu exists and has no meals for the requested date, or `null`.
+- `has_saved_menus` and `has_meals` indicate whether those collections have records.
 
 `POST /menus/generate` plans the next Monday–Sunday week (using the existing UTC
 next-Monday date semantics). It creates seven days with breakfast, lunch, and

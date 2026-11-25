@@ -1,5 +1,9 @@
 export const queryKeys = {
   menus: ["menus"] as const,
+  menuHome: ["menus", "home"] as const,
+  menuSummaries: ["menus", "summaries"] as const,
+  menuDetails: ["menus", "details"] as const,
+  menu: (id: number) => ["menus", "details", id] as const,
   meals: ["meals"] as const,
   mealDetails: ["meal"] as const,
   meal: (id: number) => ["meal", id] as const,

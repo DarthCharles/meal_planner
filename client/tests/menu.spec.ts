@@ -45,7 +45,7 @@ test("opens hero meal details, replaces them with editing, and restores focus", 
     "https://example.com/huevos",
   );
   await expect(dialog.getByRole("textbox")).toHaveCount(0);
-  expect(Object.keys(api.reads)).toEqual(["/menus"]);
+  expect(Object.keys(api.reads)).toEqual(["/menus/home"]);
   await dialog.getByRole("button", { name: "Edit meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   const editor = page.getByRole("region", { name: "Edit meal", exact: true });
@@ -108,7 +108,7 @@ test("opens weekly meal rows with the keyboard and handles missing recipe detail
   await expect(row).toBeFocused();
   await page.keyboard.press("Space");
   await expect(dialog).toBeVisible();
-  expect(Object.keys(api.reads)).toEqual(["/menus"]);
+  expect(Object.keys(api.reads)).toEqual(["/menus/home"]);
   expect(api.saves).toEqual([]);
 });
 
@@ -156,14 +156,14 @@ test(
     }
     // The overview should leave the weekly plan visible below it.
     await expect(page.getByRole("article").first()).toBeInViewport();
-    const initialMenuReads = api.reads["/menus"];
+    const initialMenuReads = api.reads["/menus/home"];
     await navigateTo(page, "My meals");
     await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
     await expect(hero).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Plan next week" })).toHaveCount(0);
     await navigateTo(page, "My menu");
     await expect(hero).toBeVisible();
-    expect(api.reads["/menus"]).toBe(initialMenuReads);
+    expect(api.reads["/menus/home"]).toBe(initialMenuReads);
   },
 );
 
@@ -354,15 +354,15 @@ test("recovers the menu after a load failure without showing example meals", asy
   page,
   api,
 }) => {
-  api.readErrors["/menus"] = "Internal connection details";
+  api.readErrors["/menus/home"] = "Internal connection details";
   await page.goto("/");
   await expect(page.getByText("We couldn’t load your menu. Please try again.")).toBeVisible();
   await expect(page.getByText("Internal connection details")).toHaveCount(0);
   await expect(page.getByRole("article")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Add (your first |a )recipe/ })).toHaveCount(0);
-  delete api.readErrors["/menus"];
+  delete api.readErrors["/menus/home"];
   let release!: () => void;
-  api.readBarriers["/menus"] = new Promise<void>((resolve) => {
+  api.readBarriers["/menus/home"] = new Promise<void>((resolve) => {
     release = resolve;
   });
   await page.getByRole("button", { name: "Try again", exact: true }).click();
@@ -398,11 +398,11 @@ test("keeps reference query failures inside the modal", async ({ page, api }) =>
 test("loads each resource only when its screen or form needs it", async ({ page, api }) => {
   await page.goto("/");
   await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
-  expect(Object.keys(api.reads)).toEqual(["/menus"]);
+  expect(Object.keys(api.reads)).toEqual(["/menus/home"]);
   await navigateTo(page, "My meals");
   await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(3);
-  expect(Object.keys(api.reads).sort()).toEqual(["/meals", "/menus"]);
+  expect(Object.keys(api.reads).sort()).toEqual(["/meals", "/menus/home"]);
   await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
   await expect(
@@ -415,7 +415,7 @@ test("loads each resource only when its screen or form needs it", async ({ page,
     "/ingredients",
     "/meal_types",
     "/meals",
-    "/menus",
+    "/menus/home",
     "/units",
   ]);
 });

@@ -1,6 +1,6 @@
 class MealsController < ApplicationController
   def index
-    @meals = Meal.includes(:preferred_weekdays)
+    @meals = Meal.preload(*Meal::RECIPE_DETAILS)
     render json: { data: @meals }, status: :ok
   end
 

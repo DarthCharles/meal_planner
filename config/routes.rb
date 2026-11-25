@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   post "menus/generate", to: "menus#generate"
   resources :meals
   resources :menus do
+    get :home, on: :collection
+    get :summaries, on: :collection
     get :shopping_list, on: :member
   end
 

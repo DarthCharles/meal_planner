@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../../api";
 import { queryKeys } from "../../queryKeys";
-import type { IngredientCatalogEntry, Meal, MealPayload, Menu } from "../../types";
+import type { IngredientCatalogEntry, Meal, MealPayload, MenuHome } from "../../types";
+import { updateCachedMenus } from "../menu/queries";
 
 export function useMeals({ enabled = true } = {}) {
   return useQuery({
@@ -52,7 +53,6 @@ function useSyncSavedMeal() {
     await Promise.all([
       client.cancelQueries({ queryKey: queryKeys.meals }),
       client.cancelQueries({ queryKey: queryKeys.mealDetails }),
-      client.cancelQueries({ queryKey: queryKeys.menus }),
       client.cancelQueries({ queryKey: queryKeys.ingredients }),
     ]);
     client.setQueryData<IngredientCatalogEntry[]>(queryKeys.ingredients, (ingredients) => {
@@ -93,14 +93,15 @@ function useSyncSavedMeal() {
     client.setQueriesData<Meal>({ queryKey: queryKeys.mealDetails }, (cached) =>
       cached?.id === meal.id ? meal : cached,
     );
-    client.setQueriesData<Menu[]>({ queryKey: queryKeys.menus }, (menus) =>
-      menus?.map((menu) => ({
-        ...menu,
-        days: menu.days.map((day) => ({
-          ...day,
-          meals: day.meals.map((item) => (item.id === meal.id ? meal : item)),
-        })),
+    await updateCachedMenus(client, (menu) => ({
+      ...menu,
+      days: menu.days.map((day) => ({
+        ...day,
+        meals: day.meals.map((item) => (item.id === meal.id ? meal : item)),
       })),
+    }));
+    client.setQueriesData<MenuHome>({ queryKey: queryKeys.menuHome }, (home) =>
+      home && !home.has_meals ? { ...home, has_meals: true } : home,
     );
     await client.invalidateQueries({ queryKey: queryKeys.shoppingLists });
     // A mutation response cannot reconstruct a list that has never loaded.

@@ -559,16 +559,18 @@ test("retries menu lookup and explains an ingredient not used in that menu", asy
   page,
   api,
 }) => {
-  api.readErrors["/menus"] = "Menus unavailable";
+  api.readErrors["/menus/1"] = "Menus unavailable";
   await page.goto("/menus/1/shopping-list");
   await page.getByRole("button", { name: "Tomato", exact: true }).click();
   const recipes = page.getByRole("dialog", { name: "Meals with Tomato", exact: true });
   await expect(recipes.getByRole("alert")).toHaveText("Menus unavailable");
-  delete api.readErrors["/menus"];
+  delete api.readErrors["/menus/1"];
   await recipes.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(
     recipes.getByText("No meals in this menu use this ingredient.", { exact: true }),
   ).toBeVisible();
+  expect(api.reads["/menus"]).toBeUndefined();
+  expect(api.reads["/menus/summaries"]).toBeUndefined();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Tomato", exact: true })).toBeFocused();
 });

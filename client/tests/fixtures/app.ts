@@ -10,9 +10,32 @@ import type {
   MealPayload,
   MeasurementReference,
   Menu,
+  MenuHome,
   ShoppingList,
 } from "../../src/types";
 import { meals, mealTypes, menu, shoppingCategories, shoppingList, units } from "./data";
+
+function nextWeekBounds(now: Date) {
+  const start = new Date(now);
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() + 7 - ((start.getUTCDay() + 6) % 7));
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 6);
+  end.setUTCHours(23, 59, 59, 999);
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+function scheduledDates(menu: Menu) {
+  const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  return menu.days
+    .filter((day) => day.meals.length)
+    .map((day) => {
+      const date = new Date(`${menu.from.slice(0, 10)}T00:00:00Z`);
+      const weekday = weekdays.indexOf(day.weekday.toLowerCase());
+      date.setUTCDate(date.getUTCDate() + ((weekday - date.getUTCDay() + 7) % 7));
+      return date.toISOString().slice(0, 10);
+    });
+}
 
 type SaveRequest = { method: string; path: string; body: MealPayload };
 type MockApi = {
@@ -96,7 +119,8 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
       await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, (route) => route.abort());
       await page.route("http://127.0.0.1:4174/**", async (route) => {
         const request = route.request();
-        const path = new URL(request.url()).pathname;
+        const url = new URL(request.url());
+        const path = url.pathname;
         const headers = {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
@@ -140,10 +164,54 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
                 : (profile ?? null),
             ));
           }
-          if (path === "/menus")
-            return void (await respond(
-              api.localizedMenus[language === "es" ? "es" : "en"] ?? api.menus,
-            ));
+          const menus = api.localizedMenus[language === "es" ? "es" : "en"] ?? api.menus;
+          if (path === "/menus/home" || path === "/menus/summaries") {
+            const ordered = [...menus].sort(
+              (left, right) => right.from.localeCompare(left.from) || right.id - left.id,
+            );
+            if (path === "/menus/summaries")
+              return void (await respond(ordered.map(({ id, from, to }) => ({ id, from, to }))));
+            const date = url.searchParams.get("date")!;
+            const now = new Date(await page.evaluate(() => Date.now()));
+            const { from, to } = nextWeekBounds(now);
+            const nextWeek = { from: from.slice(0, 10), to: to.slice(0, 10) };
+            const currentMenu =
+              ordered.find(
+                (menu) => menu.from.slice(0, 10) <= date && date <= menu.to.slice(0, 10),
+              ) ?? null;
+            const nextMealDate =
+              currentMenu && !scheduledDates(currentMenu).includes(date)
+                ? (ordered
+                    .flatMap((menu) =>
+                      scheduledDates(menu).filter(
+                        (day) => day > date && day <= menu.to.slice(0, 10),
+                      ),
+                    )
+                    .sort()[0] ?? null)
+                : null;
+            return void (await respond({
+              current_menu: currentMenu,
+              next_week: nextWeek,
+              next_week_menu_id:
+                ordered.find((menu) => {
+                  const start = menu.from.slice(0, 10);
+                  return nextWeek.from <= start && start <= nextWeek.to;
+                })?.id ?? null,
+              next_meal_date: nextMealDate,
+              has_saved_menus: menus.length > 0,
+              has_meals: api.meals.length > 0,
+            } satisfies MenuHome));
+          }
+          if (/^\/menus\/\d+$/.test(path)) {
+            const id = Number(path.split("/")[2]);
+            const selected = menus.find((menu) => menu.id === id);
+            if (selected) return void (await respond(selected));
+            return void (await route.fulfill({
+              status: 404,
+              json: { errors: `Menu with id ${id} not found` },
+              headers,
+            }));
+          }
           if (path === "/meals") return void (await respond(api.meals));
           if (/^\/meals\/\d+$/.test(path))
             return void (await respond(
@@ -206,14 +274,7 @@ export const test = base.extend<{ api: MockApi; runtimeErrors: void }>({
           const requestDate = new Date(await page.evaluate(() => Date.now()));
           await api.generationBarrier;
           if (api.generationError) return void (await fail(api.generationError));
-          requestDate.setUTCHours(0, 0, 0, 0);
-          do {
-            requestDate.setUTCDate(requestDate.getUTCDate() + 1);
-          } while (requestDate.getUTCDay() !== 1);
-          const from = requestDate.toISOString();
-          requestDate.setUTCDate(requestDate.getUTCDate() + 6);
-          requestDate.setUTCHours(23, 59, 59, 999);
-          const to = requestDate.toISOString();
+          const { from, to } = nextWeekBounds(requestDate);
           const existing = api.menus.find((item) => item.from >= from && item.from <= to);
           const generated = {
             ...structuredClone(menu),

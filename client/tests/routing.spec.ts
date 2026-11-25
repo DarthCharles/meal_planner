@@ -6,7 +6,7 @@ test(
   async ({ page, api }) => {
     await page.goto("/");
     await expect(page.getByRole("region", { name: "Today’s menu" })).toBeVisible();
-    const initialMenuReads = api.reads["/menus"];
+    const initialMenuReads = api.reads["/menus/home"];
     await navigateTo(page, "My meals");
     await expect(page).toHaveURL("/meals");
     await expect(page.getByPlaceholder("Search meals")).toBeVisible();
@@ -14,6 +14,7 @@ test(
     await navigateTo(page, "Saved Menus");
     await expect(page).toHaveURL("/saved-menus");
     await expect(page.getByRole("heading", { name: "Saved Menus", exact: true })).toBeVisible();
+    await expect(page.getByRole("article").first()).toBeVisible();
     await page.goBack();
     await expect(page).toHaveURL("/meals");
     await expect(page.getByPlaceholder("Search meals")).toBeVisible();
@@ -23,7 +24,14 @@ test(
     await page.goForward();
     await expect(page).toHaveURL("/meals");
     await expect(page.getByPlaceholder("Search meals")).toBeVisible();
-    expect(api.reads).toEqual({ "/menus": initialMenuReads, "/meals": initialMealReads });
+    expect(api.reads["/menus/home"]).toBe(initialMenuReads);
+    expect(api.reads["/meals"]).toBe(initialMealReads);
+    expect(Object.keys(api.reads).sort()).toEqual([
+      "/meals",
+      "/menus/1",
+      "/menus/home",
+      "/menus/summaries",
+    ]);
   },
 );
 

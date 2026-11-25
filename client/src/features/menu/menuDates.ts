@@ -1,7 +1,7 @@
 import { formatLocale, t } from "../../i18n";
-import type { Menu } from "../../types";
+import type { MenuSummary } from "../../types";
 
-export function isCurrentMenu(menu: Menu, now: Date) {
+export function isCurrentMenu(menu: MenuSummary, now: Date) {
   const date = localDateKey(now);
   // API boundaries represent calendar days; preserve them across local timezones.
   return menu.from.slice(0, 10) <= date && date <= menu.to.slice(0, 10);
@@ -25,12 +25,12 @@ export function nextGenerationWeek(now: Date) {
   return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) };
 }
 
-export function startsWithinWeek(menu: Menu, week: Pick<Menu, "from" | "to">) {
+export function startsWithinWeek(menu: MenuSummary, week: Pick<MenuSummary, "from" | "to">) {
   const start = menu.from.slice(0, 10);
   return week.from.slice(0, 10) <= start && start <= week.to.slice(0, 10);
 }
 
-export function menuPeriod(menu: Menu, now: Date) {
+export function menuPeriod(menu: MenuSummary, now: Date) {
   const today = localDateKey(now);
   if (menu.from.slice(0, 10) > today) return t("menu.saved.upcoming");
   if (menu.to.slice(0, 10) < today) return t("menu.saved.past");
@@ -47,7 +47,7 @@ function calendarDate(value: string) {
   return new Date(`${value.slice(0, 10)}T00:00:00Z`);
 }
 
-export function menuDayDate(menu: Menu, weekday: string) {
+export function menuDayDate(menu: MenuSummary, weekday: string) {
   const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
   const date = calendarDate(menu.from);
   const offset = (weekdays.indexOf(weekday.toLowerCase()) - date.getUTCDay() + 7) % 7;
@@ -55,7 +55,7 @@ export function menuDayDate(menu: Menu, weekday: string) {
   return date;
 }
 
-export function formatMenuDateRange(menu: Pick<Menu, "from" | "to">, includeYear = true) {
+export function formatMenuDateRange(menu: Pick<MenuSummary, "from" | "to">, includeYear = true) {
   const format = (value: string) =>
     calendarDate(value).toLocaleDateString(formatLocale(), {
       month: "short",

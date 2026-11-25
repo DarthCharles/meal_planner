@@ -7,6 +7,7 @@ en:
     ingredient_in_use: "Cannot delete an ingredient used by meals. Remove it from those meals first."
     meal_not_found: "Meal with id %{id} not found"
     menu_not_found: "Menu with id %{id} not found"
+    invalid_menu_date: "Enter a date in YYYY-MM-DD format."
   menu:
     insufficient_meals: "Cannot complete the menu. Add meals for each meal time; each day needs three different meals."
     preference_notice: "%{meal} was scheduled on %{weekday} to complete the menu; its preferred days are %{preferred}."

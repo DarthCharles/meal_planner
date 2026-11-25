@@ -46,6 +46,95 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
     assert_equal 3, response.parsed_body.dig("data", "people_count")
   end
 
+  test "home uses the requested calendar date and the next UTC generation week" do
+    menu = Menu.create!(from: Time.utc(2026, 11, 16), to: Time.utc(2026, 11, 22, 23, 59, 59))
+    current = Menu.create!(from: menu.from, to: menu.to)
+    future = Menu.create!(from: Time.utc(2026, 11, 25), to: Time.utc(2026, 12, 1))
+    upcoming = Menu.create!(from: Time.utc(2026, 11, 30), to: Time.utc(2026, 12, 6))
+    meal = Meal.create!(name: "Rice", description: "Steamed", servings: 1)
+    add_scheduled_meal(future, meal, weekday: "thursday")
+    add_scheduled_meal(upcoming, meal, weekday: "monday")
+
+    travel_to Time.utc(2026, 11, 23, 0, 30) do
+      get "/menus/home", params: { date: "2026-11-22" }
+      assert_response :ok
+      home = response.parsed_body.fetch("data")
+      assert_equal current.id, home.dig("current_menu", "id")
+      assert_equal({ "from" => "2026-11-30", "to" => "2026-12-06" }, home.fetch("next_week"))
+      assert_equal upcoming.id, home.fetch("next_week_menu_id")
+      assert_equal "2026-11-26", home.fetch("next_meal_date")
+      assert home.fetch("has_saved_menus")
+      assert home.fetch("has_meals")
+    end
+  end
+
+  test "home rejects invalid dates and reports an empty library and history" do
+    travel_to Time.utc(2026, 11, 22, 12)
+    get "/menus/home", params: { date: "2026-02-30" }
+    assert_response :unprocessable_entity
+
+    get "/menus/home", params: { date: "2026-11-22" }
+    assert_response :ok
+    home = response.parsed_body.fetch("data")
+    assert_nil home.fetch("current_menu")
+    assert_nil home.fetch("next_week_menu_id")
+    assert_nil home.fetch("next_meal_date")
+    assert_equal false, home.fetch("has_saved_menus")
+    assert_equal false, home.fetch("has_meals")
+  end
+
+  test "summaries only include menu identity and dates in history order" do
+    from = Time.utc(2026, 11, 16)
+    to = Time.utc(2026, 11, 22, 23, 59, 59)
+    earlier = Menu.create!(from: from, to: to)
+    later = Menu.create!(from: from, to: to)
+
+    get "/menus/summaries"
+    assert_response :ok
+    assert_equal [later, earlier].map { |menu| { "id" => menu.id, "from" => from.as_json, "to" => to.as_json } },
+      response.parsed_body.fetch("data")
+  end
+
+  test "home and the full menu index batch recipe queries as history grows" do
+    travel_to Time.utc(2026, 11, 16, 12)
+    current = Menu.create!(from: Time.utc(2026, 11, 16), to: Time.utc(2026, 11, 22, 23, 59, 59))
+    Weekday.find_or_create_by!(name: "monday")
+    first = Meal.create!(name: "Breakfast", description: "Steamed", servings: 1, preferred_days: ["monday"])
+    second = Meal.create!(name: "Lunch", description: "Steamed", servings: 2)
+    first.meal_types << MealType.find_or_create_by!(description: "breakfast")
+    first.meal_ingredients.create!(ingredient: Ingredient.create!(name: "Rice"),
+      unit: Unit.find_or_create_by!(code: "g"), quantity: 100)
+    add_scheduled_meal(current, second, weekday: "monday", position: 1)
+    add_scheduled_meal(current, first, weekday: "monday", position: 0)
+
+    home_path = "/menus/home?date=2026-11-16"
+    home_before = count_selects { get home_path }
+    assert_response :ok
+    assert_operator home_before, :<=, 16
+    home = response.parsed_body.fetch("data")
+    assert_nil home.fetch("next_meal_date")
+    day_meals = home.dig("current_menu", "days", 0, "meals")
+    assert_equal [first.id, second.id], day_meals.map { |meal| meal.fetch("id") }
+    assert_equal ["breakfast"], day_meals.first.fetch("meal_types")
+    assert_equal ["monday"], day_meals.first.fetch("preferred_days")
+    assert_equal "Rice", day_meals.first.dig("ingredients", 0, "name")
+    index_before = count_selects { get "/menus" }
+    assert_response :ok
+
+    12.times do |index|
+      from = current.from - (index + 1).weeks
+      archived = Menu.create!(from: from, to: from + 6.days)
+      add_scheduled_meal(archived, first, weekday: "monday")
+    end
+
+    assert_equal home_before, count_selects { get home_path }
+    assert_response :ok
+    assert_equal home, response.parsed_body.fetch("data")
+    assert_equal index_before, count_selects { get "/menus" }
+    assert_response :ok
+    assert_equal 13, response.parsed_body.fetch("data").size
+  end
+
   test "invalid people updates return localized errors and preserve the saved count" do
     menu = Menu.create!(from: Time.utc(2026, 11, 16), to: Time.utc(2026, 11, 22), people_count: 2)
     [0, -1, 1.5, "2.5", "2people", nil, true, [], {}].each do |invalid|
@@ -112,6 +201,20 @@ class MenusControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def add_scheduled_meal(menu, meal, weekday:, position: 0)
+    day = menu.days.find_or_create_by!(weekday: Weekday.find_or_create_by!(name: weekday))
+    day.daily_meals.create!(meal: meal, position: position)
+  end
+
+  def count_selects
+    queries = 0
+    subscriber = ->(_name, _started, _finished, _id, payload) do
+      queries += 1 if payload[:name] != "SCHEMA" && payload[:sql].match?(/\ASELECT\b/i)
+    end
+    ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") { yield }
+    queries
+  end
 
   def create_meal_pool_for_generate
     %w[monday tuesday wednesday thursday friday saturday sunday].each { |n| Weekday.find_or_create_by!(name: n) }

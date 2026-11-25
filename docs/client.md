@@ -164,11 +164,12 @@ Keep Rails API traffic on its configured API origin; do not rewrite API requests
 to the client entry point. The service worker caches the app shell and both language manifests; offline deep
 links and PWA installation require separate verification.
 
-Saved Menus is available in the header Menu popover. It uses the shared
-`GET /menus` query and lists all saved weeks newest first,
+Saved Menus is available in the header Menu popover. It requests
+`GET /menus/summaries` and lists all saved weeks newest first,
 with Upcoming, Current, and Past labels based on calendar dates in the browser's
 timezone. Date labels preserve the API calendar dates and include the year.
-Selecting a week displays its meals Monday–Sunday and any generation notices;
+Selecting a week loads `GET /menus/:id` and displays its meals Monday–Sunday
+and any generation notices;
 meal rows open the existing meal details dialog. Loading, empty, and API error
 states are explicit, with retry on error and no demo fallback.
 Saved Menus contains saved weekly assignments, not previous regenerations of the
@@ -372,16 +373,17 @@ window focus or reconnection. Meal types and units remain fresh for five minutes
 The cache lives in memory and is not persisted for offline use.
 
 Feature hooks in `features/menu/queries.ts` and `features/meals/queries.ts` expose
-`useMenus`, `useMeals`, `useMeal`, `useMealTypes`, `useUnits`, `useGenerateMenu`,
+`useMenuHome`, `useMenuSummaries`, `useMenu`, `useMeals`, `useMeal`, `useMealTypes`, `useUnits`, `useGenerateMenu`,
 `useCreateMeal`, and `useUpdateMeal`. Query/mutation status supplies loading,
 saving, and API errors; HTTP calls remain in `api.ts`, using `fetch` with the
 query's abort signal for cancellable reads.
 
 Query ownership follows the feature that consumes the data:
 
-- `MenuScreen` and `SavedMenusScreen` share `useMenus`. Home checks `useMeals`
-  when it needs to distinguish an empty library from a missing plan.
-- `NextWeekPlan` mounts `useGenerateMenu` for Home’s planning action.
+- `MenuScreen` uses `useMenuHome` for the current menu and planning status.
+  `SavedMenusScreen` uses `useMenuSummaries` for the list and `useMenu` for the
+  selected week. Ingredient previews from a shopping list also use `useMenu`.
+- `MenuScreen` owns `useGenerateMenu` so planning feedback survives a date refresh.
 - `MealsScreen` mounts `useMeals` when the library is opened.
 - `MealDialogContent` mounts `useMealTypes` and `useUnits` only while the editor is open.
   It waits for both queries before mounting `MealForm`, so an edit draft starts
@@ -393,13 +395,15 @@ API collections through props. Display components such as `MenuView`, `DayCard`,
 and `MealsView` receive data and callbacks through props. Nested ingredient
 inputs access their form through React Hook Form context.
 Adding an ingredient focuses the new row's ingredient-name field.
-Opening Home requests `/menus` first. It requests `/meals` if both planning periods
-lack a menu, and the library requests `/meals` when opened directly. The header
+Opening Home requests `/menus/home` with the browser's local calendar date.
+The response includes whether the meal library is empty. The library requests
+`/meals` when opened. The header
 handles navigation and language. Opening a form adds `/meal_types` and `/units`.
 Fresh cached data is reused when revisiting a screen or reopening a form.
 
 Successful mutations update the cache from the API response. Generating a menu
-puts it first in the menu list. Saving a meal updates the library and replaces
+updates the next-week link and refreshes the planning and history queries.
+Saving a meal updates the library and replaces
 that meal wherever it appears in cached menus. In-flight reads are cancelled
 before applying those responses so older data cannot overwrite the update.
 Individually fetched meal details also receive meal and ingredient-name updates.

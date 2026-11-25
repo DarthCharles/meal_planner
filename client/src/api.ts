@@ -10,6 +10,8 @@ import type {
   MealTypeOption,
   MeasurementReference,
   Menu,
+  MenuHome,
+  MenuSummary,
   ShoppingCategory,
   ShoppingList,
   UnitOption,
@@ -95,8 +97,14 @@ export const api = {
     request<ShoppingCategory[]>("/shopping_categories", { signal }),
   getShoppingList: (id: number, signal?: AbortSignal) =>
     request<ShoppingList>(`/menus/${id}/shopping_list`, { signal }),
-  getMenus: (signal?: AbortSignal, locale: Locale = getLocale()) =>
-    request<Menu[]>("/menus", { signal, headers: { "Accept-Language": locale } }),
+  getMenuHome: (date: string, locale: Locale, signal: AbortSignal) =>
+    request<MenuHome>(`/menus/home?date=${encodeURIComponent(date)}`, {
+      signal,
+      headers: { "Accept-Language": locale },
+    }),
+  getMenuSummaries: (signal: AbortSignal) => request<MenuSummary[]>("/menus/summaries", { signal }),
+  getMenu: (id: number, locale: Locale, signal: AbortSignal) =>
+    request<Menu>(`/menus/${id}`, { signal, headers: { "Accept-Language": locale } }),
   getMeals: (signal?: AbortSignal) => request<Meal[]>("/meals", { signal }),
   getMeal: (id: number, signal?: AbortSignal) => request<Meal>(`/meals/${id}`, { signal }),
   getMealTypes: (signal?: AbortSignal) => request<MealTypeOption[]>("/meal_types", { signal }),

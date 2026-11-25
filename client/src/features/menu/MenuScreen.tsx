@@ -3,32 +3,27 @@ import { Link } from "react-router";
 
 import { Notice } from "../../components/Notice";
 import { useI18n } from "../../i18n";
-import { useMeals } from "../meals/queries";
 import { useMealDialog } from "../meals/useMealDialog";
-import { isCurrentMenu, nextGenerationWeek, startsWithinWeek } from "./menuDates";
 import { MenuHero } from "./MenuHero";
 import { MenuView } from "./MenuView";
 import { NextWeekPlan } from "./NextWeekPlan";
-import { useMenus } from "./queries";
+import { useGenerateMenu, useMenuHome } from "./queries";
 
 export function MenuScreen() {
   const { t } = useI18n();
   const { openMeal, openCreateMeal } = useMealDialog();
-  const { data: menus, isPending: loading, isError, isFetching, refetch } = useMenus();
   const now = new Date();
-  const currentMenu = menus?.find((menu) => isCurrentMenu(menu, now));
-  const nextWeek = nextGenerationWeek(now);
-  const savedNextWeek = menus?.find((menu) => startsWithinWeek(menu, nextWeek));
-  const checkLibrary = !!menus && !currentMenu && !savedNextWeek;
-  const { data: meals, isLoading: checkingLibrary } = useMeals({ enabled: checkLibrary });
-  const firstRecipe = checkLibrary && meals?.length === 0;
-  const canAddRecipe = checkLibrary && !checkingLibrary;
+  const { data: home, isPending: loading, isError, isFetching, refetch } = useMenuHome(now);
+  const { mutate: generateMenu, isPending: generating, error: generationError } = useGenerateMenu();
+  const currentMenu = home?.current_menu;
+  const canAddRecipe = !!home && !currentMenu && home.next_week_menu_id === null;
+  const firstRecipe = canAddRecipe && home?.has_meals === false;
 
   return (
     <div className="space-y-lg tablet:space-y-xl">
       {isError && (
         <div className="my-sm space-y-sm">
-          <Notice>{t(menus ? "menu.screen.refresh_error" : "menu.screen.load_error")}</Notice>
+          <Notice>{t(home ? "menu.screen.refresh_error" : "menu.screen.load_error")}</Notice>
           <Button
             variant="outline"
             className="min-h-11"
@@ -49,9 +44,14 @@ export function MenuScreen() {
           <MenuView menu={null} loading onOpenMeal={openMeal} />
         </>
       )}
-      {currentMenu && menus && (
+      {home && currentMenu && (
         <>
-          <MenuHero menu={currentMenu} menus={menus} now={now} onOpenMeal={openMeal} />
+          <MenuHero
+            menu={currentMenu}
+            nextMealDate={home.next_meal_date}
+            now={now}
+            onOpenMeal={openMeal}
+          />
           <section aria-labelledby="current-week-title" className="space-y-md">
             <div className="flex flex-wrap items-baseline justify-between gap-x-md gap-y-2xs">
               <h2
@@ -82,7 +82,7 @@ export function MenuScreen() {
           </section>
         </>
       )}
-      {menus && !currentMenu && (
+      {home && !currentMenu && (
         <section className="mt-xs rounded-[30px] bg-card p-md tablet:p-lg">
           <h2 className="m-0 font-display text-[28px] font-semibold">
             {t("menu.screen.no_current_week")}
@@ -92,7 +92,7 @@ export function MenuScreen() {
               {t("menu.hero.recipe_help")}
             </p>
           )}
-          {(canAddRecipe || menus.length > 0) && (
+          {(canAddRecipe || home.has_saved_menus) && (
             <div className="mt-md flex flex-wrap gap-xs">
               {canAddRecipe && (
                 <Button
@@ -103,7 +103,7 @@ export function MenuScreen() {
                   {t(firstRecipe ? "menu.hero.add_first_recipe" : "menu.hero.add_recipe")}
                 </Button>
               )}
-              {menus.length > 0 && (
+              {home.has_saved_menus && (
                 <Button asChild variant="outline" className="min-h-11">
                   <Link to="/saved-menus">{t("menu.screen.browse_saved")}</Link>
                 </Button>
@@ -112,11 +112,14 @@ export function MenuScreen() {
           )}
         </section>
       )}
-      {menus && !firstRecipe && (
+      {home && !firstRecipe && (
         <NextWeekPlan
-          week={nextWeek}
-          savedMenu={savedNextWeek}
-          disabled={checkingLibrary || isFetching || isError}
+          week={home.next_week}
+          savedMenuId={home.next_week_menu_id}
+          disabled={isFetching || isError}
+          generateMenu={generateMenu}
+          generating={generating}
+          error={generationError}
         />
       )}
     </div>

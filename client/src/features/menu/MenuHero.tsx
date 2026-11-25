@@ -5,16 +5,16 @@ import { formatLocale, useI18n } from "../../i18n";
 import type { Meal, Menu } from "../../types";
 import { MealRow } from "../meals/MealRow";
 import { mealTypeOrder } from "../meals/mealTypes";
-import { formatMenuDateRange, localDateKey, localWeekday, menuDayDate } from "./menuDates";
+import { formatMenuDateRange, localDateKey, localWeekday } from "./menuDates";
 
 export function MenuHero({
   menu,
-  menus,
+  nextMealDate,
   now,
   onOpenMeal,
 }: {
   menu: Menu;
-  menus: Menu[];
+  nextMealDate: string | null;
   now: Date;
   onOpenMeal: (meal: Meal) => void;
 }) {
@@ -22,7 +22,7 @@ export function MenuHero({
   const todayDate = localDateKey(now);
   const today = menu.days.find((day) => day.weekday.toLowerCase() === localWeekday(now));
   const meals = today?.meals ?? [];
-  const nextDay = meals.length ? undefined : findNextMealDate(menus, todayDate);
+  const nextDay = !meals.length && nextMealDate ? new Date(`${nextMealDate}T00:00:00Z`) : null;
   const dateFormat: Intl.DateTimeFormatOptions = {
     weekday: "long",
     month: "short",
@@ -85,19 +85,4 @@ export function MenuHero({
       </div>
     </section>
   );
-}
-
-function findNextMealDate(menus: Menu[], today: string) {
-  return menus
-    .filter((menu) => menu.to.slice(0, 10) > today)
-    .flatMap((menu) =>
-      menu.days
-        .filter((day) => day.meals.length)
-        .map((day) => menuDayDate(menu, day.weekday))
-        .filter((date) => {
-          const dateKey = date.toISOString().slice(0, 10);
-          return dateKey > today && dateKey <= menu.to.slice(0, 10);
-        }),
-    )
-    .sort((left, right) => left.getTime() - right.getTime())[0];
 }

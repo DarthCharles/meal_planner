@@ -1,4 +1,4 @@
-import { expect, navigateTo, test } from "./fixtures/app";
+import { editorScreen, expect, navigateTo, test } from "./fixtures/app";
 import { menu } from "./fixtures/data";
 
 function savedMenu(id: number, from: string, to: string, name: string) {
@@ -27,8 +27,7 @@ test(
     // A week ending today must still be labeled Current.
     const endingToday = savedMenu(5, "2026-10-15", "2026-10-21", "Today breakfast");
     api.menus = [older, upcoming, api.menus[0], recent, endingToday];
-    await page.goto("/");
-    await navigateTo(page, "Saved Menus");
+    await page.goto("/saved-menus");
     await expect(page.getByRole("heading", { name: "Saved Menus", exact: true })).toBeVisible();
     const weeks = page.getByRole("navigation", { name: "Saved weeks" }).getByRole("button");
     await expect(weeks).toHaveText([
@@ -50,6 +49,7 @@ test(
     ]);
     await expect(page.getByRole("article").getByText("Today", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("article").first().getByText("Future breakfast")).toBeVisible();
+    expect(Object.keys(api.reads).sort()).toEqual(["/menus/4", "/menus/summaries"]);
     await weeks.nth(3).click();
     await expect(page.getByText(recent.generation_notices[0])).toBeVisible();
     await weeks.nth(4).focus();
@@ -66,7 +66,12 @@ test(
     await expect(dialog.getByText("2 pieces · Eggbeaten")).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(row).toBeFocused();
-    expect(Object.keys(api.reads)).toEqual(["/menus"]);
+    expect(Object.keys(api.reads).sort()).toEqual([
+      "/menus/2",
+      "/menus/3",
+      "/menus/4",
+      "/menus/summaries",
+    ]);
     expect(api.generationRequests).toBe(0);
     expect(api.saves).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -100,19 +105,84 @@ test("shows loading before displaying past weeks", async ({ page, api }) => {
   await expect(page.getByText("Loading saved menus…")).toHaveCount(0);
 });
 
-test("retries history errors without showing demo menus", async ({ page, api }) => {
-  api.readErrors["/menus"] = "Could not load saved menus.";
+test("retries the history list and selected week independently", async ({ page, api }) => {
+  api.readErrors["/menus/summaries"] = "Could not load saved menus.";
   api.menus = [savedMenu(2, "2026-10-12", "2026-10-18", "Saved breakfast")];
-  await page.goto("/");
-  await expect(page.getByText("We couldn’t load your menu. Please try again.")).toBeVisible();
-  await navigateTo(page, "Saved Menus");
+  await page.goto("/saved-menus");
   await expect(page.getByText("Could not load saved menus.")).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "No saved menus yet" })).toHaveCount(0);
-  delete api.readErrors["/menus"];
+  const failedListReads = api.reads["/menus/summaries"];
+  delete api.readErrors["/menus/summaries"];
+  api.readErrors["/menus/2"] = "Could not load this week.";
   await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "Saved weeks" })).toBeVisible();
   await expect(page.getByText("Could not load saved menus.")).toHaveCount(0);
+  await expect(page.getByText("Could not load this week.")).toBeVisible();
+  expect(api.reads["/menus/summaries"]).toBe(failedListReads + 1);
+  delete api.readErrors["/menus/2"];
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page.getByRole("article").first().getByText("Saved breakfast")).toBeVisible();
+  expect(api.reads["/menus/summaries"]).toBe(failedListReads + 1);
+});
+
+test("resumes loading a saved week when a recipe is saved during its first read", async ({
+  page,
+  api,
+}) => {
+  let release!: () => void;
+  api.readBarriers["/menus/1"] = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.goto("/saved-menus");
+  await expect(page.getByText("Finding your menu…")).toBeVisible();
+  await expect.poll(() => api.reads["/menus/1"] ?? 0).toBeGreaterThan(0);
+  const initialReads = api.reads["/menus/1"];
+
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
+  await page.getByRole("button", { name: "Add a meal", exact: true }).click();
+  const editor = editorScreen(page);
+  await editor.getByLabel("Meal name", { exact: true }).fill("New breakfast");
+  await editor.getByLabel("Servings", { exact: true }).fill("2");
+  await editor.getByLabel("Instructions", { exact: true }).fill("Fresh from the kitchen.");
+  await editor.getByRole("button", { name: "Breakfast", exact: true }).click();
+  await editor.getByRole("button", { name: "Save meal", exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await expect.poll(() => api.reads["/menus/1"]).toBeGreaterThan(initialReads);
+
+  release();
+  await expect(page.getByRole("article").first()).toContainText("Huevos a la mexicana");
+});
+
+test("opens the regenerated week while the cached history list refreshes", async ({
+  page,
+  api,
+}) => {
+  const previous = savedMenu(2, "2026-10-26", "2026-11-01", "Previous breakfast");
+  api.menus.unshift(previous);
+  api.generationNotices = ["Notice from the regenerated week."];
+  await page.goto("/saved-menus");
+  await expect(page.getByRole("article").first()).toContainText("Previous breakfast");
+  await navigateTo(page, "My menu");
+  const regenerate = page.getByRole("button", { name: "Regenerate menu" });
+  await regenerate.click();
+  await page.getByRole("button", { name: "Replace menu" }).click();
+  await expect.poll(() => api.menus[0].id).not.toBe(previous.id);
+  await expect(regenerate).toBeEnabled();
+
+  let release!: () => void;
+  api.readBarriers["/menus/summaries"] = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const summaryReads = api.reads["/menus/summaries"];
+  await page.getByRole("link", { name: "View next week’s menu" }).click();
+  await expect.poll(() => api.reads["/menus/summaries"]).toBeGreaterThan(summaryReads);
+  await expect(page.getByText(api.generationNotices[0], { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Shopping list" })).toHaveAttribute(
+    "href",
+    `/menus/${api.menus[0].id}/shopping-list`,
+  );
+  release();
 });
 
 test.describe("history in a timezone west of UTC", () => {

@@ -7,6 +7,7 @@ class Meal < ApplicationRecord
   has_many :ingredients, through: :meal_ingredients
 
   WEEKDAY_NAMES = %w[monday tuesday wednesday thursday friday saturday sunday].freeze
+  RECIPE_DETAILS = [:meal_types, :preferred_weekdays, { meal_ingredients: [:ingredient, :unit, :package_unit] }].freeze
 
   has_many :meal_preferred_days, dependent: :destroy
   has_many :preferred_weekdays, through: :meal_preferred_days, source: :weekday
@@ -40,7 +41,7 @@ class Meal < ApplicationRecord
       h[:name] = name
       h[:servings] = servings
       h[:recipe_url] = recipe_url
-      h[:meal_types] = meal_types.pluck(:description)
+      h[:meal_types] = meal_types.map(&:description)
       h[:preferred_days] = preferred_days
       h[:ingredients] = meal_ingredients
     end
