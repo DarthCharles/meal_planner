@@ -10,10 +10,6 @@ export function useMealDialog() {
   const remember = (meal: Meal) => client.setQueryData(queryKeys.meal(meal.id), meal);
   return {
     openCreateMeal: () => openEditor("/meals/new"),
-    openEditMeal: (meal: Meal) => {
-      remember(meal);
-      openEditor(`/meals/${meal.id}/edit`);
-    },
     openMeal: (meal: Meal) => {
       remember(meal);
       preview({ meal: meal.id, name: meal.name });

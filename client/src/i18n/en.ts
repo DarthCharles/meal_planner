@@ -130,8 +130,7 @@ export const en = {
     },
     screen: {
       add_ingredient: "+ Add ingredient",
-      unused_badge: "Not used in any meals yet",
-      ingredients_intro: "Browse and manage the ingredients for your meals.",
+      unused: "Unused",
       search_ingredients: "Search ingredients",
       ingredient_catalog: "Ingredient catalog",
       no_ingredients_found: "No ingredients found",

@@ -84,6 +84,11 @@ contents sets the ingredient's buying preference using the selected container.
 Details includes an Edit ingredient link for saved ingredients. It opens
 the ingredient editor in a new tab while keeping the recipe draft open.
 
+The meal library and ingredient catalog use single-column lists. Each meal row
+shows its meal times and opens the recipe preview. Each ingredient row shows its
+usage count or unused status and opens the usage preview. Open Edit from the
+corresponding preview.
+
 My Ingredients loads the catalog on entry. Usage previews list recipes from the
 catalog response, then fetch details for the chosen recipe. The ingredient
 editor changes the shared name and shopping category. Only unused ingredients

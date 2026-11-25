@@ -132,8 +132,7 @@ export const es: typeof en = {
     },
     screen: {
       add_ingredient: "+ Agregar ingrediente",
-      unused_badge: "Aún no se usa en ninguna comida",
-      ingredients_intro: "Consulta y administra los ingredientes de tus comidas.",
+      unused: "Sin usar",
       search_ingredients: "Buscar ingredientes",
       ingredient_catalog: "Catálogo de ingredientes",
       no_ingredients_found: "No se encontraron ingredientes",

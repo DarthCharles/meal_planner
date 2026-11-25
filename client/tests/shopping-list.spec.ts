@@ -4,6 +4,7 @@ import {
   expect,
   finishIngredientSave,
   navigateTo,
+  openEditorFromIndex,
   test,
 } from "./fixtures/app";
 
@@ -154,13 +155,14 @@ test("edits category codes and refreshes the list after returning", async ({ pag
   await page.goto("/menus/1/shopping-list");
   await expect(page.getByRole("region", { name: "Dairy & eggs", exact: true })).toBeVisible();
   await navigateTo(page, "My Ingredients");
-  await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
+  await openEditorFromIndex(page, "Egg", "Edit ingredient");
   const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   await dialog.getByRole("combobox", { name: "Shopping category", exact: true }).click();
   await dialog.getByRole("option", { name: "Frozen foods", exact: true }).click();
   await dialog.getByRole("button", { name: "Save ingredient", exact: true }).click();
   await finishIngredientSave(page);
   await expect(dialog).toHaveCount(0);
+  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   expect(api.ingredientSaves[0].body).toEqual({ name: "Egg", shopping_category: "frozen" });
   await navigateTo(page, "My menu");
   await page.getByRole("link", { name: "Shopping list", exact: true }).click();
@@ -187,7 +189,7 @@ test("translates category headings and editing labels without changing codes or 
   await expect(page.getByRole("heading", { name: "Frutas y verduras", exact: true })).toBeVisible();
   await expect(page.getByText("Tomato", { exact: true })).toBeVisible();
   await page.goto("/ingredients");
-  await page.getByRole("button", { name: "Editar Egg", exact: true }).click();
+  await openEditorFromIndex(page, "Egg", "Editar ingrediente");
   const dialog = page.getByRole("region", { name: "Editar ingrediente", exact: true });
   await dialog.getByRole("combobox", { name: "Categoría de compra", exact: true }).click();
   await dialog.getByRole("option", { name: "Carnes", exact: true }).click();
@@ -208,7 +210,7 @@ test("waits for category reference data and retries without exposing an editable
   api.readErrors["/shopping_categories"] = "Categories unavailable";
   await page.goto("/ingredients");
   expect(api.reads["/shopping_categories"] ?? 0).toBe(0);
-  await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
+  await openEditorFromIndex(page, "Egg", "Edit ingredient");
   const dialog = page.getByRole("region", { name: "Edit ingredient", exact: true });
   await expect(dialog.getByRole("status")).toHaveText("Loading shopping categories…");
   await expect(dialog.getByRole("textbox", { name: "Ingredient name" })).toHaveCount(0);

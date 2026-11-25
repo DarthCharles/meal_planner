@@ -561,6 +561,15 @@ export function editorScreen(page: Page) {
   });
 }
 
+export async function openEditorFromIndex(
+  page: Page,
+  name: string,
+  action: "Edit meal" | "Edit ingredient" | "Editar ingrediente",
+) {
+  await page.getByRole("button", { name, exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: action, exact: true }).click();
+}
+
 export async function cancelEditor(page: Page) {
   const accept = (dialog: import("@playwright/test").Dialog) => dialog.accept();
   page.on("dialog", accept);

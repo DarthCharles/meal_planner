@@ -11,7 +11,7 @@ import { useMealDialog } from "./useMealDialog";
 
 export function MealsScreen() {
   const { t } = useI18n();
-  const { openCreateMeal, openEditMeal, openMeal } = useMealDialog();
+  const { openCreateMeal, openMeal } = useMealDialog();
   const {
     data: meals,
     isPending: loading,
@@ -46,12 +46,7 @@ export function MealsScreen() {
       {loading ? (
         <MealsSkeleton />
       ) : (
-        <MealsView
-          meals={meals ?? demoMeals}
-          showCount={meals !== undefined}
-          onEdit={openEditMeal}
-          onOpen={openMeal}
-        />
+        <MealsView meals={meals ?? demoMeals} showCount={meals !== undefined} onOpen={openMeal} />
       )}
     </>
   );

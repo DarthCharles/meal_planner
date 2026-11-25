@@ -1,10 +1,10 @@
 import type { Locator } from "@playwright/test";
 
-import { cancelEditor, editorScreen, expect, test } from "./fixtures/app";
+import { cancelEditor, editorScreen, expect, openEditorFromIndex, test } from "./fixtures/app";
 
 async function openEgg(page: import("@playwright/test").Page) {
   await page.goto("/ingredients");
-  await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
+  await openEditorFromIndex(page, "Egg", "Edit ingredient");
   return page.getByRole("region", { name: "How do you buy this ingredient?", exact: true });
 }
 
@@ -31,7 +31,7 @@ test("loads buying setup only in saved editors and never asks for measurement re
     api.requests.some(({ path }) => /shopping_profile|measurement_references/.test(path)),
   ).toBe(false);
   await cancelEditor(page);
-  await page.getByRole("button", { name: "Edit Egg", exact: true }).click();
+  await openEditorFromIndex(page, "Egg", "Edit ingredient");
   const setup = page.getByRole("region", { name: "How do you buy this ingredient?", exact: true });
   expect(api.reads["/units"] ?? 0).toBe(0);
   await expect(formatControl(setup)).toHaveText("Use recipe measurements");
@@ -260,6 +260,9 @@ test("Back protects unsaved buying and ingredient changes", async ({ page, api }
   expect(api.profileSaves).toEqual([]);
   page.once("dialog", (dialog) => dialog.accept());
   await editorScreen(page).getByRole("button", { name: "Back", exact: true }).click();
+  const preview = page.getByRole("dialog", { name: "Meals with Egg", exact: true });
+  await expect(preview).toBeVisible();
+  await preview.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page).toHaveURL("/ingredients");
 });
 

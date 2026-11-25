@@ -1,12 +1,23 @@
 import type { Page } from "@playwright/test";
 
-import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
+import {
+  cancelEditor,
+  editorScreen,
+  expect,
+  navigateTo,
+  openEditorFromIndex,
+  test,
+} from "./fixtures/app";
 
 async function openLibrary(page: Page) {
   await page.goto("/");
   await page.getByRole("region", { name: "Today’s menu" }).waitFor();
   await navigateTo(page, "My meals");
-  await page.getByRole("article").first().waitFor();
+  await page
+    .getByRole("list", { name: "Your meal library" })
+    .getByRole("listitem")
+    .first()
+    .waitFor();
 }
 
 async function addMeal(page: Page) {
@@ -104,26 +115,29 @@ test(
 test("combines case-insensitive search and meal time filters", async ({ page }) => {
   await openLibrary(page);
   const count = page.getByRole("region", { name: "Your meal library" }).getByRole("status");
+  const rows = page.getByRole("list", { name: "Your meal library" }).getByRole("listitem");
   const dinner = page.getByRole("button", { name: "Dinner", exact: true });
   const allMeals = page.getByRole("button", { name: "All meals", exact: true });
   await expect(allMeals).toHaveAttribute("aria-pressed", "true");
   await expect(count).toHaveText("3 of 3 meals");
-  await expect(page.getByRole("article")).toHaveCount(3);
+  await expect(rows).toHaveCount(3);
   await dinner.click();
   await expect(dinner).toHaveAttribute("aria-pressed", "true");
   await expect(allMeals).toHaveAttribute("aria-pressed", "false");
   await expect(count).toHaveText("2 of 3 meals");
-  await expect(page.getByRole("article")).toHaveCount(2);
+  await expect(rows).toHaveCount(2);
   await page.getByPlaceholder("Search meals").fill("AVENA");
   await expect(count).toHaveText("1 of 3 meals");
-  await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(page.getByRole("heading", { name: "Avena cocida" })).toBeVisible();
+  await expect(rows).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Avena cocida", exact: true })).toBeVisible();
   await page.getByPlaceholder("Search meals").fill("huevos");
   await expect(count).toHaveText("0 of 3 meals");
   await expect(page.getByRole("heading", { name: "No meals found." })).toBeVisible();
   await allMeals.click();
   await expect(count).toHaveText("1 of 3 meals");
-  await expect(page.getByRole("heading", { name: "Huevos a la mexicana" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Huevos a la mexicana", exact: true }),
+  ).toBeVisible();
   await page.getByPlaceholder("Search meals").clear();
   await expect(count).toHaveText("3 of 3 meals");
 });
@@ -153,7 +167,7 @@ test(
 );
 
 test(
-  "wraps long meal card text across the card below the edit action",
+  "wraps long meal names and opens recipe details from the row",
   { tag: "@responsive" },
   async ({ page, api }) => {
     const name = "RoastedVegetablesWithRiceAndFreshTomatoSalsaMadeForTheWholeFamily";
@@ -161,20 +175,20 @@ test(
     Object.assign(api.meals[0], { name, description });
     await page.goto("/meals");
 
-    const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name }) });
-    const edit = card.getByRole("button", { name: `Edit ${name}` });
-    await expect(edit).toBeVisible();
-    const editBox = (await edit.boundingBox())!;
-    for (const text of [name, description]) {
-      const content = card.getByText(text, { exact: true });
-      await expect(content).toBeVisible();
-      expect(await content.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
-        true,
-      );
-      const box = (await content.boundingBox())!;
-      expect(box.y).toBeGreaterThanOrEqual(editBox.y + editBox.height);
-      expect(box.x + box.width).toBeGreaterThan(editBox.x);
-    }
+    const row = page.getByRole("button", { name, exact: true });
+    await expect(row).toHaveAccessibleDescription("Breakfast");
+    const label = row.getByText(name, { exact: true });
+    expect(await label.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+      true,
+    );
+    await expect(page.getByText(description, { exact: true })).toHaveCount(0);
+    await row.focus();
+    await page.keyboard.press("Enter");
+    const preview = page.getByRole("dialog", { name, exact: true });
+    await expect(preview.getByText(description, { exact: true })).toBeVisible();
+    await expect(preview.getByRole("button", { name: "Edit meal", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(row).toBeFocused();
   },
 );
 
@@ -271,7 +285,7 @@ test(
     await expect(dialog.getByRole("button", { name: "Saving…", exact: true })).toBeDisabled();
     release();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "Tacos de papa" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tacos de papa", exact: true })).toBeVisible();
     expect(api.saves).toEqual([
       {
         method: "POST",
@@ -331,7 +345,7 @@ test(
   { tag: "@responsive" },
   async ({ page, api }) => {
     await openLibrary(page);
-    await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
+    await openEditorFromIndex(page, "Huevos a la mexicana", "Edit meal");
     const dialog = editorScreen(page);
     const egg = dialog.getByRole("button", { name: "Edit Egg", exact: true });
     const editIngredient = dialog.getByRole("link", { name: /^Edit ingredient/ });
@@ -400,7 +414,7 @@ test(
 
 test("preserves typed names on Escape and matches an exact catalog name", async ({ page, api }) => {
   await openLibrary(page);
-  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
+  await openEditorFromIndex(page, "Huevos a la mexicana", "Edit meal");
   const dialog = editorScreen(page);
   await dialog.getByRole("button", { name: "Edit Egg", exact: true }).click();
   const ingredient = dialog.getByRole("combobox", { name: "Ingredient name" });
@@ -504,7 +518,7 @@ test("waits for edit options, prefills the meal, and saves ingredient removal", 
   api.readBarriers["/meal_types"] = optionsBarrier;
   api.readBarriers["/units"] = optionsBarrier;
   await openLibrary(page);
-  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
+  await openEditorFromIndex(page, "Huevos a la mexicana", "Edit meal");
   const dialog = page.getByRole("region", { name: "Edit meal", exact: true });
   await expect(dialog.getByRole("heading", { name: "Edit meal", exact: true })).toBeVisible();
   await expect(dialog.getByText("Loading meal options…")).toBeVisible();
@@ -531,12 +545,12 @@ test("waits for edit options, prefills the meal, and saves ingredient removal", 
   await dialog.getByRole("button", { name: "Remove Egg", exact: true }).click();
   await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Edit Huevos con salsa", exact: true }),
-  ).toBeVisible();
+  const preview = page.getByRole("dialog", { name: "Huevos con salsa", exact: true });
+  await preview.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Huevos con salsa", exact: true })).toBeVisible();
   await expect(
     page.getByRole("button", {
-      name: "Edit Huevos a la mexicana",
+      name: "Huevos a la mexicana",
       exact: true,
     }),
   ).toHaveCount(0);
@@ -565,19 +579,23 @@ test("preserves form values after a save error and supports retrying", async ({ 
   api.saveError = null;
   await dialog.getByRole("button", { name: "Save meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Tacos de papa" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tacos de papa", exact: true })).toBeVisible();
   expect(api.saves).toHaveLength(2);
 });
 
 test("retains cached meals when a background refresh fails", async ({ page, api }) => {
   api.meals[0].name = "Breakfast from the API";
   await openLibrary(page);
-  await expect(page.getByRole("heading", { name: "Breakfast from the API" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Breakfast from the API", exact: true }),
+  ).toBeVisible();
   api.readErrors["/meals"] = "Could not refresh meals.";
   await page.clock.setFixedTime(new Date("2026-10-21T12:01:00Z"));
   await page.evaluate(() => window.dispatchEvent(new Event("visibilitychange")));
   await expect(page.getByText("Could not refresh meals.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Breakfast from the API" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Breakfast from the API", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByText("We couldn’t load your saved data. Showing examples for now."),
   ).toHaveCount(0);
@@ -648,7 +666,7 @@ test("preserves ingredient values after removing a middle row", async ({ page, a
 
 test("validates deselecting all meal times and submits numeric type IDs", async ({ page, api }) => {
   await openLibrary(page);
-  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
+  await openEditorFromIndex(page, "Huevos a la mexicana", "Edit meal");
   const dialog = editorScreen(page);
   const breakfast = dialog.getByRole("button", {
     name: "Breakfast",
@@ -697,8 +715,7 @@ test("prefills custom preferences, updates nested menu details, and clears to An
 }) => {
   api.meals[0].preferred_days = ["monday", "thursday"];
   await openLibrary(page);
-  const edit = page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true });
-  await edit.click();
+  await openEditorFromIndex(page, "Huevos a la mexicana", "Edit meal");
   const dialog = editorScreen(page);
   const days = dialog.getByRole("group", { name: "Preferred days" });
   await expect(days.getByRole("button", { name: "Monday", exact: true })).toHaveAttribute(
@@ -714,6 +731,7 @@ test("prefills custom preferences, updates nested menu details, and clears to An
   await dialog.getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(api.saves[0].body.preferred_days).toEqual(["thursday", "tuesday"]);
+  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   await navigateTo(page, "My menu");
   await page
     .getByRole("button", { name: "View Breakfast: Huevos a la mexicana", exact: true })
@@ -724,7 +742,7 @@ test("prefills custom preferences, updates nested menu details, and clears to An
   ).toBeVisible();
   await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   await navigateTo(page, "My meals");
-  await edit.click();
+  await openEditorFromIndex(page, "Huevos a la mexicana", "Edit meal");
   await expect(days.getByRole("button", { name: "Select all", exact: true })).toHaveCount(0);
   await days.getByRole("button", { name: "Clear all", exact: true }).click();
   await expect(days.getByRole("button", { name: "Clear all", exact: true })).toBeDisabled();
@@ -759,10 +777,11 @@ test(
     await page.getByRole("region", { name: "Today’s menu" }).waitFor();
     await navigateTo(page, "My meals");
     const loading = page.getByRole("status", { name: "Loading meals", exact: true });
+    const rows = page.getByRole("list", { name: "Your meal library" }).getByRole("listitem");
     try {
       await expect(loading).toBeVisible();
       await expect(loading).toHaveAttribute("aria-busy", "true");
-      await expect(page.getByRole("article")).toHaveCount(0);
+      await expect(rows).toHaveCount(0);
       await expect(page.getByText("No meals found.", { exact: true })).toHaveCount(0);
       expect(
         await loading.evaluate((element) => element.getAnimations({ subtree: true }).length),
@@ -778,9 +797,9 @@ test(
       release();
     }
     await expect(loading).toHaveCount(0);
-    await expect(page.getByRole("article")).toHaveCount(api.meals.length);
+    await expect(rows).toHaveCount(api.meals.length);
     await expect(
-      page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }),
+      page.getByRole("button", { name: "Huevos a la mexicana", exact: true }),
     ).toBeEnabled();
   },
 );

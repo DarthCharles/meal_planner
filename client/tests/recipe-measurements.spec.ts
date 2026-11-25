@@ -1,6 +1,13 @@
 import type { Page } from "@playwright/test";
 
-import { cancelEditor, editorScreen, expect, navigateTo, test } from "./fixtures/app";
+import {
+  cancelEditor,
+  editorScreen,
+  expect,
+  navigateTo,
+  openEditorFromIndex,
+  test,
+} from "./fixtures/app";
 
 async function chooseUnit(page: Page, label: string) {
   await editorScreen(page).getByRole("combobox", { name: "Unit", exact: true }).click();
@@ -25,7 +32,8 @@ test("requires explicit servings and retains fractional and decimal quantities i
   api,
 }) => {
   await page.goto("/ingredients");
-  await expect(page.getByRole("button", { name: "Used in 1 meal" })).toBeVisible();
+  const egg = page.getByRole("button", { name: "Egg", exact: true });
+  await expect(egg).toHaveAccessibleDescription("Used in 1 meal");
   await navigateTo(page, "My meals");
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();
   const form = editorScreen(page);
@@ -61,7 +69,7 @@ test("requires explicit servings and retains fractional and decimal quantities i
   await expect(form).toHaveCount(0);
   expect(api.saves[0].body.servings).toBe("4");
   expect(api.saves[0].body.ingredients.map(({ quantity }) => quantity)).toEqual(quantities);
-  await page.getByRole("button", { name: "Edit Decimal recipe", exact: true }).click();
+  await openEditorFromIndex(page, "Decimal recipe", "Edit meal");
   const eggRows = editorScreen(page).getByRole("button", { name: "Edit Egg", exact: true });
   await expect(eggRows).toHaveCount(3);
   await expect(eggRows.nth(1)).toContainText("⅛");
@@ -70,8 +78,9 @@ test("requires explicit servings and retains fractional and decimal quantities i
     editorScreen(page).getByRole("textbox", { name: "Quantity", exact: true }),
   ).toHaveValue("⅛");
   await cancelEditor(page);
+  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   await navigateTo(page, "My Ingredients");
-  await expect(page.getByRole("button", { name: "Used in 2 meals", exact: true })).toBeVisible();
+  await expect(egg).toHaveAccessibleDescription("Used in 2 meals");
 });
 
 test("saving a new recipe ingredient stores its package contents as a buying preference", async ({

@@ -34,9 +34,16 @@ export function PreviewController() {
   const editing = isEditorPath(location.pathname);
   const { data: meal } = useMeal(mealId ?? 0, { enabled: !!mealId && !editing });
   const { data: ingredients } = useIngredients({ enabled: false });
+  const ingredient = ingredients?.find((entry) => entry.id === ingredientId);
+  const catalogItemRemoved =
+    location.pathname === "/ingredients" &&
+    !!location.state?.previewParent &&
+    !!ingredientId &&
+    !!ingredients &&
+    !ingredient;
   const name = mealId
     ? (meal?.name ?? params.get("previewName") ?? t("preview.meal"))
-    : (ingredients?.find((entry) => entry.id === ingredientId)?.name ??
+    : (ingredient?.name ??
       params.get("ingredientName") ??
       params.get("previewName") ??
       t("shopping_list.ingredient"));
@@ -50,9 +57,6 @@ export function PreviewController() {
       }
       return;
     }
-    if (!opener.current?.isConnected)
-      opener.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dismiss = () => {
       const search = new URLSearchParams(location.search);
       for (const key of ["meal", "ingredient", "previewName", "ingredientName"]) search.delete(key);
@@ -61,6 +65,13 @@ export function PreviewController() {
         { replace: true, state: location.state },
       );
     };
+    if (catalogItemRemoved) {
+      dismiss();
+      return;
+    }
+    if (!opener.current?.isConnected)
+      opener.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const focusMealId = previousMeal.current;
     openDialog({
       title: mealId ? name : () => t("shopping_list.menu_meals_title", { name }),
@@ -108,6 +119,7 @@ export function PreviewController() {
     previousMeal.current = mealId;
   }, [
     editing,
+    catalogItemRemoved,
     mealId,
     ingredientId,
     menuId,

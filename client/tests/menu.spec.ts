@@ -392,7 +392,9 @@ test("keeps reference query failures inside the modal", async ({ page, api }) =>
   await cancelEditor(page);
   await expect(page.getByRole("heading", { name: "Thursday" })).toBeVisible();
   await navigateTo(page, "My meals");
-  await expect(page.getByRole("heading", { name: "Breakfast from the API" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Breakfast from the API", exact: true }),
+  ).toBeVisible();
 });
 
 test("loads each resource only when its screen or form needs it", async ({ page, api }) => {
@@ -401,7 +403,9 @@ test("loads each resource only when its screen or form needs it", async ({ page,
   expect(Object.keys(api.reads)).toEqual(["/menus/home"]);
   await navigateTo(page, "My meals");
   await expect(page.getByRole("heading", { name: "Your meal library" })).toBeVisible();
-  await expect(page.getByRole("article")).toHaveCount(3);
+  await expect(
+    page.getByRole("list", { name: "Your meal library" }).getByRole("listitem"),
+  ).toHaveCount(3);
   expect(Object.keys(api.reads).sort()).toEqual(["/meals", "/menus/home"]);
   await page.getByRole("button", { name: "Menu" }).click();
   await page.getByRole("button", { name: "Add a meal", exact: true }).click();
@@ -436,8 +440,9 @@ test("creating a meal from the menu does not eagerly load the library", async ({
   await expect(dialog).toHaveCount(0);
   expect(api.reads["/meals"]).toBeUndefined();
   await navigateTo(page, "My meals");
-  await expect(page.getByRole("heading", { name: "New breakfast" })).toBeVisible();
-  await expect(page.getByRole("article")).toHaveCount(4);
+  const library = page.getByRole("list", { name: "Your meal library" });
+  await expect(library.getByRole("button", { name: "New breakfast", exact: true })).toBeVisible();
+  await expect(library.getByRole("listitem")).toHaveCount(4);
 });
 
 test("keeps a pending plan from being submitted again after navigating home", async ({

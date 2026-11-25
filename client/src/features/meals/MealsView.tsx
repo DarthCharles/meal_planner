@@ -1,20 +1,19 @@
 import { useMemo, useState } from "react";
 
-import { Badge, Button, Card, Input } from "@darthcharles/greda";
+import { Button, Input } from "@darthcharles/greda";
 
+import { CollectionRow } from "../../components/CollectionRow";
 import { useI18n } from "../../i18n";
 import type { Meal } from "../../types";
-import { mealTypeColorClassName, mealTypeLabel, mealTypeOrder } from "./mealTypes";
+import { mealTypeLabel, mealTypeOrder } from "./mealTypes";
 
 export function MealsView({
   meals,
   showCount,
-  onEdit,
   onOpen,
 }: {
   meals: Meal[];
   showCount: boolean;
-  onEdit: (meal: Meal) => void;
   onOpen: (meal: Meal) => void;
 }) {
   const { t } = useI18n();
@@ -64,60 +63,31 @@ export function MealsView({
           {t("meals.screen.count", { shown: filtered.length, count: meals.length })}
         </p>
       )}
-      <div className="grid grid-cols-1 gap-md tablet:grid-cols-2 wide:grid-cols-3">
-        {filtered.map((meal) => (
-          <Card
-            role="article"
-            className="min-h-[143px] overflow-hidden rounded-[17px] border border-border bg-card shadow-none pt-md pr-md pb-md pl-lg"
-            key={meal.id}
-          >
-            <div className="flex items-center gap-sm">
-              <div className="flex min-w-0 flex-1 flex-wrap gap-2xs">
-                {meal.meal_types.map((type) => (
-                  <Badge
-                    variant="secondary"
-                    className={`max-w-full rounded-[5px] border-0 px-2xs py-2xs text-caption wrap-anywhere whitespace-normal ${mealTypeColorClassName(type)}`}
-                    key={type}
-                  >
-                    {mealTypeLabel(type)}
-                  </Badge>
-                ))}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="shrink-0 self-start text-label"
-                onClick={() => onEdit(meal)}
-                aria-label={t("common.edit_name", { name: meal.name })}
-              >
-                {t("common.edit")}
-              </Button>
-            </div>
-            <h3 className="mt-xs mb-2xs">
-              <Button
-                variant="link"
-                className="h-auto max-w-full px-0 py-2xs text-left text-body font-medium whitespace-normal text-foreground"
-                onClick={() => onOpen(meal)}
-              >
-                <span className="min-w-0 wrap-anywhere text-pretty">{meal.name}</span>
-              </Button>
-            </h3>
-            <p className="m-0 text-sm leading-relaxed wrap-anywhere text-pretty text-muted-foreground">
-              {meal.description}
-            </p>
-          </Card>
-        ))}
-        {filtered.length === 0 && (
-          <div className="grid min-h-[180px] content-center justify-items-center rounded-[20px] border border-dashed border-border px-lg py-2xl text-center col-span-full">
-            <h3 className="m-0 font-display text-2xl leading-tight font-semibold tracking-[-.03em] text-balance">
-              {t("meals.screen.no_meals")}
-            </h3>
-            <p className="mt-xs mb-0 max-w-[40ch] text-body text-pretty text-muted-foreground">
-              {t("meals.screen.try_meals")}
-            </p>
-          </div>
-        )}
-      </div>
+      {filtered.length > 0 ? (
+        <ul
+          role="list"
+          aria-label={t("meals.screen.meal_library")}
+          className="m-0 list-none rounded-xl border border-border p-0"
+        >
+          {filtered.map((meal) => (
+            <CollectionRow
+              key={meal.id}
+              name={meal.name}
+              description={meal.meal_types.map(mealTypeLabel).join(" · ")}
+              onOpen={() => onOpen(meal)}
+            />
+          ))}
+        </ul>
+      ) : (
+        <div className="border-t border-border py-lg">
+          <h3 className="m-0 font-display text-2xl leading-tight font-semibold tracking-[-.03em] text-balance">
+            {t("meals.screen.no_meals")}
+          </h3>
+          <p className="mt-xs mb-0 max-w-[40ch] text-body text-pretty text-muted-foreground">
+            {t("meals.screen.try_meals")}
+          </p>
+        </div>
+      )}
     </section>
   );
 }

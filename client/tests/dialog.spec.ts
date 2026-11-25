@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import { cancelEditor, editorScreen, expect, test } from "./fixtures/app";
+import { cancelEditor, editorScreen, expect, openEditorFromIndex, test } from "./fixtures/app";
 
 async function openMealPreview(page: Page) {
   await page.goto("/");
@@ -92,19 +92,20 @@ test("an old save cannot leave a subsequently opened editor", async ({ page, api
     release = resolve;
   });
   await page.goto("/meals");
-  await page.getByRole("button", { name: "Edit Huevos a la mexicana", exact: true }).click();
+  await openEditorFromIndex(page, "Huevos a la mexicana", "Edit meal");
   await editorScreen(page).getByLabel("Meal name", { exact: true }).fill("First draft");
   await editorScreen(page).getByRole("button", { name: "Update meal", exact: true }).click();
   await expect(
     editorScreen(page).getByRole("button", { name: "Saving…", exact: true }),
   ).toBeDisabled();
   await cancelEditor(page);
+  await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   await page.getByRole("button", { name: "+ Add meal", exact: true }).click();
   await editorScreen(page).getByLabel("Meal name", { exact: true }).fill("Second draft");
   release();
-  await expect(page.getByRole("heading", { name: "First draft", includeHidden: true })).toHaveCount(
-    1,
-  );
+  await expect(
+    page.getByRole("button", { name: "First draft", exact: true, includeHidden: true }),
+  ).toHaveCount(1);
   await expect(page).toHaveURL("/meals/new");
   await expect(editorScreen(page).getByLabel("Meal name", { exact: true })).toHaveValue(
     "Second draft",

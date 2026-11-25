@@ -30,8 +30,12 @@ test(
     await expect(page.getByRole("searchbox", { name: "Buscar comidas" })).toHaveValue("Huevos");
     await expect(page.getByRole("heading", { name: "Tu colección de comidas" })).toBeVisible();
     await expect(page.getByText("1 de 3 comidas", { exact: true })).toBeVisible();
-    await expect(page.getByRole("article")).toHaveCount(1);
-    await expect(page.getByRole("heading", { name: "Huevos a la mexicana" })).toBeVisible();
+    await expect(
+      page.getByRole("list", { name: "Tu colección de comidas" }).getByRole("listitem"),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("button", { name: "Huevos a la mexicana", exact: true }),
+    ).toHaveAccessibleDescription("Desayuno");
     await expect(page).toHaveTitle("Comal — Planificador de comidas");
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
       "href",
@@ -222,8 +226,9 @@ for (const scenario of [
   {
     name: "edit meal",
     path: "/meals",
-    action: "Edit Huevos a la mexicana",
-    actionEs: "Editar Huevos a la mexicana",
+    action: "Huevos a la mexicana",
+    actionEs: "Huevos a la mexicana",
+    editFromPreview: true,
     title: "Edit meal",
     titleEs: "Editar comida",
     field: "Meal name",
@@ -243,8 +248,9 @@ for (const scenario of [
   {
     name: "edit ingredient",
     path: "/ingredients",
-    action: "Edit Egg",
-    actionEs: "Editar Egg",
+    action: "Egg",
+    actionEs: "Egg",
+    editFromPreview: true,
     title: "Edit ingredient",
     titleEs: "Editar ingrediente",
     field: "Ingredient name",
@@ -257,6 +263,12 @@ for (const scenario of [
   }) => {
     await page.goto(scenario.path);
     await page.getByRole("button", { name: scenario.action, exact: true }).click();
+    if (scenario.editFromPreview) {
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: scenario.title, exact: true })
+        .click();
+    }
     const dialog = page.getByRole("region", { name: scenario.title, exact: true });
     await dialog.getByLabel(scenario.field, { exact: true }).fill("Unsaved draft");
     await page.evaluate(() => {
@@ -281,6 +293,9 @@ for (const scenario of [
       ).toBeVisible();
     }
     await cancelEditor(page);
+    if (scenario.editFromPreview) {
+      await page.getByRole("dialog").getByRole("button", { name: "Cerrar", exact: true }).click();
+    }
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("button", { name: scenario.actionEs, exact: true })).toBeFocused();
     expect(api.saves).toEqual([]);
