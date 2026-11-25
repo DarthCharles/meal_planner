@@ -141,9 +141,10 @@ erDiagram
   new recipes have no implicit serving count. Changing counts does not rewrite quantities.
 - Shopping lists use `quantity × people_count ÷ servings` for every scheduled
   occurrence, accumulate before rounding, and do not subtract pantry stock.
-  Calculable pieces round upward and bulk quantities stay in g/ml. Packages and
-  ingredients whose totals cannot be fully converted appear once by name only.
-  There are no persisted shopping lists or checked-item records.
+  They display calculable package counts, piece counts, or bulk quantities.
+  Ingredients whose totals cannot be fully converted appear by name only.
+  See the [shopping list API](api.md#shopping-lists) for display rules. There are
+  no persisted shopping lists or checked-item records in the database.
 - `Day` belongs to a `Menu` and a `Weekday`.
 - `Day` has many `Meal` records through `DailyMeal`.
 - `DailyMeal.position` orders meals within a day: `0` breakfast, `1` lunch, `2` dinner.

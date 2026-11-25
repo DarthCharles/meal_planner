@@ -183,12 +183,11 @@ The current-week sample menu includes a recipe with an explicit can size.
 Seeded recipe quantities are explicitly for one person; they are demonstration
 recipes rather than nutritional guidance.
 
-The checklist contains one line per ingredient. Packages appear by name only;
-calculable pieces round upward and compatible mass/volume totals remain in g/ml.
-When a conversion is unavailable, the ingredient also appears by name only.
-Original recipe quantities remain stored. Calculation is local and makes no
-external calls. Nullable checklist amounts are shared by Rails and the client;
-conversion metadata is not displayed. There is no shopping-adjustment step.
+The checklist contains one line per ingredient. It shows package counts and
+other quantities when calculable, and the ingredient name alone when the recipe
+amounts cannot be combined. Calculation runs in Rails without external calls
+and preserves the original recipe quantities. See the
+[shopping list API](api.md#shopping-lists) for conversion and rounding rules.
 
 ## Scheduled generation
 

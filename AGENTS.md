@@ -51,7 +51,8 @@ requires them.
   apply its semantic tokens and typography roles directly to components. See
   [DESIGN.md](DESIGN.md) and the [client instructions](client/AGENTS.md).
 - Update the relevant file under `docs/` when changing routes, data models,
-  setup, or client behavior.
+  or setup, or when adding or changing a client workflow. Routine styling
+  tweaks and behavior-preserving refactors require no documentation update.
 - Do not commit secrets, local `.env` files, generated `client/dist/` output,
   `node_modules/`, or generated Playwright reports and test results.
 

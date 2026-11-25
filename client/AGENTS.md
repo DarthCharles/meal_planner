@@ -28,6 +28,10 @@ The client uses `VITE_API_URL` when set, and otherwise targets
 
 ## Development guidelines
 
+- Consult the sections of `docs/client.md` relevant to the task. Update the
+  relevant section in place when setup or routes change or a client workflow
+  is added or changed. Routine styling tweaks and behavior-preserving refactors
+  require no update to the guide.
 - Keep API-facing TypeScript types in `client/src/types.ts` and HTTP calls in
   `client/src/api.ts`.
 - Manage client server state with React Query hooks in feature `queries.ts`
