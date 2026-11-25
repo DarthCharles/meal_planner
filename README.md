@@ -59,6 +59,9 @@ The default ports are `3000` for Rails and `5173` for Vite. Override them with
 
 Open the client at [http://127.0.0.1:5173/](http://127.0.0.1:5173/).
 
+To open the app from a phone on the same Wi-Fi, run `bin/dev --lan` and open
+the URL it prints. See the [development guide](docs/development.md#run-api-and-client-together).
+
 The client connects to the API at `http://127.0.0.1:3000` by default. Set `VITE_API_URL` in `client/.env` to use another API URL.
 
 ## Tests

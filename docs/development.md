@@ -61,6 +61,16 @@ example:
 API_PORT=3001 CLIENT_PORT=5174 bin/dev
 ```
 
+To open the development app on a phone connected to the same Wi-Fi, run:
+
+```bash
+bin/dev --lan
+```
+
+Open the URL printed by `bin/dev` on your phone. If the computer has multiple
+network interfaces, set `LAN_IP` to its Wi-Fi IPv4 address before running the
+command. `API_PORT` and `CLIENT_PORT` also apply in LAN mode.
+
 ## Client environment
 
 ```bash
