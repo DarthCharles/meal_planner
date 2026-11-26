@@ -7,6 +7,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@darthcharles/greda";
+import {
+  Archive,
+  CalendarDays,
+  Carrot,
+  CookingPot,
+  Menu as MenuIcon,
+  Plus,
+} from "@darthcharles/greda/icons";
 import { Link, NavLink, useLocation, useNavigate } from "react-router";
 
 import { useMealDialog } from "../features/meals/useMealDialog";
@@ -48,6 +56,7 @@ export function AppHeader() {
               variant="outline"
               className="h-auto min-h-11 min-w-11 shrink-0 px-xs text-xs tablet:px-sm tablet:text-sm"
             >
+              <MenuIcon aria-hidden="true" />
               {t("app_header.menu")}
             </Button>
           </PopoverTrigger>
@@ -79,12 +88,12 @@ export function AppHeader() {
             <nav className="flex flex-col gap-2xs" aria-label={t("navigation.primary_navigation")}>
               {(
                 [
-                  ["/", t("navigation.my_menu")],
-                  ["/meals", t("navigation.my_meals")],
-                  ["/ingredients", t("navigation.my_ingredients")],
-                  ["/saved-menus", t("navigation.saved_menus")],
+                  ["/", t("navigation.my_menu"), CalendarDays],
+                  ["/meals", t("navigation.my_meals"), CookingPot],
+                  ["/ingredients", t("navigation.my_ingredients"), Carrot],
+                  ["/saved-menus", t("navigation.saved_menus"), Archive],
                 ] as const
-              ).map(([destination, label]) => (
+              ).map(([destination, label, Icon]) => (
                 <Fragment key={destination}>
                   {destination === "/saved-menus" && <hr className="my-2xs border-border" />}
                   <NavLink
@@ -111,6 +120,7 @@ export function AppHeader() {
                       setActionsOpen(false);
                     }}
                   >
+                    <Icon aria-hidden="true" />
                     {label}
                   </NavLink>
                 </Fragment>
@@ -125,6 +135,7 @@ export function AppHeader() {
                 setActionsOpen(false);
               }}
             >
+              <Plus aria-hidden="true" />
               {t("app_header.add_meal_action")}
             </Button>
             <hr className="my-2xs border-border" />

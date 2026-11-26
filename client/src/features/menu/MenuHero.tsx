@@ -1,4 +1,5 @@
 import { Button } from "@darthcharles/greda";
+import { ShoppingBasket } from "@darthcharles/greda/icons";
 import { intlFormat } from "date-fns";
 import { Link } from "react-router";
 
@@ -33,7 +34,7 @@ export function MenuHero({
   return (
     <section
       aria-labelledby="menu-hero-title"
-      className="mt-xs grid gap-sm rounded-[30px] bg-card p-md tablet:grid-cols-[minmax(0,1fr)_auto] tablet:gap-lg tablet:p-lg"
+      className="mt-xs grid gap-sm rounded-[30px] border border-border bg-card p-md tablet:grid-cols-[minmax(0,1fr)_auto] tablet:gap-lg tablet:p-lg"
     >
       <div className="min-w-0">
         <h2
@@ -81,6 +82,7 @@ export function MenuHero({
             state={{ from: "/" }}
             aria-describedby="shopping-week"
           >
+            <ShoppingBasket aria-hidden="true" />
             {t("shopping_list.title")}
           </Link>
         </Button>

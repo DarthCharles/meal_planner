@@ -24,7 +24,7 @@ export function DayCard({
   return (
     <Card
       role="article"
-      className={`rounded-[20px] bg-card p-md shadow-sm tablet:p-lg ${featured ? "border border-action" : "border-0 max-[640px]:pb-xs"}`}
+      className={`rounded-[20px] border bg-card p-md shadow-sm tablet:p-lg ${featured ? "border-action" : "border-border max-[640px]:pb-xs"}`}
     >
       <div className="mb-md flex flex-wrap items-baseline justify-between gap-x-sm gap-y-2xs">
         <h4 className="m-0 font-display text-[23px] font-semibold">{dayLabel(day.weekday)}</h4>

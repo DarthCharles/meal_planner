@@ -29,7 +29,26 @@ test(
     api.menus = [older, upcoming, api.menus[0], recent, endingToday];
     await page.goto("/saved-menus");
     await expect(page.getByRole("heading", { name: "Saved Menus", exact: true })).toBeVisible();
-    const weeks = page.getByRole("navigation", { name: "Saved weeks" }).getByRole("button");
+    const picker = page.getByRole("navigation", { name: "Saved weeks" });
+    const changeWeek = page.getByRole("button", { name: "Change week" });
+    const backToMenu = page.getByRole("button", { name: "Back to menu" });
+    const weeks = picker.getByRole("button");
+    const width = page.viewportSize()!.width;
+    const compact = width < 760;
+    const shoppingList = page.getByRole("link", { name: "Shopping list" });
+
+    await expect(page.getByText("Next week", { exact: true })).toBeVisible();
+    if (compact) {
+      await expect(picker).toBeHidden();
+      await expect(shoppingList).toHaveAttribute("href", "/menus/4/shopping-list");
+      if (width < 350) {
+        await expect(changeWeek).toBeVisible();
+        await expect(changeWeek.getByText("Change week", { exact: true })).toBeHidden();
+      }
+      await changeWeek.click();
+      await expect(backToMenu).toBeFocused();
+      await expect(shoppingList).toBeHidden();
+    }
     await expect(weeks).toHaveText([
       "Oct 26, 2026 — Nov 1, 2026Upcoming",
       "Oct 19, 2026 — Oct 25, 2026Current",
@@ -38,6 +57,11 @@ test(
       "Dec 29, 2025 — Jan 4, 2026Past",
     ]);
     await expect(weeks.first()).toHaveAttribute("aria-current", "true");
+    if (compact) {
+      await backToMenu.click();
+      await expect(changeWeek).toBeFocused();
+      await expect(picker).toBeHidden();
+    }
     await expect(page.getByRole("article").getByRole("heading")).toHaveText([
       "Monday",
       "Tuesday",
@@ -50,11 +74,25 @@ test(
     await expect(page.getByRole("article").getByText("Today", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("article").first().getByText("Future breakfast")).toBeVisible();
     expect(Object.keys(api.reads).sort()).toEqual(["/menus/4", "/menus/summaries"]);
+    if (compact) await changeWeek.click();
     await weeks.nth(3).click();
+    await expect(page.getByText("Past week", { exact: true })).toBeVisible();
     await expect(page.getByText(recent.generation_notices[0])).toBeVisible();
+    if (compact) {
+      await expect(changeWeek).toBeFocused();
+      await expect(picker).toBeHidden();
+      await expect(shoppingList).toHaveAttribute("href", "/menus/3/shopping-list");
+      await changeWeek.click();
+      await expect(weeks.nth(3)).toHaveAttribute("aria-current", "true");
+    }
     await weeks.nth(4).focus();
     await page.keyboard.press("Enter");
+    if (compact) {
+      await expect(changeWeek).toBeFocused();
+      await changeWeek.click();
+    }
     await expect(weeks.nth(4)).toHaveAttribute("aria-current", "true");
+    if (compact) await backToMenu.click();
     await expect(page.getByText(recent.generation_notices[0])).toHaveCount(0);
     const row = page
       .getByRole("article")
@@ -227,6 +265,7 @@ test("moves an upcoming menu into My Menu when its week starts", async ({ page, 
   await navigateTo(page, "Saved Menus");
   await expect(weeks.first()).toContainText("Current");
   await expect(weeks.nth(1)).toContainText("Past");
+  await expect(page.getByText("This week", { exact: true })).toBeVisible();
   expect(api.generationRequests).toBe(0);
 });
 

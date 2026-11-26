@@ -299,9 +299,12 @@ export const en = {
       no_saved: "No saved menus yet",
       saved_help: "Your weekly plans will appear here when they are saved.",
       saved_weeks: "Saved weeks",
+      change_week: "Change week",
+      back_to_menu: "Back to menu",
       upcoming: "Upcoming",
       current: "Current",
       past: "Past",
+      past_week: "Past week",
     },
     screen: {
       load_error: "We couldn’t load your menu. Please try again.",

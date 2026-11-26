@@ -61,6 +61,10 @@ Saved Menus fetches `GET /menus/summaries` and loads the selected week via
 reference the live library, so edits appear in past menus. Persisted generation
 notices describe the preferences used at generation time. Both menu screens
 offer retry on errors and retain the last successful data during failed refreshes.
+Below 760px, Saved Menus opens directly to the selected week and its shopping
+list action. **Change week** opens the archive picker. Selecting a week or using
+**Back to menu** returns to the menu and restores focus to **Change week**.
+At wider widths, the week list and selected menu appear side by side.
 
 Menu dates use date-fns with `@date-fns/utc`. Preserve the calendar day encoded
 in API dates. Today and the archive's Upcoming, Current, and Past labels use

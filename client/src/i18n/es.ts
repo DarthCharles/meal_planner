@@ -302,9 +302,12 @@ export const es: typeof en = {
       no_saved: "Aún no hay menús guardados",
       saved_help: "Tus planes semanales aparecerán aquí cuando se guarden.",
       saved_weeks: "Semanas guardadas",
+      change_week: "Cambiar semana",
+      back_to_menu: "Volver al menú",
       upcoming: "Próximo",
       current: "Actual",
       past: "Anterior",
+      past_week: "Semana anterior",
     },
     screen: {
       load_error: "No pudimos cargar tu menú. Inténtalo de nuevo.",

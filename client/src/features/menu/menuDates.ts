@@ -46,11 +46,18 @@ export function startsWithinWeek(menu: MenuSummary, week: Pick<MenuSummary, "fro
   });
 }
 
-export function menuPeriod(menu: MenuSummary, now: Date) {
+export function menuPeriod(menu: MenuSummary, now: Date, label: "archive" | "header" = "archive") {
   const today = calendarDate(localDateKey(now));
-  if (isAfter(calendarDate(menu.from), today)) return t("menu.saved.upcoming");
-  if (isBefore(calendarDate(menu.to), today)) return t("menu.saved.past");
-  return t("menu.saved.current");
+  if (isAfter(calendarDate(menu.from), today)) {
+    if (label === "header" && startsWithinWeek(menu, nextGenerationWeek(today))) {
+      return t("menu.next_week.title");
+    }
+    return t("menu.saved.upcoming");
+  }
+  if (isBefore(calendarDate(menu.to), today)) {
+    return t(label === "header" ? "menu.saved.past_week" : "menu.saved.past");
+  }
+  return t(label === "header" ? "menu.screen.this_week" : "menu.saved.current");
 }
 
 export function localWeekday(now: Date) {
@@ -83,4 +90,13 @@ export function formatMenuDateRange(menu: Pick<MenuSummary, "from" | "to">, incl
       { locale: formatLocale() },
     );
   return `${format(menu.from)} — ${format(menu.to)}`;
+}
+
+export function formatCompactMenuDateRange(menu: Pick<MenuSummary, "from" | "to">) {
+  return new Intl.DateTimeFormat(formatLocale(), {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).formatRange(calendarDate(menu.from), calendarDate(menu.to));
 }
